@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neon Arcade Hall</title>
+<style>
+  :root { --bg:#05060f; --fg:#e8ecff; --accent:#64d7ff; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { height:100%; background:var(--bg); color:var(--fg); overflow:hidden;
+    font-family: "Segoe UI", system-ui, sans-serif; }
+  #gl { position:fixed; inset:0; width:100%; height:100%; display:block; }
+  .hud { position:fixed; left:0; right:0; bottom:24px; display:flex; justify-content:center;
+    gap:10px; flex-wrap:wrap; padding:0 16px; pointer-events:none; }
+  .hud button { pointer-events:auto; background:rgba(10,14,40,.7); color:var(--fg);
+    border:1px solid rgba(120,160,255,.35); padding:10px 16px; border-radius:8px;
+    font:600 13px/1 monospace; letter-spacing:.12em; cursor:pointer; backdrop-filter:blur(6px); }
+  .hud button.on { border-color:var(--accent); color:var(--accent); box-shadow:0 0 12px var(--accent); }
+  .title { position:fixed; top:20px; left:0; right:0; text-align:center; pointer-events:none;
+    font:700 14px monospace; letter-spacing:.4em; color:var(--accent); text-shadow:0 0 10px var(--accent); }
+  #info { position:fixed; top:48px; left:0; right:0; text-align:center; pointer-events:none;
+    font:600 22px monospace; letter-spacing:.15em; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div class="title">NEON ARCADE · 4 SIDES</div>
+<div id="info"></div>
+<div class="hud" id="hud"></div>
+
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+// ---- Content: 4 sides, 3 cabinets each ----
+const SIDES = [
+  { name:'NORTH', c:'#64d7ff', games:['PONG','BREAKOUT','SNAKE'] },
+  { name:'EAST',  c:'#ff4fd8', games:['INVADERS','TETRA','RACER'] },
+  { name:'SOUTH', c:'#ffd84f', games:['ASTEROIDS','MAZE','JUMPER'] },
+  { name:'WEST',  c:'#7dff6a', games:['SHOOTER','PUZZLE','RHYTHM'] },
+];
+const HALF = 9;       // half-width of the square hall
+const GAP = 3.2;      // spacing between cabinets
+
+// ---- Renderer / scene ----
+const canvas = document.getElementById('gl');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#05060f');
+scene.fog = new THREE.Fog('#05060f', 10, 40);
+const camera = new THREE.PerspectiveCamera(60, 1, 0.1, 100);
+camera.position.set(0, 1.7, 0);
+
+scene.add(new THREE.HemisphereLight('#6070ff', '#100820', 0.6));
+
+// Floor grid
+const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 40),
+  new THREE.MeshStandardMaterial({ color:'#0a0b1a', roughness:0.25, metalness:0.6 }));
+floor.rotation.x = -Math.PI/2; scene.add(floor);
+const grid = new THREE.GridHelper(40, 40, '#3040a0', '#1a2050'); grid.position.y = 0.01; scene.add(grid);
+
+// Ceiling neon ring (square)
+const ringPts = [[-HALF,-HALF],[HALF,-HALF],[HALF,HALF],[-HALF,HALF],[-HALF,-HALF]]
+  .map(([x,z]) => new THREE.Vector3(x*0.8, 4.2, z*0.8));
+scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(ringPts),
+  new THREE.LineBasicMaterial({ color:'#8090ff' })));
+
+// ---- Cabinet builder ----
+function screenTexture(title, color) {
+  const c = document.createElement('canvas'); c.width = 256; c.height = 192;
+  const g = c.getContext('2d');
+  g.fillStyle = '#000'; g.fillRect(0,0,256,192);
+  g.strokeStyle = color; g.globalAlpha = .25;
+  for (let y=0; y<192; y+=4) { g.beginPath(); g.moveTo(0,y); g.lineTo(256,y); g.stroke(); }
+  g.globalAlpha = 1; g.fillStyle = color; g.textAlign = 'center';
+  g.font = 'bold 30px monospace'; g.fillText(title, 128, 90);
+  g.font = '14px monospace'; g.fillText('INSERT COIN', 128, 130);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+
+const clickable = [];
+function makeCabinet(title, color) {
+  const grp = new THREE.Group();
+  const body = new THREE.MeshStandardMaterial({ color:'#15182e', roughness:.5, metalness:.4 });
+  const box = (w,h,d,x,y,z,m=body) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), m); b.position.set(x,y,z); grp.add(b); return b; };
+  box(1.6, 2.1, 1.0, 0, 1.05, 0);                       // main body
+  box(1.6, 0.12, 0.6, 0, 1.0, 0.75);                     // control deck
+  const neon = new THREE.MeshBasicMaterial({ color: new THREE.Color(color).multiplyScalar(2) });
+  box(1.62, 0.04, 1.02, 0, 2.1, 0, neon);                // top trim
+  box(0.04, 2.1, 1.02, -0.81, 1.05, 0, neon);            // side trims
+  box(0.04, 2.1, 1.02,  0.81, 1.05, 0, neon);
+  box(1.5, 0.3, 0.05, 0, 2.35, 0.45, neon);              // marquee
+  const scr = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 0.98),
+    new THREE.MeshBasicMaterial({ map: screenTexture(title, color) }));
+  scr.position.set(0, 1.55, 0.51); grp.add(scr);
+  const light = new THREE.PointLight(color, 6, 5); light.position.set(0, 1.5, 1.4); grp.add(light);
+  scr.userData = { grp, title, color }; clickable.push(scr);
+  return grp;
+}
+
+// Place 3 cabinets on each of the 4 walls, facing the center
+SIDES.forEach((side, i) => {
+  const angle = -i * Math.PI/2;                 // N, E, S, W
+  side.angle = angle;
+  side.games.forEach((g, j) => {
+    const cab = makeCabinet(g, side.c);
+    const offset = (j - 1) * GAP;
+    const local = new THREE.Vector3(offset, 0, -HALF);
+    local.applyAxisAngle(new THREE.Vector3(0,1,0), angle);
+    cab.position.copy(local);
+    cab.rotation.y = angle;
+    scene.add(cab);
+  });
+  // big wall sign
+  const c = document.createElement('canvas'); c.width = 512; c.height = 96;
+  const g = c.getContext('2d'); g.fillStyle = side.c; g.font = 'bold 64px monospace';
+  g.textAlign = 'center'; g.fillText(side.name, 256, 72);
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+  const sign = new THREE.Mesh(new THREE.PlaneGeometry(4, 0.75),
+    new THREE.MeshBasicMaterial({ map: tex, transparent:true }));
+  sign.position.set(0, 3.6, -HALF - 0.4).applyAxisAngle(new THREE.Vector3(0,1,0), angle);
+  sign.rotation.y = angle; scene.add(sign);
+});
+
+// ---- Post-processing ----
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(1,1), 0.9, 0.5, 0.7);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+
+// ---- Camera control: rotate between 4 sides, drag to look, click cabinet to zoom ----
+let yaw = 0, targetYaw = 0, sideIdx = 0;
+let focus = null;   // focused cabinet screen
+const camPos = new THREE.Vector3(0, 1.7, 0), camLook = new THREE.Vector3();
+const hud = document.getElementById('hud'), info = document.getElementById('info');
+
+SIDES.forEach((s, i) => {
+  const b = document.createElement('button'); b.textContent = s.name;
+  b.onclick = () => goSide(i); hud.appendChild(b);
+});
+const back = document.createElement('button'); back.textContent = '◀ BACK'; back.style.display = 'none';
+back.onclick = () => { focus = null; back.style.display = 'none'; updateHud(); };
+hud.appendChild(back);
+
+function goSide(i) {
+  focus = null; back.style.display = 'none';
+  const diff = ((i - sideIdx) % 4 + 4) % 4;      // shortest rotation
+  targetYaw += (diff === 3 ? 1 : -diff) * Math.PI/2;
+  sideIdx = i; updateHud();
+}
+function updateHud() {
+  [...hud.children].forEach((b, i) => b.classList.toggle('on', i === sideIdx && i < 4));
+  info.textContent = focus ? focus.userData.title : SIDES[sideIdx].name + ' SIDE';
+  info.style.color = focus ? focus.userData.color : SIDES[sideIdx].c;
+}
+updateHud();
+
+addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight') goSide((sideIdx + 1) % 4);
+  if (e.key === 'ArrowLeft')  goSide((sideIdx + 3) % 4);
+  if (e.key === 'Escape') back.onclick();
+});
+
+// drag to swipe between sides
+let dragX = null;
+canvas.addEventListener('pointerdown', (e) => { dragX = e.clientX; });
+addEventListener('pointerup', (e) => {
+  if (dragX === null) return;
+  const dx = e.clientX - dragX; dragX = null;
+  if (Math.abs(dx) > 60) { goSide((sideIdx + (dx < 0 ? 1 : 3)) % 4); return; }
+  // click: pick a cabinet
+  const ray = new THREE.Raycaster();
+  ray.setFromCamera(new THREE.Vector2(e.clientX/innerWidth*2-1, -(e.clientY/innerHeight)*2+1), camera);
+  const hit = ray.intersectObjects(clickable)[0];
+  if (hit) { focus = hit.object; back.style.display = ''; updateHud(); }
+});
+
+function resize() {
+  renderer.setSize(innerWidth, innerHeight, false);
+  composer.setSize(innerWidth, innerHeight);
+  camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize); resize();
+
+const clock = new THREE.Clock();
+const tmp = new THREE.Vector3();
+renderer.setAnimationLoop(() => {
+  const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
+  yaw += (targetYaw - yaw) * (1 - Math.exp(-dt * 4));
+  if (focus) {
+    focus.getWorldPosition(tmp);
+    const n = new THREE.Vector3(0,0,1).applyQuaternion(focus.getWorldQuaternion(new THREE.Quaternion()));
+    camPos.lerp(tmp.clone().addScaledVector(n, 2.2), 1 - Math.exp(-dt*3));
+    camLook.lerp(tmp, 1 - Math.exp(-dt*3));
+  } else {
+    camPos.lerp(new THREE.Vector3(0, 1.7, 0), 1 - Math.exp(-dt*3));
+    const dir = new THREE.Vector3(Math.sin(t*0.3)*0.05, -0.05, -1).applyAxisAngle(new THREE.Vector3(0,1,0), yaw);
+    camLook.lerp(camPos.clone().add(dir), 1 - Math.exp(-dt*6));
+  }
+  camera.position.copy(camPos); camera.lookAt(camLook);
+  composer.render();
+});
+</script>
+</body>
+</html>

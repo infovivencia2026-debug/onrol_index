@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Server Hall</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#070403; --fg:#f3e6da; --or:#ff8a2a; --dim:rgba(255,160,90,.55); --line:rgba(255,140,60,.18); }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { background:var(--bg); color:var(--fg); font-family:"Roboto Condensed",system-ui,sans-serif; }
+  #gl { position:fixed; inset:0; width:100%; height:100%; display:block; }
+  #scroll { height:1200vh; }
+  .ui { position:fixed; pointer-events:none; letter-spacing:.08em; text-transform:uppercase; }
+  /* top bar */
+  .ticks { top:22px; left:46px; right:46px; height:30px; display:flex; justify-content:space-between; }
+  .ticks i { width:1px; height:12px; background:var(--fg); opacity:.6; }
+  .tl { top:62px; left:46px; } .tr { top:62px; right:46px; text-align:right; }
+  .tl b, .tr b { display:block; font-weight:500; font-size:17px; }
+  .tl span, .tr span { font-size:13px; color:var(--dim); }
+  .hr { left:0; right:0; height:1px; background:var(--line); }
+  /* center label */
+  .label { top:18%; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:28px;
+    border-left:1px solid var(--line); padding-left:28px; }
+  .label b { display:block; font-size:24px; font-weight:500; letter-spacing:.06em; }
+  .label span { font-size:12px; color:var(--or); }
+  .label button { pointer-events:auto; width:40px; height:40px; border:0; border-radius:3px;
+    background:#f3e6da; color:#1a0c04; font-size:20px; cursor:pointer; }
+  /* bottom */
+  .meta { bottom:178px; left:46px; right:46px; display:flex; justify-content:space-between;
+    font-size:13px; color:var(--dim); letter-spacing:.14em; }
+  .head { bottom:58px; left:46px; right:46px; font-weight:700; line-height:.98;
+    font-size:clamp(28px, 5vw, 64px); letter-spacing:.01em; transition:opacity .4s; }
+  .foot { bottom:20px; left:46px; right:46px; display:flex; justify-content:space-between;
+    font-size:13px; color:var(--dim); letter-spacing:.18em; border-top:1px solid var(--line); padding-top:12px; }
+  .nav { top:50%; right:22px; transform:translateY(-50%); display:flex; flex-direction:column; gap:10px; pointer-events:auto; }
+  .nav button { background:none; border:1px solid var(--line); color:var(--dim); font:500 11px "Roboto Condensed";
+    letter-spacing:.14em; padding:6px 8px; cursor:pointer; }
+  .nav button.on { color:var(--or); border-color:var(--or); box-shadow:0 0 10px rgba(255,138,42,.5); }
+  .vignette { inset:0; background:radial-gradient(ellipse at 50% 50%, transparent 45%, rgba(0,0,0,.75) 100%); }
+  @media (max-width:640px) {
+    .ticks,.tl,.tr,.meta,.head,.foot { left:16px; right:16px; } .tr { left:auto; }
+    .label { top:16%; gap:14px; padding-left:14px; } .meta { bottom:150px; }
+  }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div id="scroll"></div>
+<div class="ui vignette"></div>
+
+<div class="ui ticks"><i></i><i></i><i></i><i></i><i></i></div>
+<div class="ui tl"><b>Digital Infrastructure</b><span>AI / Compute Environments</span></div>
+<div class="ui tr"><b>Designed for scale</b><span id="clock">2026</span></div>
+<div class="ui hr" style="top:122px"></div>
+
+<div class="ui label"><div><b id="dcName">DC—01</b><span id="dcSub">AI Server Hall / 01</span></div>
+  <button id="nextBtn" aria-label="Next hall">→</button></div>
+
+<div class="ui meta"><span id="metaL">Neural compute / cloud systems</span><span id="metaR">001—026</span></div>
+<div class="ui head" id="head">AI Data Center<br>Infrastructure<br>for the AI Era</div>
+<div class="ui foot"><span>Data / Design / Systems</span><span>↑↓ walk · ←→ hall · click rack</span></div>
+<div class="ui nav" id="nav"></div>
+
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+// ---- 4 halls along one corridor ----
+const HALLS = [
+  { id:'DC—01', sub:'AI Server Hall / 01',   meta:'Neural compute / cloud systems',  racks:['GPU-A01','GPU-A02','GPU-A03','GPU-A04','GPU-A05','GPU-A06'] },
+  { id:'DC—02', sub:'Storage Vault / 02',    meta:'Distributed storage / data lake', racks:['STR-B01','STR-B02','STR-B03','STR-B04','STR-B05','STR-B06'] },
+  { id:'DC—03', sub:'Network Core / 03',     meta:'Fiber backbone / edge routing',   racks:['NET-C01','NET-C02','NET-C03','NET-C04','NET-C05','NET-C06'] },
+  { id:'DC—04', sub:'Cooling & Power / 04',  meta:'Thermal systems / grid supply',   racks:['PWR-D01','PWR-D02','PWR-D03','PWR-D04','PWR-D05','PWR-D06'] },
+];
+const OR = new THREE.Color('#ff8a2a');
+const RACK_X = 2.6, RACK_W = 1.4, RACK_H = 3.4, RACK_D = 1.9, HALL_LEN = 26;
+const TOTAL = HALLS.length * HALL_LEN;
+
+const canvas = document.getElementById('gl');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#070403');
+scene.fog = new THREE.FogExp2('#0d0603', 0.045);
+const camera = new THREE.PerspectiveCamera(64, 1, 0.1, 200);
+
+const lineMat = (o) => new THREE.LineBasicMaterial({ color:OR, transparent:true, opacity:o, blending:THREE.AdditiveBlending, depthWrite:false });
+const addLine = (pts, o) => scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lineMat(o)));
+const V = (x,y,z) => new THREE.Vector3(x,y,z);
+
+// Floor: perspective rails + cross lines
+[-3.6,-1.8,-0.9,0,0.9,1.8,3.6].forEach((x) => addLine([V(x,0,10), V(x,0,-TOTAL-30)], x === 0 ? .25 : .5));
+for (let z = 8; z > -TOTAL - 30; z -= 2) addLine([V(-3.6,0,z), V(3.6,0,z)], .08);
+// Ceiling rails
+[-3.6, 3.6].forEach((x) => addLine([V(x,RACK_H+0.6,10), V(x,RACK_H+0.6,-TOTAL-30)], .35));
+
+// Rack front texture: horizontal server slots + LEDs + id label
+function rackTex(id) {
+  const c = document.createElement('canvas'); c.width = 128; c.height = 320;
+  const g = c.getContext('2d');
+  g.fillStyle = 'rgba(255,120,30,0.10)'; g.fillRect(0,0,128,320);
+  for (let y = 18; y < 300; y += 7) {
+    g.fillStyle = `rgba(255,${130+Math.random()*60|0},60,${0.25+Math.random()*0.5})`;
+    g.fillRect(8, y, 112 * (0.5 + Math.random()*0.5), 1.5);
+    if (Math.random() < 0.35) { g.fillStyle = '#ffd3a0'; g.fillRect(114, y-1, 3, 3); }
+  }
+  g.fillStyle = '#ffb070'; g.font = '500 13px "Roboto Condensed", sans-serif'; g.fillText(id, 8, 314);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+
+const clickable = [];
+function makeRack(id) {
+  const grp = new THREE.Group();
+  const geo = new THREE.BoxGeometry(RACK_D, RACK_H, RACK_W);
+  // translucent glowing volume
+  grp.add(new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color:'#ff7a1a', transparent:true, opacity:.06,
+    blending:THREE.AdditiveBlending, depthWrite:false })));
+  // wire edges
+  grp.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), lineMat(.9)));
+  // front panel facing the corridor (+x local)
+  const face = new THREE.Mesh(new THREE.PlaneGeometry(RACK_W*0.92, RACK_H*0.95),
+    new THREE.MeshBasicMaterial({ map:rackTex(id), transparent:true, blending:THREE.AdditiveBlending, depthWrite:false }));
+  face.position.x = RACK_D/2 + 0.01; face.rotation.y = Math.PI/2; grp.add(face);
+  grp.children.forEach((m) => m.position.y += RACK_H/2);
+  face.userData = { id }; clickable.push(face);
+  return grp;
+}
+
+HALLS.forEach((h, i) => {
+  h.z0 = -i * HALL_LEN;
+  // gate frame (the doorway rectangle) + concentric rings
+  const gz = h.z0 - 1;
+  addLine([V(-3.6,0,gz),V(-3.6,RACK_H+0.6,gz),V(3.6,RACK_H+0.6,gz),V(3.6,0,gz)], .7);
+  for (let r = 3; r <= 9; r += 2) {
+    const pts = []; for (let a = 0; a <= 64; a++) { const t = a/64*Math.PI*2; pts.push(V(Math.cos(t)*r, 2 + Math.sin(t)*r, gz)); }
+    addLine(pts, .12);
+  }
+  // racks: 6 per side, packed like the image
+  h.racks.forEach((id, j) => {
+    [-1, 1].forEach((side) => {
+      const r = makeRack(side < 0 ? id : id.replace(/\d+$/, (n) => String(+n + 6).padStart(2,'0')));
+      r.position.set(side * (RACK_X + RACK_D/2), 0, h.z0 - 4 - j * (RACK_W + 0.25));
+      if (side < 0) r.rotation.y = 0; else r.rotation.y = Math.PI;   // faces toward the aisle
+      scene.add(r);
+    });
+  });
+});
+
+// End-of-corridor glowing door
+const endZ = -TOTAL - 4;
+addLine([V(-1.4,0,endZ),V(-1.4,2.6,endZ),V(1.4,2.6,endZ),V(1.4,0,endZ),V(-1.4,0,endZ)], 1);
+const glow = new THREE.Mesh(new THREE.PlaneGeometry(2.8, 2.6),
+  new THREE.MeshBasicMaterial({ color:'#ff7a1a', transparent:true, opacity:.5, blending:THREE.AdditiveBlending }));
+glow.position.set(0, 1.3, endZ - 0.01); scene.add(glow);
+const halo = new THREE.Mesh(new THREE.CircleGeometry(14, 48), new THREE.MeshBasicMaterial({ color:'#ff6a10', transparent:true,
+  opacity:.12, blending:THREE.AdditiveBlending, depthWrite:false }));
+halo.position.set(0, 1.5, endZ - 0.5); scene.add(halo);
+
+// floating dust particles
+const dust = new THREE.BufferGeometry(), N = 900, dp = new Float32Array(N*3);
+for (let i = 0; i < N; i++) { dp[i*3] = (Math.random()-.5)*8; dp[i*3+1] = Math.random()*4.5; dp[i*3+2] = 8 - Math.random()*(TOTAL+30); }
+dust.setAttribute('position', new THREE.BufferAttribute(dp, 3));
+scene.add(new THREE.Points(dust, new THREE.PointsMaterial({ color:'#ffb070', size:.03, transparent:true, opacity:.7, blending:THREE.AdditiveBlending })));
+
+// glow
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+composer.addPass(new UnrealBloomPass(new THREE.Vector2(1,1), 1.1, 0.6, 0.15));
+composer.addPass(new OutputPass());
+
+// ---- Walking ----
+const START_Z = 7, END_Z = -TOTAL + 2;
+const scrollMax = () => document.documentElement.scrollHeight - innerHeight;
+let camZ = START_Z, focus = null;
+const camPos = V(0, 1.7, START_Z), camLook = V(0, 1.6, START_Z - 6);
+const hallOf = () => Math.max(0, Math.min(HALLS.length - 1, Math.floor((START_Z - 3 - camZ) / HALL_LEN)));
+const goHall = (i) => { focus = null; scrollTo({ top: scrollMax() * (i / HALLS.length) + 1, behavior:'smooth' }); };
+
+const nav = document.getElementById('nav');
+HALLS.forEach((h, i) => { const b = document.createElement('button'); b.textContent = h.id; b.onclick = () => goHall(i); nav.appendChild(b); });
+document.getElementById('nextBtn').onclick = () => goHall((hallOf() + 1) % HALLS.length);
+
+addEventListener('keydown', (e) => {
+  const step = scrollMax() / TOTAL * 3;
+  if (e.key === 'Escape') focus = null;
+  else if (e.key === 'ArrowUp')    { e.preventDefault(); scrollBy({ top:  step, behavior:'smooth' }); }
+  else if (e.key === 'ArrowDown')  { e.preventDefault(); scrollBy({ top: -step, behavior:'smooth' }); }
+  else if (e.key === 'ArrowRight') { e.preventDefault(); goHall(Math.min(HALLS.length - 1, hallOf() + 1)); }
+  else if (e.key === 'ArrowLeft')  { e.preventDefault(); goHall(Math.max(0, hallOf() - 1)); }
+});
+addEventListener('scroll', () => { focus = null; });
+canvas.addEventListener('click', (e) => {
+  const ray = new THREE.Raycaster();
+  ray.setFromCamera(new THREE.Vector2(e.clientX/innerWidth*2-1, -(e.clientY/innerHeight)*2+1), camera);
+  const hit = ray.intersectObjects(clickable)[0];
+  focus = hit ? hit.object : null;
+});
+
+function resize() {
+  renderer.setSize(innerWidth, innerHeight, false); composer.setSize(innerWidth, innerHeight);
+  camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize); resize();
+
+const $ = (id) => document.getElementById(id);
+const clock = new THREE.Clock(), tmp = V(0,0,0), q = new THREE.Quaternion();
+let lastHall = -1;
+renderer.setAnimationLoop(() => {
+  const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
+  const p = scrollMax() > 0 ? scrollY / scrollMax() : 0;
+  camZ += (START_Z + (END_Z - START_Z) * p - camZ) * (1 - Math.exp(-dt * 4));
+  const k = 1 - Math.exp(-dt * 6);
+  if (focus) {
+    focus.getWorldPosition(tmp);
+    const n = V(0,0,1).applyQuaternion(focus.getWorldQuaternion(q));
+    camPos.lerp(tmp.clone().addScaledVector(n, 2.4).setY(1.8), k * .5);
+    camLook.lerp(tmp, k * .5);
+  } else {
+    camPos.lerp(V(Math.sin(t*.4)*.08, 1.7, camZ), k);
+    camLook.lerp(V(0, 1.55, camZ - 8), k);
+  }
+  camera.position.copy(camPos); camera.lookAt(camLook);
+  glow.material.opacity = .45 + Math.sin(t*2)*.08;
+
+  const hi = hallOf();
+  if (hi !== lastHall) {
+    lastHall = hi; const h = HALLS[hi];
+    $('dcName').textContent = h.id; $('dcSub').textContent = h.sub; $('metaL').textContent = h.meta;
+    $('metaR').textContent = String(hi*6+1).padStart(3,'0') + '—' + String(hi*6+6).padStart(3,'0');
+    [...nav.children].forEach((b, i) => b.classList.toggle('on', i === hi));
+  }
+  $('head').style.opacity = focus ? 0 : Math.max(0.15, 1 - p * 6);
+  if (focus) $('dcSub').textContent = 'Rack / ' + focus.userData.id;
+  else if ($('dcSub').textContent.startsWith('Rack')) $('dcSub').textContent = HALLS[hi].sub;
+  composer.render();
+});
+</script>
+</body>
+</html>

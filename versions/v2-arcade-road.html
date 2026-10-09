@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Neon Arcade Road</title>
+<style>
+  :root { --bg:#05060f; --fg:#e8ecff; --accent:#64d7ff; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { background:var(--bg); color:var(--fg); font-family:"Segoe UI",system-ui,sans-serif; }
+  #gl { position:fixed; inset:0; width:100%; height:100%; display:block; }
+  #scroll { height:1200vh; }   /* scroll distance drives the walk down the road */
+  .title { position:fixed; top:20px; left:0; right:0; text-align:center; pointer-events:none;
+    font:700 14px monospace; letter-spacing:.4em; color:var(--accent); text-shadow:0 0 10px var(--accent); }
+  #info { position:fixed; top:48px; left:0; right:0; text-align:center; pointer-events:none;
+    font:600 22px monospace; letter-spacing:.15em; transition:color .4s; }
+  .hud { position:fixed; left:0; right:0; bottom:24px; display:flex; justify-content:center;
+    gap:10px; flex-wrap:wrap; padding:0 16px; }
+  .hud button { background:rgba(10,14,40,.7); color:var(--fg); border:1px solid rgba(120,160,255,.35);
+    padding:10px 16px; border-radius:8px; font:600 13px/1 monospace; letter-spacing:.12em; cursor:pointer; }
+  .hud button.on { border-color:currentColor; box-shadow:0 0 12px currentColor; }
+  .hint { position:fixed; bottom:76px; left:0; right:0; text-align:center; font:12px monospace;
+    opacity:.6; pointer-events:none; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div id="scroll"></div>
+<div class="title">NEON ARCADE ROAD</div>
+<div id="info"></div>
+<div class="hint">SCROLL or ↑↓ TO WALK · ←→ CHANGE AREA · CLICK A SCREEN</div>
+<div class="hud" id="hud"></div>
+
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+// ---- 4 areas along one road, cabinets on both sides ----
+const AREAS = [
+  { name:'AREA 1 · CYAN STREET',   c:'#64d7ff', games:['PONG','BREAKOUT','SNAKE','TETRA'] },
+  { name:'AREA 2 · PINK AVENUE',   c:'#ff4fd8', games:['INVADERS','RACER','MAZE','JUMPER'] },
+  { name:'AREA 3 · GOLD BLVD',     c:'#ffd84f', games:['ASTEROIDS','SHOOTER','PUZZLE','RHYTHM'] },
+  { name:'AREA 4 · GREEN ALLEY',   c:'#7dff6a', games:['GOLF','BOXING','DRIFT','FINAL'] },
+];
+const CAB_X = 3.2;     // distance of cabinets from road center
+const CAB_GAP = 5;     // spacing along the road
+const AREA_LEN = 28;   // length of each area
+const ROAD_LEN = AREAS.length * AREA_LEN + 10;
+
+const canvas = document.getElementById('gl');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#05060f');
+scene.fog = new THREE.Fog('#05060f', 8, 45);
+const camera = new THREE.PerspectiveCamera(62, 1, 0.1, 200);
+scene.add(new THREE.HemisphereLight('#6070ff', '#100820', 0.5));
+
+// Road + sidewalks
+const road = new THREE.Mesh(new THREE.PlaneGeometry(5, ROAD_LEN + 40),
+  new THREE.MeshStandardMaterial({ color:'#0b0c18', roughness:.2, metalness:.7 }));
+road.rotation.x = -Math.PI/2; road.position.z = -ROAD_LEN/2 + 10; scene.add(road);
+const ground = new THREE.Mesh(new THREE.PlaneGeometry(60, ROAD_LEN + 40),
+  new THREE.MeshStandardMaterial({ color:'#07081a', roughness:.6 }));
+ground.rotation.x = -Math.PI/2; ground.position.set(0, -0.01, road.position.z); scene.add(ground);
+// lane dashes + edge lines
+const lineMat = new THREE.MeshBasicMaterial({ color:'#8090ff' });
+for (let z = 10; z > -ROAD_LEN - 20; z -= 3) {
+  const d = new THREE.Mesh(new THREE.PlaneGeometry(0.12, 1.4), lineMat);
+  d.rotation.x = -Math.PI/2; d.position.set(0, 0.01, z); scene.add(d);
+}
+[-2.5, 2.5].forEach((x) => {
+  const e = new THREE.Mesh(new THREE.PlaneGeometry(0.06, ROAD_LEN + 40), lineMat);
+  e.rotation.x = -Math.PI/2; e.position.set(x, 0.01, road.position.z); scene.add(e);
+});
+
+// Background buildings (simple neon-edged blocks)
+const bMat = new THREE.MeshStandardMaterial({ color:'#0c0e22', roughness:.8 });
+for (let z = 0; z > -ROAD_LEN - 20; z -= 4) {
+  [-1, 1].forEach((s) => {
+    const h = 4 + Math.random() * 14, w = 3 + Math.random() * 3;
+    const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, 3.5), bMat);
+    b.position.set(s * (9 + Math.random() * 4), h/2, z); scene.add(b);
+    const area = AREAS[Math.min(AREAS.length-1, Math.floor(-z / AREA_LEN))];
+    const edge = new THREE.LineSegments(new THREE.EdgesGeometry(b.geometry),
+      new THREE.LineBasicMaterial({ color: area.c, transparent:true, opacity:.35 }));
+    edge.position.copy(b.position); scene.add(edge);
+  });
+}
+
+// ---- Cabinet ----
+function textTex(lines, color, w=256, h=192) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const g = c.getContext('2d'); g.fillStyle = '#000'; g.fillRect(0,0,w,h);
+  g.strokeStyle = color; g.globalAlpha = .25;
+  for (let y=0; y<h; y+=4) { g.beginPath(); g.moveTo(0,y); g.lineTo(w,y); g.stroke(); }
+  g.globalAlpha = 1; g.fillStyle = color; g.textAlign = 'center';
+  lines.forEach(([txt, size, y]) => { g.font = `bold ${size}px monospace`; g.fillText(txt, w/2, y); });
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+
+const clickable = [];
+function makeCabinet(title, color) {
+  const grp = new THREE.Group();
+  const body = new THREE.MeshStandardMaterial({ color:'#15182e', roughness:.5, metalness:.4 });
+  const neon = new THREE.MeshBasicMaterial({ color: new THREE.Color(color).multiplyScalar(2) });
+  const box = (w,h,d,x,y,z,m=body) => { const b = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), m); b.position.set(x,y,z); grp.add(b); };
+  box(1.6, 2.1, 1.0, 0, 1.05, 0);
+  box(1.6, 0.12, 0.6, 0, 1.0, 0.75);
+  box(1.62, 0.04, 1.02, 0, 2.1, 0, neon);
+  box(0.04, 2.1, 1.02, -0.81, 1.05, 0, neon);
+  box(0.04, 2.1, 1.02,  0.81, 1.05, 0, neon);
+  box(1.5, 0.3, 0.05, 0, 2.35, 0.45, neon);
+  const scr = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 0.98),
+    new THREE.MeshBasicMaterial({ map: textTex([[title,30,90],['INSERT COIN',14,130]], color) }));
+  scr.position.set(0, 1.55, 0.51); grp.add(scr);
+  const light = new THREE.PointLight(color, 6, 6); light.position.set(0, 1.5, 1.4); grp.add(light);
+  scr.userData = { title, color }; clickable.push(scr);
+  return grp;
+}
+
+// Build areas: entrance gate + cabinets alternating left/right, angled toward the road
+AREAS.forEach((a, i) => {
+  a.z0 = -i * AREA_LEN;
+  // gate arch
+  const gc = new THREE.MeshBasicMaterial({ color: new THREE.Color(a.c).multiplyScalar(2) });
+  [-3, 3].forEach((x) => { const p = new THREE.Mesh(new THREE.BoxGeometry(0.2, 5, 0.2), gc); p.position.set(x, 2.5, a.z0 - 2); scene.add(p); });
+  const top = new THREE.Mesh(new THREE.BoxGeometry(6.2, 0.2, 0.2), gc); top.position.set(0, 5, a.z0 - 2); scene.add(top);
+  const sign = new THREE.Mesh(new THREE.PlaneGeometry(5.6, 0.9),
+    new THREE.MeshBasicMaterial({ map: textTex([[a.name, 34, 60]], a.c, 512, 90) }));
+  sign.position.set(0, 5.6, a.z0 - 2); scene.add(sign);
+
+  a.games.forEach((g, j) => {
+    const side = j % 2 === 0 ? -1 : 1;
+    const z = a.z0 - 7 - j * CAB_GAP;
+    const cab = makeCabinet(g, a.c);
+    cab.position.set(side * CAB_X, 0, z);
+    cab.rotation.y = -side * (Math.PI/2 - 0.5);   // face the road, angled toward the walker
+    scene.add(cab);
+  });
+});
+
+// Post-processing glow
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+composer.addPass(new UnrealBloomPass(new THREE.Vector2(1,1), 0.9, 0.5, 0.7));
+composer.addPass(new OutputPass());
+
+// ---- Walking: scroll position -> z along the road ----
+const START_Z = 6, END_Z = -(AREAS.length * AREA_LEN) + 2;
+const scrollMax = () => document.documentElement.scrollHeight - innerHeight;
+let camZ = START_Z, focus = null;
+const camPos = new THREE.Vector3(0, 1.7, START_Z), camLook = new THREE.Vector3(0, 1.6, START_Z - 5);
+
+const hud = document.getElementById('hud'), info = document.getElementById('info');
+AREAS.forEach((a, i) => {
+  const b = document.createElement('button'); b.textContent = 'AREA ' + (i+1); b.style.color = a.c;
+  b.onclick = () => { focus = null; scrollTo({ top: scrollMax() * (i / AREAS.length) + 1, behavior:'smooth' }); };
+  hud.appendChild(b);
+});
+const back = document.createElement('button'); back.textContent = '◀ BACK'; back.style.display = 'none';
+back.onclick = () => { focus = null; back.style.display = 'none'; };
+hud.appendChild(back);
+const currentArea = () => Math.max(0, Math.min(AREAS.length - 1, Math.floor((START_Z - camZ) / AREA_LEN)));
+const goArea = (i) => scrollTo({ top: scrollMax() * (i / AREAS.length) + 1, behavior:'smooth' });
+addEventListener('keydown', (e) => {
+  const step = scrollMax() / (AREAS.length * AREA_LEN) * 3;   // ~3 units of road per press
+  if (e.key === 'Escape') back.onclick();
+  else if (e.key === 'ArrowUp')    { e.preventDefault(); scrollBy({ top:  step, behavior:'smooth' }); }
+  else if (e.key === 'ArrowDown')  { e.preventDefault(); scrollBy({ top: -step, behavior:'smooth' }); }
+  else if (e.key === 'ArrowRight') { e.preventDefault(); goArea(Math.min(AREAS.length - 1, currentArea() + 1)); }
+  else if (e.key === 'ArrowLeft')  { e.preventDefault(); goArea(Math.max(0, currentArea() - 1)); }
+});
+addEventListener('scroll', () => { if (focus) back.onclick(); });
+
+canvas.addEventListener('click', (e) => {
+  const ray = new THREE.Raycaster();
+  ray.setFromCamera(new THREE.Vector2(e.clientX/innerWidth*2-1, -(e.clientY/innerHeight)*2+1), camera);
+  const hit = ray.intersectObjects(clickable)[0];
+  if (hit) { focus = hit.object; back.style.display = ''; }
+});
+
+function resize() {
+  renderer.setSize(innerWidth, innerHeight, false); composer.setSize(innerWidth, innerHeight);
+  camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize); resize();
+
+const clock = new THREE.Clock(), tmp = new THREE.Vector3(), q = new THREE.Quaternion();
+renderer.setAnimationLoop(() => {
+  const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
+  const p = scrollMax() > 0 ? scrollY / scrollMax() : 0;
+  const targetZ = START_Z + (END_Z - START_Z) * p;
+  camZ += (targetZ - camZ) * (1 - Math.exp(-dt * 4));
+  const k = 1 - Math.exp(-dt * 3);
+
+  if (focus) {
+    focus.getWorldPosition(tmp);
+    const n = new THREE.Vector3(0,0,1).applyQuaternion(focus.getWorldQuaternion(q));
+    camPos.lerp(tmp.clone().addScaledVector(n, 2.0), k);
+    camLook.lerp(tmp, k);
+  } else {
+    camPos.lerp(new THREE.Vector3(Math.sin(t*0.5)*0.15, 1.7 + Math.sin(camZ*1.5)*0.03, camZ), k * 2);
+    camLook.lerp(new THREE.Vector3(Math.sin(t*0.3)*0.4, 1.5, camZ - 6), k * 2);
+  }
+  camera.position.copy(camPos); camera.lookAt(camLook);
+
+  // HUD: current area
+  const ai = Math.max(0, Math.min(AREAS.length - 1, Math.floor((START_Z - camZ) / AREA_LEN)));
+  const label = focus ? focus.userData.title : AREAS[ai].name;
+  if (info.textContent !== label) { info.textContent = label; info.style.color = focus ? focus.userData.color : AREAS[ai].c; }
+  [...hud.children].forEach((b, i) => b.classList.toggle('on', i === ai));
+  composer.render();
+});
+</script>
+</body>
+</html>
