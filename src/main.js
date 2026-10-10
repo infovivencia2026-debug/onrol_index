@@ -1008,8 +1008,8 @@ async function start() {
     film.uniforms.time.value = t % 100; film.uniforms.ca.value = tier === 'low' ? 0 : caBase + fovKick * .004;
 
     const atStart = targetU <= STOPS[0] + .001, atEnd = targetU >= .999;
-    $('upBtn').disabled = $('mUp').disabled = $('homeBtn').disabled = atStart;
-    $('downBtn').disabled = $('mDown').disabled = atEnd;
+    $('downBtn').disabled = $('mDown').disabled = $('homeBtn').disabled = atStart;
+    $('upBtn').disabled = $('mUp').disabled = atEnd;
     $('head').classList.toggle('gone', !!focus || currentU > STOPS[0] + .03);
     $('endnav').classList.toggle('on', currentU > .94 && !focus);
 
