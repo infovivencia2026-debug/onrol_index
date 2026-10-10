@@ -569,7 +569,7 @@ async function start() {
     // home stands further back so the USP posters on both walls are in view
     // home stands further back so the USP posters are in view; on phones far enough to fit [poster][ONROL][poster]
     // desktop: stand just far enough back that the outer posters (z 16.6, |x| ≈ 6.5) fit the view width
-    const homeD = camera.aspect > 1 ? Math.max(d + 3, 3.4 + 6.9 / (Math.tan(hf) * .74)) : d + 3;
+    const homeD = camera.aspect > 1 ? Math.max(d + 3, 3.4 + 6.9 / (Math.tan(hf) * .86)) : d + 3;
     // the video stop must sit past the ONROL card (z 20), so cap its distance at 10.5
     STOPS = [...SCREEN_U.map((u, i) => clampU(u - (i === 0 ? homeD : i === 1 ? Math.min(d * .9, 10.5) : (camera.aspect < 1 && i === 4 ? Math.min(d, 7) : camera.aspect < 1 && i === 5 ? 7.6 : d)) / PATH_LEN)), 1];   // LAUNCH must stop past the corner
   }
@@ -1044,7 +1044,7 @@ async function start() {
 
     fovKick *= Math.exp(-dt * 3);
     const speed = Math.abs(currentU - prevU) / Math.max(dt, 1e-3); prevU = currentU;
-    fovNow += (baseFov + Math.min(speed * 30, 7) + fovKick * 10 - fovNow) * (1 - Math.exp(-dt * 4));
+    fovNow += (baseFov * (1 - calm * (si >= 2 && si <= 5 ? .14 : .05)) + Math.min(speed * 30, 7) + fovKick * 10 - fovNow) * (1 - Math.exp(-dt * 4));
     camera.fov = fovNow; camera.updateProjectionMatrix();
     film.uniforms.time.value = t % 100; film.uniforms.ca.value = tier === 'low' ? 0 : caBase + fovKick * .004;
 

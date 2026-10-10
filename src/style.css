@@ -452,3 +452,12 @@ body { font-feature-settings:'ss01','cv11'; }
 .endnav h3, #menu h3 { font-weight:400 !important; }
 #plain h1, #plain h2 { font-weight:500 !important; } #plain b, #plain summary { font-weight:500 !important; }
 :root[data-theme="light"] .head { letter-spacing:-.03em !important; }
+
+/* home proof strip under the headline */
+.proofs { list-style:none; display:flex; justify-content:center; flex-wrap:wrap; gap:0; margin:4px auto 0; pointer-events:none;
+  font:400 12px var(--font-mono); letter-spacing:.06em; text-transform:uppercase; color:var(--dim); transition:opacity .35s; }
+.proofs li { padding:0 14px; border-left:1px solid var(--line); }
+.proofs li:first-child { border-left:0; }
+.proofs b { color:var(--fg); font-weight:500; margin-right:4px; }
+.head.gone + .proofs { opacity:0; }
+@media (max-width:760px) { .proofs { font-size:10px; } .proofs li { padding:2px 8px; } }
