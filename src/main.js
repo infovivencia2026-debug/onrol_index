@@ -573,10 +573,9 @@ async function start() {
   const joyEl = $('joy'), knob = joyEl.querySelector('.knob');
   function joyMove(e) {
     const r = joyEl.getBoundingClientRect(), R = r.width / 2 - 14;
-    let dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
-    const len = Math.hypot(dx, dy); if (len > R) { dx *= R / len; dy *= R / len; }
-    joy.x = dx / R; joy.y = -dy / R;
-    knob.style.transform = `translate(${dx}px, ${dy}px)`;
+    let dy = Math.max(-R, Math.min(R, e.clientY - (r.top + r.height / 2)));
+    joy.x = 0; joy.y = -dy / R;                     // vertical only: up = forward, down = back
+    knob.style.transform = `translate(0px, ${dy}px)`;
   }
   joyEl.addEventListener('pointerdown', (e) => {
     joyEl.setPointerCapture(e.pointerId); joy.active = true; joyEl.classList.add('active');

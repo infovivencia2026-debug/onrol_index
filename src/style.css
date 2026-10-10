@@ -382,3 +382,8 @@ html.plain .introCard { display:none; }
 /* headline centred */
 .bottom .head { text-align:center; margin-inline:auto; max-width:18ch; }
 @media (max-width:760px) { .bottom .head { max-width:100%; } }
+
+/* joystick is a vertical slider: up = forward, down = back */
+.joy::after { display:none; }
+.joy { border-radius:999px; width:64px !important; height:120px !important; }
+@media (max-width:760px) { .joy { width:56px !important; height:104px !important; } }
