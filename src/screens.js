@@ -8,9 +8,9 @@ const FONT_MONO = '"JetBrains Mono", monospace';
 
 function palette(accent, light, frosted) {
   // frosted: the 3D glass behind the card does the blurring, so the painted panel is only a light tint
-  const panel = light ? (frosted ? 'rgba(248,242,235,.5)' : 'rgba(248,242,235,.96)') : (frosted ? 'rgba(6,4,3,.42)' : 'rgba(6,4,3,.94)');
+  const panel = light ? (frosted ? 'rgba(250,246,241,.72)' : 'rgba(250,246,241,.97)') : (frosted ? 'rgba(6,4,3,.42)' : 'rgba(6,4,3,.94)');
   return light
-    ? { dark:false, panel, grid:'rgba(0,0,0,.05)', word:'#1d130c', tag:'rgba(60,40,25,.75)', dim:'rgba(60,40,25,.45)', accent }
+    ? { dark:false, panel, grid:'rgba(0,0,0,.06)', word:'#120a05', tag:'rgba(40,25,15,.9)', dim:'rgba(40,25,15,.62)', accent }
     : { dark:true, panel,      grid:'rgba(255,255,255,.035)', word:'#ece3da', tag:'rgba(236,227,218,.62)', dim:'rgba(236,227,218,.35)', accent };
 }
 const alpha = (hex, a) => {
@@ -62,9 +62,11 @@ const NET = (() => {
 })();
 function neural(g, P, t) {
   const { nodes, edges } = NET;
-  edges.forEach(([i, j]) => {
+  edges.forEach(([i, j, ph]) => {
     const a = nodes[i], b = nodes[j];
-    g.strokeStyle = alpha(P.accent, .2); g.lineWidth = 1.5;
+    // links stay clearly visible and brighten as a signal passes through them
+    const live = .5 + .5 * Math.sin(t * 1.6 + ph * 6.28);
+    g.strokeStyle = alpha(P.accent, .38 + .32 * live); g.lineWidth = 2 + live;
     g.beginPath(); g.moveTo(a.x, a.y); g.lineTo(b.x, b.y); g.stroke();
   });
   edges.forEach(([i, j, ph]) => {                             // signals travelling along links
@@ -184,8 +186,9 @@ export function createPoster(usp, accentHex, light) {
   const canvas = document.createElement('canvas');
   canvas.width = POSTER_W; canvas.height = POSTER_H;
   const g = canvas.getContext('2d');
-  const poster = { canvas, accent: accentHex, light };
+  const poster = { canvas, accent: accentHex, light, usp };
   poster.draw = (t) => {
+    const usp = poster.usp;
     const P = palette(poster.accent, poster.light, false);
     g.clearRect(0, 0, POSTER_W, POSTER_H);
     g.fillStyle = P.panel; g.fillRect(10, 10, POSTER_W - 20, POSTER_H - 20);

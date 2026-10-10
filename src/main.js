@@ -61,12 +61,12 @@ async function start() {
 
   // ---------- levels: each has its own color ----------
   const ZONES = [
-    { key: 'intro',  name: 'Intro',  sub: 'The path / 4 steps',   dark: '#ff7d1a', light: '#c4560c' },
-    { key: 'learn',  name: 'Learn',  sub: 'Learn the AI tools',   dark: '#22d3c5', light: '#0d8a82' },
-    { key: 'build',  name: 'Build',  sub: 'Build real projects',  dark: '#8b7bff', light: '#5a46d6' },
-    { key: 'launch', name: 'Launch', sub: 'Launch to the web',    dark: '#ff4f7b', light: '#c81e4f' },
-    { key: 'earn',   name: 'Earn',   sub: 'Earn from the skill',  dark: '#ffc23d', light: '#9a6a00' },
-    { key: 'apply',  name: 'Apply',  sub: 'No payment to apply',  dark: '#ff7d1a', light: '#c4560c' },
+    { key: 'intro',  name: 'Intro',  sub: 'The path / 4 steps',   dark: '#ff7d1a', light: '#b03e00' },
+    { key: 'learn',  name: 'Learn',  sub: 'Learn the AI tools',   dark: '#22d3c5', light: '#00736b' },
+    { key: 'build',  name: 'Build',  sub: 'Build real projects',  dark: '#8b7bff', light: '#3d27c4' },
+    { key: 'launch', name: 'Launch', sub: 'Launch to the web',    dark: '#ff4f7b', light: '#b30a3a' },
+    { key: 'earn',   name: 'Earn',   sub: 'Earn from the skill',  dark: '#ffc23d', light: '#805300' },
+    { key: 'apply',  name: 'Apply',  sub: 'No payment to apply',  dark: '#ff7d1a', light: '#b03e00' },
   ];
   const zoneColor = (z, light) => new THREE.Color(light ? ZONES[z].light : ZONES[z].dark);
 
@@ -93,7 +93,7 @@ async function start() {
     const k = z + ':' + o;
     if (matCache.has(k)) return matCache.get(k);
     const m = new THREE.LineBasicMaterial({ color: zoneColor(z, false), transparent: true, opacity: o, blending: THREE.AdditiveBlending, depthWrite: false });
-    m.userData.zone = z; themed.lines.push(m); matCache.set(k, m); return m;
+    m.userData.zone = z; m.userData.baseO = o; themed.lines.push(m); matCache.set(k, m); return m;
   }
   // batch many segments into one LineSegments per (parent, zone, opacity) for performance
   const batches = new Map();
@@ -326,14 +326,24 @@ async function start() {
     poly(segA, [V(side * W, 3.4, z), m.position.clone().add(V(0, 1.25, 0))], 0, .35);
     poly(segA, [V(side * W, .6, z), m.position.clone().add(V(0, -1.25, 0))], 0, .35);
     m.userData = { art, tex, zone: 0, lastDraw: -1 };
+    m.userData.desk = { pos: m.position.clone(), quat: m.quaternion.clone() };
     posters.push(m); allScreens.push(m);
+  }
+  // phones: home reads  [poster] [ONROL] [poster]  — two posters stand beside the screen, facing you
+  let portraitHome = false;
+  function layoutPosters() {
+    portraitHome = camera.aspect < 1;
+    posters.forEach((m, i) => {
+      if (!portraitHome) { m.position.copy(m.userData.desk.pos); m.quaternion.copy(m.userData.desk.quat); m.scale.setScalar(1); m.visible = true; return; }
+      m.visible = false;                         // phones: the HTML trio shows the USPs
+    });
   }
   makePoster(USPS[0], -1, 17.2); makePoster(USPS[1], 1, 17.2);
   makePoster(USPS[2], -1, 14.0); makePoster(USPS[3], 1, 14.0);
   flushLines();
 
   const X = V(1, 0, 0), Y = V(0, 1, 0), Z = V(0, 0, 1);
-  makeScreen(segA, V(0, 2.1, 10), Z, Y, 'intro', 0);
+  const introScreen = makeScreen(segA, V(0, 2.1, 10), Z, Y, 'intro', 0);
   makeScreen(segA, V(0, 2.1, -4), Z, Y, 'learn', 1);
   rackRow(segA, 1, V(0, 0, -7), V(0, 0, -1), X);
   makeScreen(segA, V(0, 2.1, -32), Z, Y, 'build', 2);
@@ -393,8 +403,9 @@ async function start() {
     const hf = Math.atan(Math.tan(THREE.MathUtils.degToRad(baseFov) / 2) * camera.aspect);
     const d = THREE.MathUtils.clamp(3.9 / Math.tan(hf), 6.5, 12);
     // home stands further back so the USP posters on both walls are in view
-    const homeExtra = camera.aspect > 1 ? 6.5 : 2.5;
-    STOPS = [...SCREEN_U.map((u, i) => clampU(u - (d + (i === 0 ? homeExtra : 0)) / PATH_LEN)), 1];
+    // home stands further back so the USP posters are in view; on phones far enough to fit [poster][ONROL][poster]
+    const homeD = camera.aspect > 1 ? d + 6.5 : d + 3;
+    STOPS = [...SCREEN_U.map((u, i) => clampU(u - (i === 0 ? homeD : d) / PATH_LEN)), 1];
   }
 
   // ---------- state ----------
@@ -537,27 +548,33 @@ async function start() {
 
   // ---------- theme ----------
   const DARK = { hemiSky: '#ffffff', hemiGround: '#120604', hemiI: .25, lightI: 14, ledMul: 2, faceO: 1, ca: .0011, bg: '#070403', body: '#120d0b', metal: .85, glossy: '#0b0705', refl: 0x2a1c14, satin: '#070302', satinO: .78, bloom: .8, vig: 1.35, grain: .022, exposure: 1, barMul: 1.4 };
-  const LIGHT = { hemiSky: '#ffffff', hemiGround: '#d9c9b8', hemiI: 1.6, lightI: 2.5, ledMul: 1, faceO: .45, ca: .0003, bg: '#efe6dc', body: '#d8cdc2', metal: .25, glossy: '#e4d9cd', refl: 0xcfc2b5, satin: '#efe6dc', satinO: .7, bloom: .22, vig: .35, grain: .012, exposure: 1.05, barMul: 1 };
+  const LIGHT = { hemiSky: '#ffffff', hemiGround: '#d9c9b8', hemiI: 1.5, lightI: 1.5, ledMul: 1, faceO: .95, ca: .0003, bg: '#efe6dc', body: '#cfc3b6', metal: .25, glossy: '#e4d9cd', refl: 0xcfc2b5, satin: '#efe6dc', satinO: .86, bloom: .18, vig: .1, grain: .01, exposure: 1, barMul: 1 };
   let T = DARK, caBase = .0011;
   function setTheme(light, save = true) {
     isLight = light; T = light ? LIGHT : DARK;
     const blend = light ? THREE.NormalBlending : THREE.AdditiveBlending;
     document.documentElement.dataset.theme = light ? 'light' : 'dark';
     document.querySelector('meta[name="theme-color"]').content = T.bg;
-    scene.background.set(T.bg);
-    themed.lines.forEach((m) => { m.color.copy(zoneColor(m.userData.zone, light)); m.blending = blend; m.needsUpdate = true; });
-    themed.dust.forEach((m) => { m.color.copy(zoneColor(m.userData.zone, light)); m.blending = blend; m.needsUpdate = true; });
-    themed.faces.forEach((m) => { m.blending = blend; m.opacity = T.faceO; m.needsUpdate = true; });
+    scene.background.set(T.bg); scene.fog.color.set(T.bg);   // snap — don't fade in from the other theme
+    themed.lines.forEach((m) => { m.color.copy(zoneColor(m.userData.zone, light)); m.blending = blend; m.opacity = light ? Math.min(1, m.userData.baseO * 2.8 + .12) : m.userData.baseO; m.needsUpdate = true; });
+    themed.dust.forEach((m) => { m.color.copy(zoneColor(m.userData.zone, light)); m.blending = blend; m.opacity = light ? .8 : .55; m.size = light ? .04 : .03; m.needsUpdate = true; });
+    themed.faces.forEach((m) => { m.blending = blend; m.opacity = T.faceO; m.color.setScalar(light ? .55 : 1); m.needsUpdate = true; });
     themed.leds.forEach((m) => m.color.copy(zoneColor(m.userData.zone, light)).multiplyScalar(T.ledMul));
     themed.lights.forEach((l) => { l.intensity = T.lightI; });
     themed.reflectors.forEach((r) => r.material.uniforms.color.value.setHex(T.refl));
     themed.satins.forEach((m) => { m.color.set(T.satin); m.opacity = T.satinO; });
     themed.glossy.forEach((m) => m.material.color.set(T.glossy));
-    themed.glass.forEach((m) => m.color.set(light ? '#f6efe8' : '#1a120d'));
+    themed.glass.forEach((m) => m.color.set('#1a120d'));
+    // light mode: solid cards (frosted glass picks up grey smudges on a light room)
+    allScreens.forEach((m) => { if (m.userData.glass) m.userData.glass.userData.off = light; if (m.userData.art.frosted !== undefined && m.userData.glass) m.userData.art.frosted = !light; });
+    themed.glossy.forEach((m) => { m.material.roughness = light ? .7 : .35; m.material.metalness = light ? 0 : .6; m.material.emissive.set(light ? '#d9ccbe' : '#000000'); m.material.emissiveIntensity = light ? .55 : 0; });
     rackBody.color.set(T.body); rackBody.metalness = T.metal;
+    scene.fog.density = light ? .022 : .04;            // light mode: see further down the corridor
     hemi.groundColor.set(T.hemiGround); hemi.intensity = T.hemiI;
     barMat.color.set(light ? '#d98a4e' : '#ffb070').multiplyScalar(T.barMul * (camera.aspect < 1 ? .6 : 1));
-    caBase = T.ca; bloom.strength = T.bloom; film.uniforms.vig.value = T.vig; film.uniforms.grain.value = T.grain;
+    caBase = T.ca; bloom.strength = T.bloom; bloom.enabled = !light && tier !== 'low';   // glow washes out dark text on light cards film.uniforms.vig.value = T.vig; film.uniforms.grain.value = T.grain;
+    // ACES greys out light colors, so light mode uses plain linear output to keep the cream background clean
+    renderer.toneMapping = light ? THREE.LinearToneMapping : THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = T.exposure;
     allScreens.forEach((m) => { const a = m.userData.art; a.light = light; a.accent = light ? ZONES[m.userData.zone].light : ZONES[m.userData.zone].dark; a.draw(clock.elapsedTime); m.userData.tex.needsUpdate = true; });
     $('themeBtn').textContent = $('mTheme').textContent = light ? 'Dark' : 'Light';
@@ -571,6 +588,7 @@ async function start() {
     renderer.setSize(innerWidth, innerHeight, false); composer.setSize(innerWidth, innerHeight);
     camera.aspect = innerWidth / innerHeight;
     baseFov = camera.aspect < 1 ? 68 : 58;
+    layoutPosters();
     camera.updateProjectionMatrix();
     computeStops();
   }
@@ -591,6 +609,22 @@ async function start() {
 
   const flash = $('flash');
   function pierce() { if (reducedMotion) return; flash.classList.remove('go'); void flash.offsetWidth; flash.classList.add('go'); fovKick = 1; }
+
+  // ---------- phone home trio ----------
+  const trio = $('homeTrio');
+  let trioFlip = 0;
+  function fillSide(el, u) {
+    el.querySelector('b').textContent = u.big[0] + u.big.slice(1).toLowerCase().replace('hr', 'hr');
+    el.querySelector('em').textContent = u.unit ? u.unit.toLowerCase() : '';
+    el.querySelector('p').textContent = u.sub.join(' ');
+  }
+  function swapTrio(flip) {
+    ['trioL', 'trioR'].forEach((id, i) => {
+      const el = $(id);
+      fillSide(el, USPS[i + flip * 2]);
+      el.classList.remove('swap'); void el.offsetWidth; el.classList.add('swap');   // replay the fade-in
+    });
+  }
 
   // ---------- frame loop ----------
   const tmp = V(0, 0, 0), q = new THREE.Quaternion(), camPos = V(0, 0, 0), camLook = V(0, 0, 0);
@@ -652,11 +686,19 @@ async function start() {
     screens.forEach((s) => {
       const local = s.mesh.worldToLocal(tmp.copy(camPos));
       s.mesh.material.opacity = local.z > 0 ? Math.min(1, local.z / 1.2) : 0;
-      const gl = s.mesh.userData.glass; if (gl) { gl.material.opacity = s.mesh.material.opacity; gl.visible = s.mesh.material.opacity > .35; }
+      const gl = s.mesh.userData.glass; if (gl) { gl.material.opacity = s.mesh.material.opacity; gl.visible = !gl.userData.off && s.mesh.material.opacity > .35; }
       const sd = Math.sign(local.z) || 1;
       if (sd !== s.side && Math.abs(local.x) < W && Math.abs(local.y) < W && !focus) pierce();
       s.side = sd;
     });
+    // phone home trio: hide the 3D intro screen behind it, fade the trio once you move on
+    const atHome = portraitHome && !focus && currentU < STOPS[0] + .02;
+    trio.classList.toggle('gone', !atHome);
+    introScreen.visible = !atHome;
+    if (atHome) {
+      const flip = Math.floor(t / 4) % 2;
+      if (flip !== trioFlip) { trioFlip = flip; swapTrio(flip); }
+    }
     if (!reducedMotion) allScreens.forEach((m) => {
       const u = m.userData;
       if (t - u.lastDraw < 1 / 30 || m.getWorldPosition(tmp).distanceTo(camPos) > 30) return;
@@ -707,6 +749,7 @@ async function start() {
     }
   }
 
+  if (params.has('debug')) window.__onrol = { scene, renderer, get T() { return T; }, get isLight() { return isLight; } };
   // ---------- boot ----------
   let savedView = null;
   try { savedView = localStorage.getItem('onrol-view'); } catch {}
