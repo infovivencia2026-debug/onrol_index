@@ -592,8 +592,8 @@ async function start() {
     if (plainOn || menuOpen || e.target.closest?.('button, a')) return;
     seen();
     if (e.key === 'Escape') focus = null;
-    else if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ' || e.key === 'ArrowRight') { e.preventDefault(); stepBy(1); }
-    else if (e.key === 'ArrowUp' || e.key === 'PageUp' || e.key === 'ArrowLeft') { e.preventDefault(); stepBy(-1); }
+    else if (e.key === 'ArrowUp' || e.key === 'PageDown' || e.key === ' ' || e.key === 'ArrowRight') { e.preventDefault(); stepBy(1); }
+    else if (e.key === 'ArrowDown' || e.key === 'PageUp' || e.key === 'ArrowLeft') { e.preventDefault(); stepBy(-1); }
     else if (e.key === 'Home') { e.preventDefault(); goStop(0); }
     else if (e.key === 'End') { e.preventDefault(); goStop(STOPS.length - 1); }
   });
@@ -640,8 +640,8 @@ async function start() {
   $('homeBtn').onclick = goHome;
   $('logoHome').onclick = (e) => { e.preventDefault(); goHome(); };
   $('mHome').onclick = () => { setMenu(false); goHome(); };
-  $('upBtn').onclick = $('mUp').onclick = () => stepBy(-1);
-  $('downBtn').onclick = $('mDown').onclick = () => stepBy(1);
+  $('upBtn').onclick = $('mUp').onclick = () => stepBy(1);
+  $('downBtn').onclick = $('mDown').onclick = () => stepBy(-1);
   $('hintText').textContent = coarse ? 'Swipe up to enter' : 'Scroll to enter';
   $('hintArrow').textContent = coarse ? '↑' : '↓';
   $('hint').style.setProperty('--nudge', coarse ? '-6px' : '6px');
