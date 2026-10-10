@@ -71,15 +71,18 @@ async function start() {
     { key: 'apply',  name: 'Apply',  sub: 'No payment to apply',  dark: '#ff8a3d', light: '#b03e00' },
   ];
   const zoneColor = (z, light) => new THREE.Color(light ? ZONES[z].light : ZONES[z].dark);
+  const ZONE_COL = [ZONES.map((z, i) => zoneColor(i, false)), ZONES.map((z, i) => zoneColor(i, true))];
+  const WHITE = new THREE.Color(1, 1, 1);
 
   const RACK_X = 2.6, RACK_W = 1.4, RACK_H = 3.4, RACK_D = 1.9, W = 3.6, CEIL = RACK_H + 0.6;
   const SHAFT_X = 26, TURN_Z = -42, SHAFT_BOTTOM = -30;   // compact: ~1.5s between levels
   const V = (x, y, z) => new THREE.Vector3(x, y, z);
 
   const canvas = $('gl');
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: tier !== 'low', powerPreference: 'high-performance' });
-  const maxDpr = { high: 2, mid: 1.5, low: 1 }[tier];
-  renderer.setPixelRatio(Math.min(devicePixelRatio, maxDpr));
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: tier === 'high' && devicePixelRatio < 1.5, powerPreference: 'high-performance', stencil: false });
+  const maxDpr = { high: 1.5, mid: 1.25, low: 1 }[tier];
+  let dpr = Math.min(devicePixelRatio, maxDpr);
+  renderer.setPixelRatio(dpr);
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   canvas.addEventListener('webglcontextlost', (e) => { e.preventDefault(); showFallback(); track('webgl_lost'); });
 
@@ -223,7 +226,7 @@ async function start() {
 
   // ---------- lighting + floors ----------
   const hemi = new THREE.HemisphereLight('#ffffff', '#120604', 0.25); scene.add(hemi);
-  [[0,3,6,0],[0,3,16,0],[0,3,30,0],[0,3,-10,1],[0,3,-24,2],[0,3,-36,2],[10,3,TURN_Z,3],[19,3,TURN_Z,3],[SHAFT_X,-12,TURN_Z,4],[SHAFT_X,-24,TURN_Z,5]].forEach(([x,y,z,zone]) => {
+  [[0,3,16,0],[0,3,-10,1],[0,3,-24,2],[0,3,-36,2],[10,3,TURN_Z,3],[19,3,TURN_Z,3],[SHAFT_X,-12,TURN_Z,4],[SHAFT_X,-24,TURN_Z,5]].forEach(([x,y,z,zone]) => {
     const l = new THREE.PointLight(zoneColor(zone, false), 14, 14, 1.6); l.position.set(x, y, z); l.userData.zone = zone; scene.add(l); themed.lights.push(l);
   });
   function floorPlane(parent, w, l, pos, mirror = true) {
@@ -295,7 +298,7 @@ async function start() {
   const screens = [], allScreens = [];
   let isLight = document.documentElement.dataset.theme === 'light';
   function makeScreen(parent, pos, normal, up, key, zone, opts = {}) {
-    const frosted = tier !== 'low';
+    const frosted = false;   // transmission glass costs a full extra scene render — the opaque card reads just as well
     const art = createArt(key, isLight ? ZONES[zone].light : ZONES[zone].dark, isLight, frosted);
     const tex = new THREE.CanvasTexture(art.canvas); tex.colorSpace = THREE.SRGBColorSpace;
     tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
@@ -382,7 +385,7 @@ async function start() {
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
   const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), .8, .5, .97)   // high threshold: LEDs glow, text never does;
-  bloom.enabled = tier !== 'low';
+  bloom.enabled = tier === 'high';
   composer.addPass(bloom);
   const film = new ShaderPass({
     uniforms: { tDiffuse: { value: null }, time: { value: 0 }, ca: { value: .0011 }, vig: { value: 1.35 }, grain: { value: .022 } },
@@ -400,7 +403,6 @@ async function start() {
         gl_FragColor = vec4(max(col, 0.), 1.);
       }`,
   });
-  composer.addPass(film);
   composer.addPass(new OutputPass());
 
   // ---------- path ----------
@@ -412,6 +414,42 @@ async function start() {
   path.add(new THREE.CubicBezierCurve3(V(SHAFT_X - R2, H, TURN_Z), V(SHAFT_X - R2 * .45, H, TURN_Z), V(SHAFT_X, H - R2 * .45, TURN_Z), V(SHAFT_X, H - R2, TURN_Z)));
   path.add(new THREE.LineCurve3(V(SHAFT_X, H - R2, TURN_Z), V(SHAFT_X, SHAFT_BOTTOM + 7, TURN_Z)));
   path.updateArcLengths();
+
+  // ---------- 3D track line: the route drawn on the floor, coloured by level ----------
+  const TRACK_N = 900, trackPos = new Float32Array(TRACK_N * 3), trackCol = new Float32Array(TRACK_N * 3), trackBase = [];
+  const zoneOfPoint = (p) => p.x > SHAFT_X - 3 ? 4 : p.x > 2 ? 3 : p.z > 2 ? 0 : p.z > -18 ? 1 : 2;
+  for (let i = 0; i < TRACK_N; i++) {
+    const p = path.getPointAt(i / (TRACK_N - 1));
+    const onFloor = p.y > H - .3;                                  // corridors: on the floor; shaft: hangs down the centre
+    trackPos.set([p.x, onFloor ? .025 : p.y - 1.2, p.z], i * 3);
+    trackBase.push(zoneColor(zoneOfPoint(p), false));
+  }
+  const trackGeo = new THREE.BufferGeometry();
+  trackGeo.setAttribute('position', new THREE.BufferAttribute(trackPos, 3));
+  trackGeo.setAttribute('color', new THREE.BufferAttribute(trackCol, 3));
+  const trackMat = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
+  scene.add(new THREE.Line(trackGeo, trackMat));
+  const trackDot = new THREE.Mesh(new THREE.SphereGeometry(.07, 16, 12), new THREE.MeshBasicMaterial({ color: '#ffffff' }));
+  scene.add(trackDot);
+  let trackLastU = -1;
+  function updateTrack(u, t) {
+    const lightMode = document.documentElement.dataset.theme === 'light';
+    if (Math.abs(u - trackLastU) > .0005 || lightMode !== updateTrack.l) {
+      trackLastU = u; updateTrack.l = lightMode;
+      for (let i = 0; i < TRACK_N; i++) {
+        const k = i / (TRACK_N - 1), c = trackBase[i];
+        const lit = k <= u ? .95 : .28 * Math.max(.25, 1 - (k - u) * 4);   // travelled: bright · ahead: fades out
+        const m = lightMode ? lit * .9 : lit;
+        trackCol[i * 3] = c.r * m; trackCol[i * 3 + 1] = c.g * m; trackCol[i * 3 + 2] = c.b * m;
+      }
+      trackGeo.attributes.color.needsUpdate = true;
+      trackMat.blending = lightMode ? THREE.NormalBlending : THREE.AdditiveBlending; trackMat.needsUpdate = true;
+    }
+    const idx = Math.round(u * (TRACK_N - 1));
+    trackDot.position.set(trackPos[idx * 3], trackPos[idx * 3 + 1], trackPos[idx * 3 + 2]);
+    trackDot.material.color.copy(trackBase[idx]).lerp(WHITE, .5);
+    trackDot.scale.setScalar(1 + Math.sin(t * 4) * .2);
+  }
   const PATH_LEN = path.getLength();
   const clampU = (v) => THREE.MathUtils.clamp(v, 0, 1);
   function nearestU(p) {
@@ -635,11 +673,10 @@ async function start() {
     allScreens.forEach((m) => { if (m.userData.glass) m.userData.glass.userData.off = light; if (m.userData.art.frosted !== undefined && m.userData.glass) m.userData.art.frosted = !light; });
     themed.glossy.forEach((m) => { m.material.roughness = light ? .7 : .35; m.material.metalness = light ? 0 : .6; m.material.emissive.set(light ? '#d9ccbe' : '#000000'); m.material.emissiveIntensity = light ? .55 : 0; });
     rackBody.color.set(T.body); rackBody.metalness = T.metal;
-    themed.propBodies?.forEach((m) => { m.color.set(light ? '#d6cdc3' : '#1a1c24'); m.metalness = light ? .1 : .35; });
     scene.fog.density = light ? .022 : .04;            // light mode: see further down the corridor
     hemi.groundColor.set(T.hemiGround); hemi.intensity = T.hemiI;
     barMat.color.set(light ? '#d98a4e' : '#ffb070').multiplyScalar(T.barMul * (camera.aspect < 1 ? .6 : 1));
-    caBase = T.ca; bloom.strength = T.bloom; bloom.enabled = !light && tier !== 'low';   // glow washes out dark text on light cards film.uniforms.vig.value = T.vig; film.uniforms.grain.value = T.grain;
+    caBase = T.ca; bloom.strength = T.bloom; bloom.enabled = !light && tier === 'high';   // glow washes out dark text on light cards
     // ACES greys out light colors, so light mode uses plain linear output to keep the cream background clean
     renderer.toneMapping = light ? THREE.LinearToneMapping : THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = T.exposure;
@@ -744,7 +781,7 @@ async function start() {
   const trio = $('homeTrio');
   let trioFlip = 0;
   function fillSide(el, u) {
-    el.querySelector('b').textContent = u.big[0] + u.big.slice(1).toLowerCase().replace('hr', 'hr');
+    el.querySelector('b').textContent = u.big[0] + u.big.slice(1).toLowerCase();
     el.querySelector('em').textContent = u.unit ? u.unit.toLowerCase() : '';
     el.querySelector('p').textContent = u.sub.join(' ');
   }
@@ -770,7 +807,7 @@ async function start() {
   }
   snapCamera();
   const fogDark = new THREE.Color(), fogTarget = new THREE.Color(), accent = new THREE.Color();
-  let frameNo = 0, lastZone = -1, roll = 0, prevU = 0, velU = 0, fovNow = baseFov, fpsT = 0, fpsN = 0, fpsChecked = OG;
+  let perfT = 0, perfN = 0, lastTracked = -1, frameNo = 0, lastZone = -1, roll = 0, prevU = 0, velU = 0, fovNow = baseFov, fpsT = 0, fpsN = 0, fpsChecked = OG;
 
   function frame() {
     const dt = Math.min(clock.getDelta(), .05), t = clock.elapsedTime;
@@ -822,7 +859,6 @@ async function start() {
       s.side = sd;
     });
     // phone home trio: hide the 3D intro screen behind it, fade the trio once you move on
-    if (!reducedMotion) animators.forEach((f) => f(t));
     syncIntroVideo();
     const atHome = portraitHome && !focus && currentU < STOPS[0] + .02;
     trio.classList.toggle('gone', !atHome);
@@ -837,7 +873,7 @@ async function start() {
     }
     if (!reducedMotion) allScreens.forEach((m) => {
       const u = m.userData;
-      if (t - u.lastDraw < 1 / 30 || m.getWorldPosition(tmp).distanceTo(camPos) > 30) return;
+      if (t - u.lastDraw < 1 / 20 || m.getWorldPosition(tmp).distanceTo(camPos) > 16) return;
       u.lastDraw = t; u.art.draw(t); u.tex.needsUpdate = true;
     });
 
@@ -852,9 +888,9 @@ async function start() {
       $('metaR').textContent = String(STOP_STEP[si]).padStart(2, '0') + '—04';
       const slug = SLUGS[si] ? '#' + SLUGS[si] : location.pathname + location.search;
       if (started && location.hash !== '#' + SLUGS[si]) history.replaceState(null, '', slug);
-      if (started) track('step_view', { step: STOP_NAMES[si].toLowerCase() });
+      if (started && si !== lastTracked) { lastTracked = si; track('step_view', { step: STOP_NAMES[si].toLowerCase() }); }
     }
-    accent.copy(zoneColor(z, isLight));
+    accent.copy(ZONE_COL[+isLight][z]);
     fogTarget.set(T.bg).lerp(accent, isLight ? .06 : .05);
     scene.fog.color.lerp(fogTarget, 1 - Math.exp(-dt * 2));
     scene.background.copy(scene.fog.color);
@@ -874,18 +910,18 @@ async function start() {
     // mid/low devices: when nothing is moving, render at ~30fps to save battery
     frameNo++;
     const idle = Math.abs(velU) < 1e-4 && !joy.active && !auto && !focus && fovKick < .01;
-    if (!(tier !== 'high' && idle && frameNo % 2)) composer.render();
+    updateTrack(currentU, t);
+    if (!(idle && frameNo % 2)) { if (bloom.enabled) composer.render(); else renderer.render(scene, camera); }
 
-    // frame-rate watchdog: step quality down once if the device is struggling
-    if (!fpsChecked && started) {
-      fpsT += dt; fpsN++;
-      if (fpsT > 2.5) {
-        const fps = fpsN / fpsT; fpsChecked = true;
-        if (fps < 40 && tier === 'high') { tier = 'mid'; dropReflections(); renderer.setPixelRatio(Math.min(devicePixelRatio, 1.5)); resize(); track('quality_down', { to: 'mid', fps: Math.round(fps) }); }
-        else if (fps < 30 && tier === 'mid') { tier = 'low'; bloom.enabled = false; renderer.setPixelRatio(1); resize(); track('quality_down', { to: 'low', fps: Math.round(fps) }); }
-        if (fps < 40 && tier !== 'low') { fpsChecked = false; fpsT = fpsN = 0; }   // re-check after one downgrade
-      }
+    // adaptive resolution: keep motion smooth on any PC
+    perfT += dt; perfN++;
+    if (perfT > 1.5) {
+      const fps = perfN / perfT; perfT = perfN = 0;
+      const next = fps < 48 ? Math.max(.6, dpr - .15) : fps > 58 && !idle ? Math.min(Math.min(devicePixelRatio, maxDpr), dpr + .1) : dpr;
+      if (Math.abs(next - dpr) > .01) { dpr = next; renderer.setPixelRatio(dpr); composer.setPixelRatio?.(dpr); resize(); }
+      if (fps < 40 && bloom.enabled) { bloom.enabled = false; track('quality_down', { to: 'no-bloom', fps: Math.round(fps) }); }
     }
+
   }
 
   if (params.has('debug')) window.__onrol = { scene, renderer, get T() { return T; }, get isLight() { return isLight; } };

@@ -8,7 +8,7 @@ const FONT_MONO = '"JetBrains Mono", monospace';
 
 function palette(accent, light, frosted) {
   // frosted: the 3D glass behind the card does the blurring, so the painted panel is only a light tint
-  const panel = light ? (frosted ? 'rgba(250,246,241,.72)' : 'rgba(250,246,241,.97)') : (frosted ? 'rgba(16,18,26,.72)' : 'rgba(16,18,26,.95)');
+  const panel = light ? (frosted ? 'rgba(250,246,241,.72)' : 'rgba(250,246,241,.97)') : (frosted ? 'rgba(16,18,26,.72)' : 'rgb(16,18,26)');
   return light
     ? { dark:false, panel, grid:'rgba(0,0,0,.06)', word:'#120a05', tag:'rgba(40,25,15,.9)', dim:'rgba(40,25,15,.62)', accent }
     : { dark:true, panel,      grid:'rgba(255,255,255,.035)', word:'#fbf7f2', tag:'rgba(245,238,230,.86)', dim:'rgba(245,238,230,.6)', accent };
@@ -29,7 +29,7 @@ function frame(g, P, kicker, index) {
   // modern glass card: rounded, soft gradient, hairline border, small accent dot
   rounded(g, 14, 14, 996, 572, 36);
   const bg = g.createLinearGradient(0, 14, 0, 586);
-  bg.addColorStop(0, P.panel); bg.addColorStop(1, P.dark ? 'rgba(10,11,16,.9)' : 'rgba(255,255,255,.96)');
+  bg.addColorStop(0, P.panel); bg.addColorStop(1, P.dark ? 'rgb(10,11,16)' : 'rgb(255,255,255)');
   g.fillStyle = bg; g.fill();
   g.strokeStyle = P.dark ? 'rgba(255,255,255,.14)' : 'rgba(0,0,0,.1)'; g.lineWidth = 2; g.stroke();
   g.fillStyle = P.accent; g.beginPath(); g.arc(60, 63, 7, 0, 7); g.fill();
