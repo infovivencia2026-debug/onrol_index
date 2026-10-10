@@ -275,3 +275,8 @@ html.og .joy, html.og .stepper, html.og #hint, html.og .tr .row, html.og .foot .
   .btn:hover, .foot a:hover, .mbar a:hover, #plain .cta:hover, .endnav a:hover, #menu a:hover { transform:none !important; }
   .foot a::after, .mbar a::after, #plain .cta::after { display:none; }
 }
+
+/* soft fade behind the headline block so text never fights the floor lines */
+.shade { left:0; right:0; bottom:0; height:46vh;
+  background:linear-gradient(to top, color-mix(in srgb, var(--bg) 88%, transparent) 0%, color-mix(in srgb, var(--bg) 55%, transparent) 45%, transparent 100%); }
+html.plain .shade { display:none; }

@@ -175,12 +175,54 @@ export function createArt(key, accentHex, light, frosted = false) {
 }
 
 // ---------- home posters (USPs) ----------
+const MOTIFS = {
+  onair(g, P, t, cx, cy) {                                    // LIVE: broadcasting signal
+    for (let i = 0; i < 4; i++) {
+      const k = ((t * .6 + i / 4) % 1), r = 30 + k * 130;
+      g.strokeStyle = alpha(P.accent, .75 * (1 - k)); g.lineWidth = 3;
+      g.beginPath(); g.arc(cx, cy, r, 0, 7); g.stroke();
+    }
+    g.fillStyle = alpha(P.accent, .25 + .2 * Math.sin(t * 4)); g.beginPath(); g.arc(cx, cy, 44, 0, 7); g.fill();
+    g.fillStyle = P.accent; g.beginPath(); g.arc(cx, cy, 26, 0, 7); g.fill();
+    g.font = `700 18px ${FONT_MONO}`; g.textAlign = 'center'; g.fillStyle = P.accent; g.fillText('\u25CF ON AIR', cx, cy + 150);
+  },
+  clock(g, P, t, cx, cy) {                                    // 1 HR: a clock face with a sweeping hand
+    const R = 120;
+    g.strokeStyle = alpha(P.accent, .35); g.lineWidth = 2; g.beginPath(); g.arc(cx, cy, R, 0, 7); g.stroke();
+    for (let i = 0; i < 12; i++) {
+      const a = i / 12 * Math.PI * 2;
+      g.strokeStyle = alpha(P.accent, i % 3 ? .35 : .9); g.lineWidth = i % 3 ? 2 : 4;
+      g.beginPath(); g.moveTo(cx + Math.sin(a) * (R - 16), cy - Math.cos(a) * (R - 16)); g.lineTo(cx + Math.sin(a) * R, cy - Math.cos(a) * R); g.stroke();
+    }
+    const sweep = (t * .5) % (Math.PI * 2);
+    g.fillStyle = alpha(P.accent, .22); g.beginPath(); g.moveTo(cx, cy); g.arc(cx, cy, R - 22, -Math.PI / 2, -Math.PI / 2 + sweep); g.closePath(); g.fill();
+    g.strokeStyle = P.accent; g.lineWidth = 4; g.beginPath(); g.moveTo(cx, cy); g.lineTo(cx + Math.sin(sweep) * (R - 26), cy - Math.cos(sweep) * (R - 26)); g.stroke();
+    g.fillStyle = P.accent; g.beginPath(); g.arc(cx, cy, 7, 0, 7); g.fill();
+  },
+  ring(g, P, t, cx, cy) {                                     // 70%: progress ring filling to 70
+    const R = 115, p = Math.min(.7, (t % 6) / 3);
+    g.strokeStyle = alpha(P.accent, .15); g.lineWidth = 18; g.beginPath(); g.arc(cx, cy, R, 0, 7); g.stroke();
+    g.strokeStyle = P.accent; g.lineCap = 'round'; g.beginPath(); g.arc(cx, cy, R, -Math.PI / 2, -Math.PI / 2 + p * Math.PI * 2); g.stroke(); g.lineCap = 'butt';
+    g.font = `800 46px ${FONT_UI}`; g.textAlign = 'center'; g.fillStyle = P.accent; g.fillText(Math.round(p * 100) + '%', cx, cy + 16);
+    g.font = `600 15px ${FONT_MONO}`; g.fillStyle = P.dim; g.fillText('HANDS-ON', cx, cy + 44);
+  },
+  deploy(g, P, t, cx, cy) {                                   // SHIP: weekly deploys ticking up
+    const n = 6, w = 40, gap = 14, x0 = cx - (n * w + (n - 1) * gap) / 2, base = cy + 110;
+    const done = Math.floor((t * .9) % (n + 2));
+    for (let i = 0; i < n; i++) {
+      const h = 50 + i * 30, x = x0 + i * (w + gap), on = i < done;
+      g.fillStyle = on ? P.accent : alpha(P.accent, .15); g.fillRect(x, base - h, w, h);
+      if (on) { g.strokeStyle = P.dark ? '#0b0604' : '#fff'; g.lineWidth = 4; g.beginPath(); g.moveTo(x + 10, base - h + 22); g.lineTo(x + 18, base - h + 30); g.lineTo(x + 31, base - h + 14); g.stroke(); }
+      g.font = `600 13px ${FONT_MONO}`; g.textAlign = 'center'; g.fillStyle = P.dim; g.fillText('W' + (i + 1), x + w / 2, base + 22);
+    }
+  },
+};
 export const POSTER_W = 512, POSTER_H = 768;
 export const USPS = [
-  { n: '01', big: 'LIVE',     sub: ['Mentors in the room,', 'not recordings'] },
-  { n: '02', big: '1 HR',     unit: '/ DAY', sub: ['Fits around work', 'or college'] },
-  { n: '03', big: '70%',      sub: ['Hands-on', 'build time'] },
-  { n: '04', big: 'SHIP',     unit: 'WEEKLY', sub: ['Deployed work,', 'live links'] },
+  { n: '01', big: 'LIVE',     motif: 'onair',  sub: ['Mentors in the room,', 'not recordings'] },
+  { n: '02', big: '1 HR',     motif: 'clock',  unit: '/ DAY', sub: ['Fits around work', 'or college'] },
+  { n: '03', big: '70%',      motif: 'ring',   sub: ['Hands-on', 'build time'] },
+  { n: '04', big: 'SHIP',     motif: 'deploy', unit: 'WEEKLY', sub: ['Deployed work,', 'live links'] },
 ];
 export function createPoster(usp, accentHex, light) {
   const canvas = document.createElement('canvas');
@@ -198,14 +240,9 @@ export function createPoster(usp, accentHex, light) {
     g.textAlign = 'left'; g.textBaseline = 'alphabetic';
     g.font = `700 20px ${FONT_MONO}`; g.fillStyle = P.accent; g.fillText('WHY ONROL', 44, 70);
     g.textAlign = 'right'; g.fillStyle = P.dim; g.fillText(usp.n + ' / 04', POSTER_W - 44, 70);
-    // slow orbit motif
-    const cx = POSTER_W / 2, cy = 250;
-    for (let i = 0; i < 3; i++) {
-      const r = 70 + i * 34, a0 = t * (.5 + i * .2) * (i % 2 ? -1 : 1);
-      g.strokeStyle = alpha(P.accent, .45 - i * .12); g.lineWidth = 2;
-      g.beginPath(); g.arc(cx, cy, r, a0, a0 + Math.PI * 1.2); g.stroke();
-    }
-    g.fillStyle = P.accent; g.beginPath(); g.arc(cx + Math.cos(t * .8) * 104, cy + Math.sin(t * .8) * 104, 6, 0, 7); g.fill();
+    // one bold motif per USP
+    const cx = POSTER_W / 2, cy = 255;
+    MOTIFS[usp.motif](g, P, t, cx, cy);
     // stat
     g.textAlign = 'left';
     let size = 150; do { g.font = `800 ${size}px ${FONT_UI}`; size -= 4; } while (g.measureText(usp.big).width > POSTER_W - 88 && size > 40);

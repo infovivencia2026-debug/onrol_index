@@ -151,6 +151,10 @@ async function start() {
       const b = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.03, 2.4), barMat); b.position.set(x, CEIL - .05, z); g.add(b);
     });
   }
+  function ceilGrid(g, z0, z1, zone) {                       // lobby: calm coffered ceiling
+    for (let x = -WI; x <= WI + .01; x += 1.6) seg(g, V(x, CEIL, z0), V(x, CEIL, z1), zone, .12);
+    for (let z = z0; z > z1; z -= 1.6) seg(g, V(-WI, CEIL, z), V(WI, CEIL, z), zone, .12);
+  }
   function ceilArches(g, z0, z1, zone) {                      // learn: vaulted arches
     for (let z = z0; z > z1; z -= 3) {
       const pts = []; for (let i = 0; i <= 24; i++) { const a = Math.PI * i / 24; pts.push(V(-Math.cos(a) * W, CEIL + Math.sin(a) * 1.4, z)); }
@@ -190,7 +194,7 @@ async function start() {
 
   // zone boundaries along the straight corridor
   const Z_INTRO = [34, 2], Z_LEARN = [2, -26], Z_BUILD = [-26, TURN_Z - W];
-  shellZ(...Z_INTRO, 0, WI); floorGrid(segA, ...Z_INTRO, 0, WI); ceilLightBars(segA, 30, 2);
+  shellZ(...Z_INTRO, 0, WI); floorGrid(segA, ...Z_INTRO, 0, WI); ceilGrid(segA, 34, 2, 0);
   shellZ(...Z_LEARN, 1); floorHex(segA, ...Z_LEARN, 1); ceilArches(segA, ...Z_LEARN, 1);
   shellZ(...Z_BUILD, 2); floorBlueprint(segA, ...Z_BUILD, 2); ceilTruss(segA, ...Z_BUILD, 2);
   floorChevrons(segB, W, SHAFT_X - W, 3); ceilHoops(segB, W + 1, SHAFT_X - W, 3);
@@ -220,18 +224,18 @@ async function start() {
   [[0,3,6,0],[0,3,20,0],[0,3,-12,1],[0,3,-38,2],[0,3,-52,2],[14,3,TURN_Z,3],[30,3,TURN_Z,3],[SHAFT_X,-14,TURN_Z,4],[SHAFT_X,-34,TURN_Z,5]].forEach(([x,y,z,zone]) => {
     const l = new THREE.PointLight(zoneColor(zone, false), 14, 14, 1.6); l.position.set(x, y, z); l.userData.zone = zone; scene.add(l); themed.lights.push(l);
   });
-  function floorPlane(parent, w, l, pos) {
+  function floorPlane(parent, w, l, pos, mirror = true) {
     // high tier: real reflections; others: cheap glossy plane
     const glossy = new THREE.Mesh(new THREE.PlaneGeometry(w, l), new THREE.MeshStandardMaterial({ color: '#0b0705', metalness: .6, roughness: .35 }));
     glossy.rotation.x = -Math.PI / 2; glossy.position.copy(pos); parent.add(glossy); themed.glossy.push(glossy);
-    if (tier !== 'high') return;
+    if (tier !== 'high' || !mirror) return;
     glossy.visible = false;
     const r = new Reflector(new THREE.PlaneGeometry(w, l), { textureWidth: innerWidth * .5, textureHeight: innerHeight * .5, color: 0x2a1c14 });
     r.rotation.x = -Math.PI / 2; r.position.copy(pos); parent.add(r); themed.reflectors.push(r);
     const satin = new THREE.Mesh(new THREE.PlaneGeometry(w, l), new THREE.MeshBasicMaterial({ color: '#070302', transparent: true, opacity: .55, depthWrite: false }));
     satin.rotation.x = -Math.PI / 2; satin.position.copy(pos).add(V(0, .002, 0)); parent.add(satin); themed.satins.push(satin.material); themed.satinMeshes.push(satin);
   }
-  floorPlane(segA, WI * 2, 32, V(0, -0.01, 18));                              // lobby
+  floorPlane(segA, WI * 2, 32, V(0, -0.01, 18), false);                       // lobby: soft gloss, no mirrored text
   floorPlane(segA, W * 2, 2 - (TURN_Z - W), V(0, -0.01, (2 + TURN_Z - W) / 2)); // corridor
   floorPlane(segB, SHAFT_X - W * 2, W * 2, V(SHAFT_X / 2, -0.01, 0));
   function dropReflections() {
@@ -300,6 +304,7 @@ async function start() {
     m.updateWorldMatrix(true, false);
     m.lookAt(m.getWorldPosition(V(0, 0, 0)).add(normal));
     m.userData = { art, tex, zone, lastDraw: -1, glass: null };
+    addHalo(m, w, w * SCREEN_H / SCREEN_W, zone);
     if (frosted) {
       // frosted glass just behind the card: the corridor behind it is seen blurred, so the text reads cleanly
       const gm = new THREE.MeshPhysicalMaterial({
@@ -315,6 +320,19 @@ async function start() {
     if (!opts.solid) screens.push({ mesh: m, side: 1 });
     return m;
   }
+  // soft backlight behind cards and posters (dark mode only)
+  const haloTex = (() => {
+    const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d');
+    const r = g.createRadialGradient(128, 128, 10, 128, 128, 128);
+    r.addColorStop(0, 'rgba(255,255,255,.9)'); r.addColorStop(.45, 'rgba(255,255,255,.25)'); r.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = r; g.fillRect(0, 0, 256, 256); return new THREE.CanvasTexture(c);
+  })();
+  const halos = [];
+  function addHalo(mesh, w, h, zone) {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w * 1.6, h * 1.7), new THREE.MeshBasicMaterial({ map: haloTex, color: zoneColor(zone, false), transparent: true, opacity: .22, blending: THREE.AdditiveBlending, depthWrite: false }));
+    m.position.z = -.08; m.renderOrder = -2; mesh.add(m); halos.push(m);
+  }
+
   // home posters: USPs on the left and right walls, angled toward the visitor
   const posters = [];
   function makePoster(usp, side, z) {
@@ -331,6 +349,7 @@ async function start() {
     poly(segA, [V(side * WI, 3.4, z), m.position.clone().add(V(0, 1.37, 0))], 0, .35);
     poly(segA, [V(side * WI, .6, z), m.position.clone().add(V(0, -1.37, 0))], 0, .35);
     m.userData = { art, tex, zone: 0, lastDraw: -1 };
+    addHalo(m, w, h, 0);
     m.userData.desk = { pos: m.position.clone(), quat: m.quaternion.clone() };
     posters.push(m); allScreens.push(m);
   }
@@ -409,7 +428,8 @@ async function start() {
     const d = THREE.MathUtils.clamp(3.9 / Math.tan(hf), 6.5, 12);
     // home stands further back so the USP posters on both walls are in view
     // home stands further back so the USP posters are in view; on phones far enough to fit [poster][ONROL][poster]
-    const homeD = camera.aspect > 1 ? d + 9.5 : d + 3;
+    // desktop: stand just far enough back that the outer posters (z 16.6, |x| ≈ 6.5) fit the view width
+    const homeD = camera.aspect > 1 ? Math.max(d + 3, 16.6 + 6.6 / (Math.tan(hf) * .72) - 10) : d + 3;
     STOPS = [...SCREEN_U.map((u, i) => clampU(u - (i === 0 ? homeD : d) / PATH_LEN)), 1];
   }
 
@@ -570,6 +590,7 @@ async function start() {
     themed.satins.forEach((m) => { m.color.set(T.satin); m.opacity = T.satinO; });
     themed.glossy.forEach((m) => m.material.color.set(T.glossy));
     themed.glass.forEach((m) => m.color.set('#1a120d'));
+    halos.forEach((m) => { m.visible = !light; });
     // light mode: solid cards (frosted glass picks up grey smudges on a light room)
     allScreens.forEach((m) => { if (m.userData.glass) m.userData.glass.userData.off = light; if (m.userData.art.frosted !== undefined && m.userData.glass) m.userData.art.frosted = !light; });
     themed.glossy.forEach((m) => { m.material.roughness = light ? .7 : .35; m.material.metalness = light ? 0 : .6; m.material.emissive.set(light ? '#d9ccbe' : '#000000'); m.material.emissiveIntensity = light ? .55 : 0; });
