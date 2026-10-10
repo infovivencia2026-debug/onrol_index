@@ -3,8 +3,8 @@
 
 export const SCREEN_W = 1024, SCREEN_H = 600;
 
-const FONT_UI = '"Plus Jakarta Sans", system-ui, sans-serif';
-const FONT_MONO = '"JetBrains Mono", monospace';
+const FONT_UI = '"Inter", system-ui, sans-serif';
+const FONT_MONO = '"IBM Plex Mono", ui-monospace, monospace';
 
 function palette(accent, light, frosted) {
   // frosted: the 3D glass behind the card does the blurring, so the painted panel is only a light tint
@@ -55,7 +55,7 @@ function frame(g, P, kicker, index) {
   g.fillStyle = bg; g.fill();
   g.strokeStyle = P.dark ? 'rgba(255,255,255,.14)' : 'rgba(0,0,0,.1)'; g.lineWidth = 2; g.stroke();
   g.fillStyle = P.accent; g.fillRect(52, 46, g.measureText ? 14 : 14, 24);
-  g.font = `700 18px ${FONT_MONO}`; g.textBaseline = 'alphabetic';
+  g.font = `600 18px ${FONT_MONO}`; g.textBaseline = 'alphabetic';
   g.textAlign = 'left'; g.fillStyle = P.tag; g.fillText(kicker, 80, 70);
   if (index) { g.textAlign = 'right'; g.fillStyle = P.dim; g.fillText(index, 972, 70); }
 }
@@ -198,14 +198,14 @@ function videoCard(g, P, t, art) {
   g.fillStyle = grd; g.fillRect(x, y + h - 150, w, 150);
   g.textAlign = 'left'; g.textBaseline = 'alphabetic';
   g.font = `800 44px ${FONT_UI}`; g.fillStyle = '#fbf7f2'; g.fillText('About ONROL', 52, y + h - 46);
-  g.font = `700 18px ${FONT_MONO}`; g.fillStyle = P.accent; g.fillText('AI EXECUTION SCHOOL · HYDERABAD', 52, y + h - 18);
+  g.font = `600 18px ${FONT_MONO}`; g.fillStyle = P.accent; g.fillText('AI EXECUTION SCHOOL · HYDERABAD', 52, y + h - 18);
   // progress bar
   const p = v.duration ? v.currentTime / v.duration : 0;
   g.fillStyle = 'rgba(255,255,255,.18)'; g.fillRect(x, y + h - 4, w, 4);
   g.fillStyle = P.accent; g.fillRect(x, y + h - 4, w * p, 4);
   // sound chip (top-right)
   const label = v.muted ? '\u{1F507}  CLICK FOR SOUND' : (v.paused ? '\u25B6  PLAY' : '\u{1F50A}  SOUND ON');
-  g.font = `700 18px ${FONT_MONO}`; const cw = g.measureText(label).width + 36;
+  g.font = `600 18px ${FONT_MONO}`; const cw = g.measureText(label).width + 36;
   const pulse = v.muted ? .55 + .45 * Math.sin(t * 3) : 1;
   g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(SCREEN_W - 52 - cw, 40, cw, 44);
   g.strokeStyle = alpha(P.accent, pulse); g.lineWidth = 2; g.strokeRect(SCREEN_W - 52 - cw, 40, cw, 44);
@@ -327,7 +327,7 @@ function earnCard(g, P, t) {
     const x = 48 + i * 316, y = 196, on = i === hi;
     rounded(g, x, y, 296, 340, 16); g.fillStyle = on ? alpha(P.accent, .16) : (P.dark ? 'rgba(255,255,255,.04)' : '#fff'); g.fill();
     g.strokeStyle = alpha(P.accent, on ? .9 : .25); g.lineWidth = 2; g.stroke();
-    g.font = `700 16px ${FONT_MONO}`; g.fillStyle = P.accent; g.fillText('0' + (i + 1), x + 26, y + 44);
+    g.font = `600 16px ${FONT_MONO}`; g.fillStyle = P.accent; g.fillText('0' + (i + 1), x + 26, y + 44);
     g.font = `800 34px ${FONT_UI}`; g.fillStyle = P.word; g.fillText(h, x + 26, y + 104);
     g.fillStyle = P.accent; g.fillRect(x + 26, y + 128, 50, 3);
     g.font = `500 21px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText('— ' + a, x + 26, y + 180); g.fillText('— ' + b, x + 26, y + 218);
@@ -379,7 +379,7 @@ const MOTIFS = {
     }
     g.fillStyle = alpha(P.accent, .25 + .2 * Math.sin(t * 4)); g.beginPath(); g.arc(cx, cy, 44, 0, 7); g.fill();
     g.fillStyle = P.accent; g.beginPath(); g.arc(cx, cy, 26, 0, 7); g.fill();
-    g.font = `700 18px ${FONT_MONO}`; g.textAlign = 'center'; g.fillStyle = P.accent; g.fillText('\u25CF ON AIR', cx, cy + 150);
+    g.font = `600 18px ${FONT_MONO}`; g.textAlign = 'center'; g.fillStyle = P.accent; g.fillText('\u25CF ON AIR', cx, cy + 150);
   },
   clock(g, P, t, cx, cy) {                                    // 1 HR: a clock face with a sweeping hand
     const R = 120;
@@ -442,7 +442,7 @@ export function createPoster(usp, accentHex, light) {
     [[28, 28], [W2 - 28, 28], [28, H2 - 28], [W2 - 28, H2 - 28]].forEach(([x, y]) => { g.beginPath(); g.moveTo(x - 8, y); g.lineTo(x + 8, y); g.moveTo(x, y - 8); g.lineTo(x, y + 8); g.stroke(); });
     // red tag + index
     g.fillStyle = P.accent; g.fillRect(36, 52, 168, 34);
-    g.font = `700 17px ${FONT_MONO}`; g.textAlign = 'left'; g.fillStyle = '#fff'; g.fillText('WHY ONROL', 48, 75);
+    g.font = `600 17px ${FONT_MONO}`; g.textAlign = 'left'; g.fillStyle = '#fff'; g.fillText('WHY ONROL', 48, 75);
     g.textAlign = 'right'; g.fillStyle = faint + '.6)'; g.fillText(usp.n + ' / 04', W2 - 36, 75);
     // HUD rule with ticks
     g.fillStyle = faint + '.35)'; g.fillRect(36, 448, W2 - 72, 1.5);
@@ -452,7 +452,7 @@ export function createPoster(usp, accentHex, light) {
     g.textAlign = 'left';
     let size = 112; do { g.font = `800 ${size}px ${FONT_UI}`; size -= 4; } while (g.measureText(usp.big).width > W2 - 120 && size > 40);
     g.fillStyle = ink; g.fillText(usp.big, 34, 590);
-    if (usp.unit) { g.font = `700 22px ${FONT_MONO}`; g.fillStyle = P.accent; g.fillText(usp.unit.toUpperCase(), 38, 626); }
+    if (usp.unit) { g.font = `600 22px ${FONT_MONO}`; g.fillStyle = P.accent; g.fillText(usp.unit.toUpperCase(), 38, 626); }
     g.font = `600 19px ${FONT_MONO}`; g.fillStyle = faint + '.75)';
     usp.sub.forEach((line, i) => g.fillText(line.toUpperCase(), 38, (usp.unit ? 668 : 640) + i * 28));
   };
@@ -477,13 +477,13 @@ const PANELS = {
     days.forEach((d, i) => {
       const y = 112 + i * 76, on = i === cur, done = i < cur;
       if (on) { rounded(g, 24, y - 34, w - 48, 62, 14); g.fillStyle = alpha(P.accent, .16); g.fill(); }
-      g.font = `700 18px ${FONT_MONO}`; g.fillStyle = on || done ? P.accent : P.dim; g.fillText('DAY ' + String(i + 1).padStart(2, '0'), 40, y + 4);
+      g.font = `600 18px ${FONT_MONO}`; g.fillStyle = on || done ? P.accent : P.dim; g.fillText('DAY ' + String(i + 1).padStart(2, '0'), 40, y + 4);
       g.font = `600 22px ${FONT_UI}`; g.fillStyle = on ? P.word : done ? P.tag : P.dim; g.fillText(d, 150, y + 4);
     });
   },
   files(g, P, t, w, h) {                                      // BUILD: tests running
     panelBase(g, P, w, h, 18);
-    g.textAlign = 'left'; g.font = `700 20px ${FONT_MONO}`; g.fillStyle = P.accent; g.fillText('tests/', 34, 60);
+    g.textAlign = 'left'; g.font = `600 20px ${FONT_MONO}`; g.fillStyle = P.accent; g.fillText('tests/', 34, 60);
     const tests = ['goal profile', 'prompt library', 'study planner', 'chat replies', 'error handling', 'deploy config'];
     const n = Math.floor((t % 8) / .8);
     tests.forEach((s, i) => {
@@ -531,7 +531,7 @@ EARN_TILES.forEach(([head, a, b], i) => {
     const on = Math.floor(t / 2.5) % 3 === i;
     panelBase(g, P, w, h, 24);
     if (on) { rounded(g, 8, 8, w - 16, h - 16, 24); g.fillStyle = alpha(P.accent, .14); g.fill(); g.strokeStyle = P.accent; g.lineWidth = 3; g.stroke(); }
-    g.textAlign = 'left'; g.font = `700 22px ${FONT_MONO}`; g.fillStyle = P.accent; g.fillText('0' + (i + 1), 40, 70);
+    g.textAlign = 'left'; g.font = `600 22px ${FONT_MONO}`; g.fillStyle = P.accent; g.fillText('0' + (i + 1), 40, 70);
     g.font = `800 34px ${FONT_UI}`; g.fillStyle = P.word; g.fillText(head, 40, 150);
     g.fillStyle = P.accent; g.fillRect(40, 178, 60, 4);
     g.font = `500 26px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText('— ' + a, 40, 250); g.fillText('— ' + b, 40, 298);

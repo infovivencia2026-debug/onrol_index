@@ -9,8 +9,8 @@
   --btn-bg:#fbfaf8; --btn-fg:#070403;
   --bar:#000; --vig:rgba(0,0,0,.85);
   --link:#e6d5c4; --head-shadow:0 2px 24px rgba(0,0,0,.8);
-  --font-ui:"Plus Jakarta Sans", system-ui, sans-serif;
-  --font-mono:"JetBrains Mono", monospace;
+  --font-ui:"Inter", system-ui, sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, monospace;
   color-scheme:dark;
 }
 :root[data-theme="light"] {
@@ -389,7 +389,7 @@ html.plain .introCard { display:none; }
 @media (max-width:760px) { .joy { width:56px !important; height:104px !important; } }
 
 /* bolder display face for the headline */
-.head, #plain h1, #fallback h2 { font-family:"Archivo Black", var(--font-ui) !important; font-weight:400 !important; letter-spacing:-.02em !important; line-height:1 !important; }
+.head, #plain h1, #fallback h2 { font-family:var(--font-ui) !important; font-weight:800 !important; letter-spacing:-.022em !important; line-height:1 !important; }
 
 /* full onrol.in content in plain view */
 #plain .sec { margin-top:72px; padding-top:28px; border-top:1px solid var(--line); }
@@ -420,3 +420,6 @@ html.plain .introCard { display:none; }
 .endnav .more .btn { padding:6px 12px; font-size:11px; text-decoration:none; }
 
 @media (max-width:760px) { .joy { display:none !important; } .bottom .head { max-width:100%; } }
+
+body { font-feature-settings:'ss01','cv11'; }
+.tl b, .tr b, .btn { letter-spacing:.01em; }

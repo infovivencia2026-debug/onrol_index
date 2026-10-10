@@ -1,10 +1,12 @@
-import '@fontsource/archivo-black/latin-400.css';
-// latin subset only: smaller font downloads
-import '@fontsource/plus-jakarta-sans/latin-600.css';
-import '@fontsource/plus-jakarta-sans/latin-700.css';
-import '@fontsource/plus-jakarta-sans/latin-800.css';
-import '@fontsource/jetbrains-mono/latin-500.css';
-import '@fontsource/jetbrains-mono/latin-700.css';
+// Inter for interface + headlines, IBM Plex Mono for labels, data and code (latin subsets)
+import '@fontsource/inter/latin-500.css';
+import '@fontsource/inter/latin-600.css';
+import '@fontsource/inter/latin-700.css';
+import '@fontsource/inter/latin-800.css';
+import '@fontsource/inter/latin-900.css';
+import '@fontsource/ibm-plex-mono/latin-400.css';
+import '@fontsource/ibm-plex-mono/latin-500.css';
+import '@fontsource/ibm-plex-mono/latin-600.css';
 import './style.css';
 import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
@@ -54,10 +56,10 @@ async function start() {
   var introReady = false;
   await Promise.race([
     Promise.all([
-      document.fonts.load(`800 170px "Plus Jakarta Sans"`),
-      document.fonts.load(`600 30px "Plus Jakarta Sans"`),
-      document.fonts.load(`700 20px "JetBrains Mono"`),
-      document.fonts.load(`500 20px "JetBrains Mono"`),
+      document.fonts.load(`800 170px "Inter"`),
+      document.fonts.load(`600 30px "Inter"`),
+      document.fonts.load(`600 20px "IBM Plex Mono"`),
+      document.fonts.load(`500 20px "IBM Plex Mono"`),
     ]),
     new Promise((r) => setTimeout(r, 2500)),
   ]).catch(() => {});
