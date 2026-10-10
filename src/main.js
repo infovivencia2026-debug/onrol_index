@@ -360,7 +360,7 @@ async function start() {
     const art = createPoster(usp, isLight ? ZONES[0].light : ZONES[0].dark, isLight);
     const tex = new THREE.CanvasTexture(art.canvas); tex.colorSpace = THREE.SRGBColorSpace;
     tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-    const h = 3.3, w = h * POSTER_W / POSTER_H;
+    const h = 3.7, w = h * POSTER_W / POSTER_H;
     const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false }));
     m.position.set(side * (WI - .7), 2.05, z);
     const a = .78;                                            // turn the poster toward the approaching camera
@@ -387,7 +387,7 @@ async function start() {
   flushLines();
 
   const X = V(1, 0, 0), Y = V(0, 1, 0), Z = V(0, 0, 1);
-  const introScreen = makeScreen(segA, V(0, 2.2, 20), Z, Y, 'intro', 0, { scale: 1.18 });
+  const introScreen = makeScreen(segA, V(0, 2.2, 20), Z, Y, 'intro', 0, { scale: 1.32 });
   const videoScreen = makeScreen(segA, V(0, 2.1, 9), Z, Y, 'watch', 0);     // 2nd stop: the About video
 
   // data-centre racks lining the travel between levels (rows start just past each level's card)
@@ -398,21 +398,21 @@ async function start() {
   rackRow(segC, 4, V(0, -14, 0), V(0, -1, 0), Z, X);
 
   // LEARN — split: class sheet turned in from the left, week schedule standing on the right
-  const learnCard = makeScreen(segA, V(0, 2.1, -4), Z, Y, 'learn', 1, { scale: .7, lx: -1.15, yaw: .22 });
-  satellite(learnCard, 'schedule', 1.95, 2.85, -.05, .7, -.42);
+  const learnCard = makeScreen(segA, V(0, 2.1, -4), Z, Y, 'learn', 1, { scale: .8, lx: -1.15, yaw: .22 });
+  satellite(learnCard, 'schedule', 2.2, 2.85, -.05, .7, -.42);
   // BUILD — triptych: tests | editor | live preview, wrapping around you
-  const buildCard = makeScreen(segA, V(0, 2.1, -20), Z, Y, 'build', 2, { scale: .66 });
-  satellite(buildCard, 'files', 1.6, -3.05, -.05, .9, .58);
-  satellite(buildCard, 'preview', 1.6, 3.05, -.05, .9, -.58);
+  const buildCard = makeScreen(segA, V(0, 2.1, -20), Z, Y, 'build', 2, { scale: .76 });
+  satellite(buildCard, 'files', 1.8, -3.05, -.05, .9, .58);
+  satellite(buildCard, 'preview', 1.8, 3.05, -.05, .9, -.58);
   // LAUNCH — browser to the right, a tall deploy pipeline on the left
-  const launchCard = makeScreen(segB, V(12, 2.1, 0), V(-1, 0, 0), Y, 'launch', 3, { scale: .74, lx: .95, yaw: -.16 });
-  satellite(launchCard, 'pipeline', 1.35, -3.15, -.1, .7, .4);
+  const launchCard = makeScreen(segB, V(12, 2.1, 0), V(-1, 0, 0), Y, 'launch', 3, { scale: .84, lx: .95, yaw: -.16 });
+  satellite(launchCard, 'pipeline', 1.5, -3.15, -.1, .7, .4);
   // EARN — looking down the shaft: a header plate above three direction tiles in an arc
   const earnCard = makeScreen(segC, V(0, -12, 0), Y, X, 'earn', 4, { scale: .001 });
-  satellite(earnCard, 'earnHead', 4.4, 0, 1.75, 0, 0);
-  satellite(earnCard, 'tile0', 2.05, -2.35, -.45, .55, .32);
-  satellite(earnCard, 'tile1', 2.05, 0, -.45, .9, 0);
-  satellite(earnCard, 'tile2', 2.05, 2.35, -.45, .55, -.32);
+  satellite(earnCard, 'earnHead', 4.9, 0, 1.75, 0, 0);
+  satellite(earnCard, 'tile0', 2.3, -2.35, -.45, .55, .32);
+  satellite(earnCard, 'tile1', 2.3, 0, -.45, .9, 0);
+  satellite(earnCard, 'tile2', 2.3, 2.35, -.45, .55, -.32);
   // APPLY — the end of the shaft
   const endScreen = makeScreen(segC, V(0, SHAFT_BOTTOM + .5, 0), Y, X, 'apply', 5, { solid: true, scale: .8 });
   endScreen.userData.href = APPLY_URL; clickable.push(endScreen);
@@ -638,6 +638,22 @@ async function start() {
     if (save) { try { localStorage.setItem('onrol-view', on ? 'plain' : '3d'); } catch {} track('view', { mode: on ? 'plain' : '3d' }); }
   }
   $('plainBtn').onclick = () => setPlain(!plainOn);
+  document.querySelectorAll('[data-plain]').forEach((b) => b.addEventListener('click', () => { setPlain(true); setTimeout(() => document.querySelector(b.dataset.plain)?.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth' }), 60); }));
+  // hover = decode: text scrambles through glyphs then resolves (buttons, links, nav)
+  const GLYPHS = '!<>-_\\/[]{}=+*^?#ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  function decode(el) {
+    if (reducedMotion || el._dec) return;
+    const node = [...el.childNodes].find((n) => n.nodeType === 3 && n.textContent.trim());
+    if (!node) return;
+    const final = node.textContent; let f = 0; el._dec = true;
+    const tick = () => {
+      f++;
+      node.textContent = [...final].map((c, i) => (c === ' ' || i < f / 2 ? c : GLYPHS[(Math.random() * GLYPHS.length) | 0])).join('');
+      if (f / 2 < final.length) requestAnimationFrame(tick); else { node.textContent = final; el._dec = false; }
+    };
+    requestAnimationFrame(tick);
+  }
+  document.querySelectorAll('.btn, .foot a, .mbar a, .endnav a, #menu a, #plain a, .tl b, .dots button').forEach((el) => el.addEventListener('pointerenter', () => decode(el)));
 
   // ---------- About video (modal) ----------
   const aboutModal = $('aboutModal'), aboutVideo = $('aboutVideo');

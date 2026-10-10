@@ -390,3 +390,31 @@ html.plain .introCard { display:none; }
 
 /* bolder display face for the headline */
 .head, #plain h1, #fallback h2 { font-family:"Archivo Black", var(--font-ui) !important; font-weight:400 !important; letter-spacing:-.02em !important; line-height:1 !important; }
+
+/* full onrol.in content in plain view */
+#plain .sec { margin-top:72px; padding-top:28px; border-top:1px solid var(--line); }
+#plain .kick { font:700 12px var(--font-mono); letter-spacing:.18em; text-transform:uppercase; color:var(--or); margin-bottom:12px; }
+#plain h2 { font-size:clamp(26px,3.4vw,42px); font-weight:800; letter-spacing:-.02em; line-height:1.1; max-width:22ch; margin-bottom:14px; }
+#plain .sec > p { color:var(--dim); font-size:17px; line-height:1.6; max-width:60ch; }
+#plain .sec a { color:var(--or); }
+#plain .note { margin-top:12px; font-size:14px !important; }
+#plain .facts { list-style:none; display:flex; flex-wrap:wrap; gap:10px; margin-top:22px; }
+#plain .facts li { border:1px solid var(--line); padding:10px 14px; font-size:14px; }
+#plain .facts b { display:block; font:700 10px var(--font-mono); letter-spacing:.14em; text-transform:uppercase; color:var(--dim); margin-bottom:4px; }
+#plain .ctas { display:flex; flex-wrap:wrap; gap:10px; margin-top:24px; }
+#plain .cta { margin-top:0 !important; }
+#plain .cta.ghost { background:transparent; color:var(--fg); border:1px solid var(--line); }
+#plain .progs { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px; margin-top:22px; }
+#plain .progs a { display:block; border:1px solid var(--line); padding:20px; text-decoration:none; color:var(--fg); transition:border-color .2s; }
+#plain .progs a:hover { border-color:var(--or); }
+#plain .progs em { font:700 11px var(--font-mono); font-style:normal; letter-spacing:.14em; text-transform:uppercase; color:var(--or); }
+#plain .progs b { display:block; font-size:20px; margin:8px 0 6px; }
+#plain .progs span { color:var(--dim); font-size:14px; }
+#plain .who { list-style:none; display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:1px; background:var(--line); border:1px solid var(--line); margin-top:22px; }
+#plain .who li { background:var(--bg); padding:16px 18px; font-size:14px; color:var(--dim); }
+#plain .who b { display:block; color:var(--fg); font-size:16px; margin-bottom:4px; }
+#plain details { border-bottom:1px solid var(--line); padding:16px 0; max-width:760px; }
+#plain summary { cursor:pointer; font-weight:700; font-size:17px; }
+#plain details p { margin-top:10px; color:var(--dim); line-height:1.6; }
+.endnav .more { display:flex; flex-wrap:wrap; gap:6px; margin:-8px 0 18px; }
+.endnav .more .btn { padding:6px 12px; font-size:11px; text-decoration:none; }
