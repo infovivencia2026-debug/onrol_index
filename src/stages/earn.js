@@ -96,8 +96,8 @@ export default function (ctx) {
   return {
     update(t) {
       if (ctx.isLight !== lastLight) { lastLight = ctx.isLight; setTheme(lastLight); }
-      const near = Math.abs(ctx.stopIndex - 5) <= 1;
-      root.visible = ctx.currentU > ctx.STOPS[3] - .02;
+      const near = ctx.stopIndex >= 4 && ctx.stopIndex <= 5;
+      root.visible = ctx.currentU > ctx.STOPS[3] - .02 && ctx.currentU < ctx.STOPS[6] - .015;
       if (!near || reducedMotion) return;
       placePulses(t);
       for (let i = 0; i < NM; i++) {

@@ -567,3 +567,23 @@ html:has(.endnav.on) #autoBtn { opacity:0; pointer-events:none; }
   #menu { top:50% !important; bottom:auto !important; max-height:86vh; transform:translateY(-50%) !important; transition:opacity .35s, transform .35s; opacity:1; }
   #menu:not(.on) { transform:translate(calc(100% + 48px), -50%) !important; opacity:0; }
 }
+
+/* footer strip v2: centred, clear hierarchy */
+.endnav { display:flex !important; flex-direction:column; align-items:center; text-align:center; gap:14px !important; padding:22px 28px 16px !important; }
+.endnav .brand { font:600 16px var(--font-ui) !important; letter-spacing:.14em; grid-row:auto; }
+.endnav .more { justify-content:center; gap:8px; }
+.endnav .more .btn { font-size:12px !important; padding:7px 14px !important; display:inline-flex; align-items:center; line-height:1; }
+.endnav .cols { display:flex !important; justify-content:center; gap:44px !important; flex-wrap:wrap; padding-top:12px; border-top:1px solid var(--line); width:100%; }
+.endnav .cols > div { flex-direction:column; align-items:center; gap:6px !important; flex-wrap:nowrap; }
+.endnav .cols > div { display:flex; flex-direction:row; flex-wrap:wrap; justify-content:center; max-width:520px; gap:4px 14px !important; }
+.endnav h3 { flex-basis:100%; margin:0 0 4px !important; font:500 10px var(--font-mono) !important; letter-spacing:.2em !important; color:var(--or) !important; }
+.endnav a { font:400 13px var(--font-ui) !important; color:var(--dim) !important; }
+.endnav a:hover { color:var(--fg) !important; transform:none !important; }
+.endnav small { grid-column:auto; border:0 !important; margin:0 !important; padding:0 !important; font:400 11px var(--font-mono) !important; color:color-mix(in srgb, var(--dim) 70%, transparent) !important; }
+
+/* footer v3: compact, three aligned columns */
+.endnav { max-width:1080px; margin:0 auto; left:0 !important; right:0 !important; padding:18px 28px 14px !important; gap:12px !important; }
+.endnav .cols { display:grid !important; grid-template-columns:1.3fr 1fr .8fr !important; gap:0 !important; text-align:left; align-items:start; }
+.endnav .cols > div { justify-content:flex-start; padding:0 22px; border-left:1px solid var(--line); max-width:none; }
+.endnav .cols > div:first-child { border-left:0; }
+@media (max-width:760px) { .endnav .cols { grid-template-columns:1fr !important; gap:10px !important; } .endnav .cols > div { border-left:0; padding:0; } }
