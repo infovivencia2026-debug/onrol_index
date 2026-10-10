@@ -116,13 +116,15 @@ async function start() {
   const segC = new THREE.Group(); segC.position.set(SHAFT_X, 0, TURN_Z); scene.add(segC); // shaft: earn, apply (−Y)
 
   // ---- shell (edges) for a stretch of the straight corridor ----
-  function shellZ(z0, z1, zone) {
-    [-W, W].forEach((x) => { seg(segA, V(x, 0, z0), V(x, 0, z1), zone, .55); seg(segA, V(x, CEIL, z0), V(x, CEIL, z1), zone, .4); });
+  const WI = 6.4;                                             // the home lobby is wider than the corridor
+  function shellZ(z0, z1, zone, w = W) {
+    [-w, w].forEach((x) => { seg(segA, V(x, 0, z0), V(x, 0, z1), zone, .55); seg(segA, V(x, CEIL, z0), V(x, CEIL, z1), zone, .4); });
   }
   // ---- unique floors & ceilings ----
-  function floorGrid(g, z0, z1, zone) {                       // intro: simple runway grid
+  function floorGrid(g, z0, z1, zone, w = W) {               // intro: runway grid across the lobby
     [-1.8, -0.9, 0, 0.9, 1.8].forEach((x) => seg(g, V(x, 0, z0), V(x, 0, z1), zone, x === 0 ? .25 : .4));
-    for (let z = z0; z > z1; z -= 2) seg(g, V(-W, 0, z), V(W, 0, z), zone, .1);
+    [-w + .9, w - .9].forEach((x) => seg(g, V(x, 0, z0), V(x, 0, z1), zone, .18));
+    for (let z = z0; z > z1; z -= 2) seg(g, V(-w, 0, z), V(w, 0, z), zone, .1);
   }
   function floorHex(g, z0, z1, zone) {                        // learn: hexagon tiles
     const r = 0.55, h = Math.sqrt(3) * r;
@@ -188,7 +190,7 @@ async function start() {
 
   // zone boundaries along the straight corridor
   const Z_INTRO = [34, 2], Z_LEARN = [2, -26], Z_BUILD = [-26, TURN_Z - W];
-  shellZ(...Z_INTRO, 0); floorGrid(segA, ...Z_INTRO, 0); ceilLightBars(segA, 30, 2);
+  shellZ(...Z_INTRO, 0, WI); floorGrid(segA, ...Z_INTRO, 0, WI); ceilLightBars(segA, 30, 2);
   shellZ(...Z_LEARN, 1); floorHex(segA, ...Z_LEARN, 1); ceilArches(segA, ...Z_LEARN, 1);
   shellZ(...Z_BUILD, 2); floorBlueprint(segA, ...Z_BUILD, 2); ceilTruss(segA, ...Z_BUILD, 2);
   floorChevrons(segB, W, SHAFT_X - W, 3); ceilHoops(segB, W + 1, SHAFT_X - W, 3);
@@ -196,6 +198,8 @@ async function start() {
   poly(segC, [V(-W, 0, -W), V(W, 0, -W), V(W, 0, W), V(-W, 0, W)], 3, .5, true);
   floorRadial(segC, SHAFT_BOTTOM + .2, 5);
   // gate frames where one level hands over to the next
+  // lobby → corridor step: short walls closing the wide lobby down to the corridor
+  [-1, 1].forEach((sd) => { seg(segA, V(sd * WI, 0, 2), V(sd * W, 0, 2), 0, .55); seg(segA, V(sd * WI, CEIL, 2), V(sd * W, CEIL, 2), 0, .4); seg(segA, V(sd * WI, 0, 2), V(sd * WI, CEIL, 2), 0, .45); });
   [[2, 1], [-26, 2]].forEach(([z, zone]) => poly(segA, [V(-W, 0, z), V(-W, CEIL, z), V(W, CEIL, z), V(W, 0, z)], zone, .8));
   flushLines();
 
@@ -208,12 +212,12 @@ async function start() {
     const pm = new THREE.PointsMaterial({ color: zoneColor(zone, false), size: .03, transparent: true, opacity: .55, blending: THREE.AdditiveBlending, depthWrite: false });
     pm.userData.zone = zone; themed.dust.push(pm); scene.add(new THREE.Points(geo, pm));
   }
-  dust(0, [-4, 4, 0, 4.5, 2, 34]); dust(1, [-4, 4, 0, 4.5, -26, 2]); dust(2, [-4, 4, 0, 4.5, TURN_Z - 4, -26]);
+  dust(0, [-WI, WI, 0, 4.5, 2, 34]); dust(1, [-4, 4, 0, 4.5, -26, 2]); dust(2, [-4, 4, 0, 4.5, TURN_Z - 4, -26]);
   dust(3, [0, SHAFT_X, 0, 4.5, TURN_Z - 4, TURN_Z + 4]); dust(4, [SHAFT_X - 4, SHAFT_X + 4, SHAFT_BOTTOM, 4, TURN_Z - 4, TURN_Z + 4]);
 
   // ---------- lighting + floors ----------
   const hemi = new THREE.HemisphereLight('#ffffff', '#120604', 0.25); scene.add(hemi);
-  [[0,3,6,0],[0,3,-12,1],[0,3,-38,2],[0,3,-52,2],[14,3,TURN_Z,3],[30,3,TURN_Z,3],[SHAFT_X,-14,TURN_Z,4],[SHAFT_X,-34,TURN_Z,5]].forEach(([x,y,z,zone]) => {
+  [[0,3,6,0],[0,3,20,0],[0,3,-12,1],[0,3,-38,2],[0,3,-52,2],[14,3,TURN_Z,3],[30,3,TURN_Z,3],[SHAFT_X,-14,TURN_Z,4],[SHAFT_X,-34,TURN_Z,5]].forEach(([x,y,z,zone]) => {
     const l = new THREE.PointLight(zoneColor(zone, false), 14, 14, 1.6); l.position.set(x, y, z); l.userData.zone = zone; scene.add(l); themed.lights.push(l);
   });
   function floorPlane(parent, w, l, pos) {
@@ -227,7 +231,8 @@ async function start() {
     const satin = new THREE.Mesh(new THREE.PlaneGeometry(w, l), new THREE.MeshBasicMaterial({ color: '#070302', transparent: true, opacity: .55, depthWrite: false }));
     satin.rotation.x = -Math.PI / 2; satin.position.copy(pos).add(V(0, .002, 0)); parent.add(satin); themed.satins.push(satin.material); themed.satinMeshes.push(satin);
   }
-  floorPlane(segA, W * 2, 34 - (TURN_Z - W), V(0, -0.01, (34 + TURN_Z - W) / 2));
+  floorPlane(segA, WI * 2, 32, V(0, -0.01, 18));                              // lobby
+  floorPlane(segA, W * 2, 2 - (TURN_Z - W), V(0, -0.01, (2 + TURN_Z - W) / 2)); // corridor
   floorPlane(segB, SHAFT_X - W * 2, W * 2, V(SHAFT_X / 2, -0.01, 0));
   function dropReflections() {
     themed.reflectors.forEach((r) => { r.visible = false; });
@@ -316,15 +321,15 @@ async function start() {
     const art = createPoster(usp, isLight ? ZONES[0].light : ZONES[0].dark, isLight);
     const tex = new THREE.CanvasTexture(art.canvas); tex.colorSpace = THREE.SRGBColorSpace;
     tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-    const h = 2.5, w = h * POSTER_W / POSTER_H;
+    const h = 2.75, w = h * POSTER_W / POSTER_H;
     const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false }));
-    m.position.set(side * (W - .35), 2.0, z);
-    const a = .38;                                            // turn the poster toward the approaching camera
+    m.position.set(side * (WI - .7), 2.05, z);
+    const a = .78;                                            // turn the poster toward the approaching camera
     m.lookAt(m.position.clone().add(V(-side * Math.cos(a), 0, Math.sin(a))));
     segA.add(m);
     // thin bracket lines tying the poster to the wall
-    poly(segA, [V(side * W, 3.4, z), m.position.clone().add(V(0, 1.25, 0))], 0, .35);
-    poly(segA, [V(side * W, .6, z), m.position.clone().add(V(0, -1.25, 0))], 0, .35);
+    poly(segA, [V(side * WI, 3.4, z), m.position.clone().add(V(0, 1.37, 0))], 0, .35);
+    poly(segA, [V(side * WI, .6, z), m.position.clone().add(V(0, -1.37, 0))], 0, .35);
     m.userData = { art, tex, zone: 0, lastDraw: -1 };
     m.userData.desk = { pos: m.position.clone(), quat: m.quaternion.clone() };
     posters.push(m); allScreens.push(m);
@@ -338,8 +343,8 @@ async function start() {
       m.visible = false;                         // phones: the HTML trio shows the USPs
     });
   }
-  makePoster(USPS[0], -1, 17.2); makePoster(USPS[1], 1, 17.2);
-  makePoster(USPS[2], -1, 14.0); makePoster(USPS[3], 1, 14.0);
+  makePoster(USPS[0], -1, 16.6); makePoster(USPS[1], 1, 16.6);
+  makePoster(USPS[2], -1, 12.2); makePoster(USPS[3], 1, 12.2);
   flushLines();
 
   const X = V(1, 0, 0), Y = V(0, 1, 0), Z = V(0, 0, 1);
@@ -404,7 +409,7 @@ async function start() {
     const d = THREE.MathUtils.clamp(3.9 / Math.tan(hf), 6.5, 12);
     // home stands further back so the USP posters on both walls are in view
     // home stands further back so the USP posters are in view; on phones far enough to fit [poster][ONROL][poster]
-    const homeD = camera.aspect > 1 ? d + 6.5 : d + 3;
+    const homeD = camera.aspect > 1 ? d + 9.5 : d + 3;
     STOPS = [...SCREEN_U.map((u, i) => clampU(u - (i === 0 ? homeD : d) / PATH_LEN)), 1];
   }
 
