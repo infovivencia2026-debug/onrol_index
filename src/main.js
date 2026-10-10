@@ -73,7 +73,7 @@ async function start() {
   const zoneColor = (z, light) => new THREE.Color(light ? ZONES[z].light : ZONES[z].dark);
 
   const RACK_X = 2.6, RACK_W = 1.4, RACK_H = 3.4, RACK_D = 1.9, W = 3.6, CEIL = RACK_H + 0.6;
-  const SHAFT_X = 40, TURN_Z = -60, SHAFT_BOTTOM = -44;
+  const SHAFT_X = 26, TURN_Z = -42, SHAFT_BOTTOM = -30;   // compact: ~1.5s between levels
   const V = (x, y, z) => new THREE.Vector3(x, y, z);
 
   const canvas = $('gl');
@@ -195,7 +195,7 @@ async function start() {
   const barMat = new THREE.MeshBasicMaterial({ color: new THREE.Color('#ffb070').multiplyScalar(1.4) });
 
   // zone boundaries along the straight corridor
-  const Z_INTRO = [44, 2], Z_LEARN = [2, -26], Z_BUILD = [-26, TURN_Z - W];
+  const Z_INTRO = [44, 2], Z_LEARN = [2, -18], Z_BUILD = [-18, TURN_Z - W];
   shellZ(...Z_INTRO, 0, WI); floorGrid(segA, ...Z_INTRO, 0, WI); ceilGrid(segA, 44, 2, 0);
   shellZ(...Z_LEARN, 1); floorHex(segA, ...Z_LEARN, 1); ceilArches(segA, ...Z_LEARN, 1);
   shellZ(...Z_BUILD, 2); floorBlueprint(segA, ...Z_BUILD, 2); ceilTruss(segA, ...Z_BUILD, 2);
@@ -206,7 +206,7 @@ async function start() {
   // gate frames where one level hands over to the next
   // lobby → corridor step: short walls closing the wide lobby down to the corridor
   [-1, 1].forEach((sd) => { seg(segA, V(sd * WI, 0, 2), V(sd * W, 0, 2), 0, .55); seg(segA, V(sd * WI, CEIL, 2), V(sd * W, CEIL, 2), 0, .4); seg(segA, V(sd * WI, 0, 2), V(sd * WI, CEIL, 2), 0, .45); });
-  [[2, 1], [-26, 2]].forEach(([z, zone]) => poly(segA, [V(-W, 0, z), V(-W, CEIL, z), V(W, CEIL, z), V(W, 0, z)], zone, .8));
+  [[2, 1], [-18, 2]].forEach(([z, zone]) => poly(segA, [V(-W, 0, z), V(-W, CEIL, z), V(W, CEIL, z), V(W, 0, z)], zone, .8));
   flushLines();
 
   // ---------- dust ----------
@@ -218,12 +218,12 @@ async function start() {
     const pm = new THREE.PointsMaterial({ color: zoneColor(zone, false), size: .025, transparent: true, opacity: .3, blending: THREE.AdditiveBlending, depthWrite: false });
     pm.userData.zone = zone; themed.dust.push(pm); scene.add(new THREE.Points(geo, pm));
   }
-  dust(0, [-WI, WI, 0, 4.5, 2, 44]); dust(1, [-4, 4, 0, 4.5, -26, 2]); dust(2, [-4, 4, 0, 4.5, TURN_Z - 4, -26]);
+  dust(0, [-WI, WI, 0, 4.5, 2, 44]); dust(1, [-4, 4, 0, 4.5, -18, 2]); dust(2, [-4, 4, 0, 4.5, TURN_Z - 4, -18]);
   dust(3, [0, SHAFT_X, 0, 4.5, TURN_Z - 4, TURN_Z + 4]); dust(4, [SHAFT_X - 4, SHAFT_X + 4, SHAFT_BOTTOM, 4, TURN_Z - 4, TURN_Z + 4]);
 
   // ---------- lighting + floors ----------
   const hemi = new THREE.HemisphereLight('#ffffff', '#120604', 0.25); scene.add(hemi);
-  [[0,3,6,0],[0,3,16,0],[0,3,30,0],[0,3,-12,1],[0,3,-38,2],[0,3,-52,2],[14,3,TURN_Z,3],[30,3,TURN_Z,3],[SHAFT_X,-14,TURN_Z,4],[SHAFT_X,-34,TURN_Z,5]].forEach(([x,y,z,zone]) => {
+  [[0,3,6,0],[0,3,16,0],[0,3,30,0],[0,3,-10,1],[0,3,-24,2],[0,3,-36,2],[10,3,TURN_Z,3],[19,3,TURN_Z,3],[SHAFT_X,-12,TURN_Z,4],[SHAFT_X,-24,TURN_Z,5]].forEach(([x,y,z,zone]) => {
     const l = new THREE.PointLight(zoneColor(zone, false), 14, 14, 1.6); l.position.set(x, y, z); l.userData.zone = zone; scene.add(l); themed.lights.push(l);
   });
   function floorPlane(parent, w, l, pos, mirror = true) {
@@ -238,8 +238,8 @@ async function start() {
     satin.rotation.x = -Math.PI / 2; satin.position.copy(pos).add(V(0, .002, 0)); parent.add(satin); themed.satins.push(satin.material); themed.satinMeshes.push(satin);
   }
   floorPlane(segA, WI * 2, 42, V(0, -0.01, 23), false);                       // lobby: soft gloss, no mirrored text
-  floorPlane(segA, W * 2, 2 - (TURN_Z - W), V(0, -0.01, (2 + TURN_Z - W) / 2)); // corridor
-  floorPlane(segB, SHAFT_X - W * 2, W * 2, V(SHAFT_X / 2, -0.01, 0));
+  floorPlane(segA, W * 2, 2 - (TURN_Z - W), V(0, -0.01, (2 + TURN_Z - W) / 2), false); // corridor
+  floorPlane(segB, SHAFT_X - W * 2, W * 2, V(SHAFT_X / 2, -0.01, 0), false);
   function dropReflections() {
     themed.reflectors.forEach((r) => { r.visible = false; });
     themed.satinMeshes.forEach((m) => { m.visible = false; });
@@ -372,14 +372,106 @@ async function start() {
   const videoScreen = makeScreen(segA, V(0, 2.1, 9), Z, Y, 'watch', 0);     // 2nd stop: the About video
 
   makeScreen(segA, V(0, 2.1, -4), Z, Y, 'learn', 1);
-  rackRow(segA, 1, V(0, 0, -7), V(0, 0, -1), X);
-  makeScreen(segA, V(0, 2.1, -32), Z, Y, 'build', 2);
-  rackRow(segA, 2, V(0, 0, -35), V(0, 0, -1), X);
-  for (let k = -2; k <= 2; k++) { const r = makeRack(2, k + 2); r.rotation.y = -Math.PI / 2; r.position.set(k * (RACK_W + .2), 0, TURN_Z - W - RACK_D / 2); scene.add(r); }
-  makeScreen(segB, V(14, 2.1, 0), V(-1, 0, 0), Y, 'launch', 3);
-  rackRow(segB, 3, V(17, 0, 0), X, Z);
-  makeScreen(segC, V(0, -8, 0), Y, X, 'earn', 4);
-  rackRow(segC, 4, V(0, -11, 0), V(0, -1, 0), Z, X);
+  makeScreen(segA, V(0, 2.1, -20), Z, Y, 'build', 2);
+  makeScreen(segB, V(12, 2.1, 0), V(-1, 0, 0), Y, 'launch', 3);
+  makeScreen(segC, V(0, -12, 0), Y, X, 'earn', 4);
+
+  // ---------- level props (no more server racks): each level gets objects that mean something ----------
+  const animators = [];
+  const propBody = new THREE.MeshStandardMaterial({ color: '#1a1c24', metalness: .35, roughness: .45 });
+  themed.propBodies = [propBody];
+  const glowMat = (zone, k = 1) => { const m = new THREE.MeshBasicMaterial({ color: zoneColor(zone, false).multiplyScalar(k) }); m.userData.zone = zone; m.userData.mul = k; themed.leds.push(m); return m; };
+  function edges(mesh, zone, o = .6) { const l = new THREE.LineSegments(new THREE.EdgesGeometry(mesh.geometry), lineMat(zone, o)); mesh.add(l); return l; }
+  function iconTex(glyph, hex) {
+    const c = document.createElement('canvas'); c.width = 256; c.height = 170; const g = c.getContext('2d');
+    g.fillStyle = 'rgba(16,18,26,.55)'; g.beginPath(); g.roundRect ? g.roundRect(4, 4, 248, 162, 22) : g.rect(4, 4, 248, 162); g.fill();
+    g.strokeStyle = hex; g.globalAlpha = .55; g.lineWidth = 3; g.stroke(); g.globalAlpha = 1;
+    g.fillStyle = hex; g.font = '800 64px "Plus Jakarta Sans", sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(glyph, 128, 88);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+  }
+
+  // LEARN — floating lesson slates + a turning wireframe "brain" on each side
+  (() => {
+    const hex = ZONES[1].dark, glyphs = ['</>', 'AI', '{ }', '?', 'Aa', '01'];
+    for (let i = 0; i < 6; i++) {
+      const side = i % 2 ? 1 : -1, z = -6 - i * 1.3, y = 1.4 + (i % 3) * .75;
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(1.1, .73), new THREE.MeshBasicMaterial({ map: iconTex(glyphs[i % glyphs.length], hex), transparent: true, side: THREE.DoubleSide, depthWrite: false }));
+      m.position.set(side * 2.75, y, z); m.rotation.y = -side * .9;
+      segA.add(m);
+      const y0 = y, ph = i * .8;
+      animators.push((t) => { m.position.y = y0 + Math.sin(t * .9 + ph) * .12; m.rotation.z = Math.sin(t * .6 + ph) * .05; });
+    }
+    [[-1, -12], [1, -9.5]].forEach(([side, z]) => {
+      const ped = new THREE.Mesh(new THREE.CylinderGeometry(.42, .5, 1.1, 32), propBody); ped.position.set(side * 2.8, .55, z); segA.add(ped); edges(ped, 1, .35);
+      const brain = new THREE.LineSegments(new THREE.WireframeGeometry(new THREE.IcosahedronGeometry(.62, 1)), lineMat(1, .85));
+      brain.position.set(side * 2.8, 1.85, z); segA.add(brain);
+      const core = new THREE.Mesh(new THREE.SphereGeometry(.16, 20, 16), glowMat(1, 1.6)); brain.add(core);
+      animators.push((t) => { brain.rotation.y = t * .35 * side; brain.rotation.x = Math.sin(t * .4) * .25; core.scale.setScalar(1 + Math.sin(t * 3) * .15); });
+    });
+  })();
+
+  // BUILD — towers of blocks that keep assembling
+  (() => {
+    const geo = new THREE.BoxGeometry(.46, .46, .46);
+    const n = 2 * 6 * 5, inst = new THREE.InstancedMesh(geo, propBody, n), lit = new THREE.InstancedMesh(geo, glowMat(2, 1.2), n);
+    segA.add(inst); segA.add(lit);
+    const cols = [];
+    for (let side of [-1, 1]) for (let j = 0; j < 6; j++) for (let k = 0; k < 2; k++)
+      cols.push({ x: side * (2.45 + k * .5), z: -23 - j * 2.6 - k * .5, h: 3 + ((j * 7 + k * 3 + (side > 0 ? 5 : 0)) % 4), ph: j * .7 + k + side });
+    const M = new THREE.Matrix4(), hide = new THREE.Matrix4().makeScale(0, 0, 0);
+    animators.push((t) => {
+      let a = 0, b = 0;
+      cols.forEach((c) => {
+        const grow = (Math.sin(t * .5 + c.ph) * .5 + .5) * c.h;               // the tower rises and settles
+        for (let i = 0; i < 5; i++) {
+          const on = i < Math.floor(grow) + 1 && i < c.h;
+          const top = i === Math.floor(grow);
+          M.makeTranslation(c.x, .23 + i * .5, c.z);
+          if (on && !top) inst.setMatrixAt(a++, M); else if (on && top) lit.setMatrixAt(b++, M);
+        }
+      });
+      for (; a < n; a++) inst.setMatrixAt(a, hide); for (; b < n; b++) lit.setMatrixAt(b, hide);
+      inst.instanceMatrix.needsUpdate = lit.instanceMatrix.needsUpdate = true;
+    });
+  })();
+
+  // LAUNCH — two rockets on pads with pulsing launch rings
+  (() => {
+    const body = new THREE.Group();
+    const tube = new THREE.Mesh(new THREE.CylinderGeometry(.26, .3, 1.5, 24), propBody); tube.position.y = .75; body.add(tube); edges(tube, 3, .35);
+    const nose = new THREE.Mesh(new THREE.ConeGeometry(.26, .55, 24), glowMat(3, 1.3)); nose.position.y = 1.78; body.add(nose);
+    for (let f = 0; f < 3; f++) { const fin = new THREE.Mesh(new THREE.BoxGeometry(.04, .38, .3), glowMat(3, 1)); fin.position.set(Math.cos(f * 2.09) * .3, .2, Math.sin(f * 2.09) * .3); fin.rotation.y = -f * 2.09; body.add(fin); }
+    [[15.5, -2.6], [20, 2.6]].forEach(([x, z], i) => {
+      const pad = new THREE.Mesh(new THREE.CylinderGeometry(.75, .85, .18, 40), propBody); pad.position.set(x, .09, z); segB.add(pad); edges(pad, 3, .5);
+      const r = body.clone(); r.position.set(x, .18, z); segB.add(r);
+      const rings = [0, 1, 2].map(() => { const ring = new THREE.Mesh(new THREE.TorusGeometry(.7, .015, 8, 48), glowMat(3, 1.4)); ring.rotation.x = Math.PI / 2; ring.position.set(x, .2, z); segB.add(ring); return ring; });
+      animators.push((t) => {
+        r.position.y = .18 + (Math.sin(t * .7 + i * 2) * .5 + .5) * .35;
+        rings.forEach((ring, k) => { const p = ((t * .5 + k / 3 + i * .17) % 1); ring.position.y = .2 + p * 2.2; ring.scale.setScalar(1 - p * .45); ring.material.transparent = true; ring.material.opacity = 1 - p; });
+      });
+    });
+  })();
+
+  // EARN — coins spiralling up the shaft + growing bar pillars
+  (() => {
+    const coinGeo = new THREE.CylinderGeometry(.14, .14, .03, 24), N = 18;
+    const coins = new THREE.InstancedMesh(coinGeo, glowMat(4, .7), N); segC.add(coins);
+    const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), S = new THREE.Vector3(1, 1, 1), P = V(0, 0, 0), E = new THREE.Euler();
+    animators.push((t) => {
+      for (let i = 0; i < N; i++) {
+        const k = (i / N + t * .03) % 1, y = SHAFT_BOTTOM + 3 + k * (Math.abs(SHAFT_BOTTOM) - 2), a = i * 2.4 + t * .4;
+        P.set(Math.cos(a) * 3.2, y, Math.sin(a) * 3.2); E.set(Math.PI / 2, t * 2 + i, 0); Q.setFromEuler(E);
+        coins.setMatrixAt(i, M.compose(P, Q, S));
+      }
+      coins.instanceMatrix.needsUpdate = true;
+    });
+    [[-2.6, -2.6], [2.6, -2.6], [-2.6, 2.6], [2.6, 2.6]].forEach(([x, z], i) => {
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(.5, 1, .5), propBody); segC.add(bar); edges(bar, 4, .6);
+      const cap = new THREE.Mesh(new THREE.BoxGeometry(.52, .08, .52), glowMat(4, 1.5)); segC.add(cap);
+      animators.push((t) => { const h = 2 + (i + 1) * 1.6 + Math.sin(t * .6 + i) * .4; bar.scale.y = h; bar.position.set(x, SHAFT_BOTTOM + h / 2, z); cap.position.set(x, SHAFT_BOTTOM + h + .04, z); });
+    });
+  })();
+
   const endScreen = makeScreen(segC, V(0, SHAFT_BOTTOM + .5, 0), Y, X, 'apply', 5, { solid: true, scale: .95 });
   endScreen.userData.href = APPLY_URL; clickable.push(endScreen);
 
@@ -424,7 +516,7 @@ async function start() {
     for (let i = 0; i <= 800; i++) { const d = path.getPointAt(i / 800).distanceToSquared(p); if (d < bd) { bd = d; best = i / 800; } }
     return best;
   }
-  const SCREEN_U = [V(0, H, 20), V(0, H, 9), V(0, H, -4), V(0, H, -32), V(14, H, TURN_Z), V(SHAFT_X, -8, TURN_Z)].map(nearestU);
+  const SCREEN_U = [V(0, H, 20), V(0, H, 9), V(0, H, -4), V(0, H, -20), V(12, H, TURN_Z), V(SHAFT_X, -12, TURN_Z)].map(nearestU);
   let STOPS = [], baseFov = 58;
   function computeStops() {
     const hf = Math.atan(Math.tan(THREE.MathUtils.degToRad(baseFov) / 2) * camera.aspect);
@@ -629,7 +721,7 @@ async function start() {
     themed.lines.forEach((m) => { m.color.copy(zoneColor(m.userData.zone, light)); m.blending = blend; m.opacity = light ? Math.min(1, m.userData.baseO * 2.2 + .08) : m.userData.baseO * .55; m.needsUpdate = true; });
     themed.dust.forEach((m) => { m.color.copy(zoneColor(m.userData.zone, light)); m.blending = blend; m.opacity = light ? .4 : .3; m.size = .025; m.needsUpdate = true; });
     themed.faces.forEach((m) => { m.blending = blend; m.opacity = T.faceO; m.color.setScalar(light ? .55 : 1); m.needsUpdate = true; });
-    themed.leds.forEach((m) => m.color.copy(zoneColor(m.userData.zone, light)).multiplyScalar(T.ledMul));
+    themed.leds.forEach((m) => m.color.copy(zoneColor(m.userData.zone, light)).multiplyScalar(T.ledMul * (m.userData.mul || 1)));
     themed.lights.forEach((l) => { l.intensity = T.lightI; });
     themed.reflectors.forEach((r) => r.material.uniforms.color.value.setHex(T.refl));
     themed.satins.forEach((m) => { m.color.set(T.satin); m.opacity = T.satinO; });
@@ -640,6 +732,7 @@ async function start() {
     allScreens.forEach((m) => { if (m.userData.glass) m.userData.glass.userData.off = light; if (m.userData.art.frosted !== undefined && m.userData.glass) m.userData.art.frosted = !light; });
     themed.glossy.forEach((m) => { m.material.roughness = light ? .7 : .35; m.material.metalness = light ? 0 : .6; m.material.emissive.set(light ? '#d9ccbe' : '#000000'); m.material.emissiveIntensity = light ? .55 : 0; });
     rackBody.color.set(T.body); rackBody.metalness = T.metal;
+    themed.propBodies?.forEach((m) => { m.color.set(light ? '#d6cdc3' : '#1a1c24'); m.metalness = light ? .1 : .35; });
     scene.fog.density = light ? .022 : .04;            // light mode: see further down the corridor
     hemi.groundColor.set(T.hemiGround); hemi.intensity = T.hemiI;
     barMat.color.set(light ? '#d98a4e' : '#ffb070').multiplyScalar(T.barMul * (camera.aspect < 1 ? .6 : 1));
@@ -782,7 +875,7 @@ async function start() {
     if (joy.active) targetU = clampU(currentU + joy.y * .05);       // joystick drives speed
     const stiff = auto ? 10 : 14;
     velU += ((targetU - currentU) * stiff - velU * 2 * Math.sqrt(stiff)) * dt;
-    velU = THREE.MathUtils.clamp(velU, -.12, .12);
+    velU = THREE.MathUtils.clamp(velU, -.2, .2);
     currentU = clampU(currentU + velU * dt);
     // at the end (wide screens) turn slightly right so the Apply screen sits left of the link panel
     const endTurn = camera.aspect > 1.1 && !focus ? -.45 * THREE.MathUtils.smoothstep(currentU, .93, 1) : 0;
@@ -826,6 +919,7 @@ async function start() {
       s.side = sd;
     });
     // phone home trio: hide the 3D intro screen behind it, fade the trio once you move on
+    if (!reducedMotion) animators.forEach((f) => f(t));
     syncIntroVideo();
     const atHome = portraitHome && !focus && currentU < STOPS[0] + .02;
     trio.classList.toggle('gone', !atHome);

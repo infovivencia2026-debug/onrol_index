@@ -144,7 +144,7 @@ function chart(g, P, t) {
   shown.forEach((v, i) => (i ? g.lineTo(X(i), Y(v)) : g.moveTo(X(i), Y(v)))); g.stroke();
   const last = shown.length - 1;
   g.fillStyle = P.accent; g.beginPath(); g.arc(X(last), Y(shown[last]), 7, 0, 7); g.fill();
-  g.font = `700 22px ${FONT_MONO}`; g.textAlign = 'right'; g.fillText('▲ ' + Math.round(shown[last] * 100) + '%', x1, y1 - 18);
+  
 }
 
 function cta(g, P, t) {
