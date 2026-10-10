@@ -511,7 +511,7 @@ async function start() {
   glossMats.forEach((m) => { m.userData.subtle = true; });
   const blobs = [], blobGeo = new THREE.SphereGeometry(1, tier === 'low' ? 24 : 48, tier === 'low' ? 16 : 32);
   const seeds = [[-3.95, 4.05, 22, .42, 1], [4.05, .55, 22.6, .55, 0], [-3.8, .35, 21.6, .3, 2], [3.9, 4.15, 21.3, .3, 2], [0, 4.7, 21, .2, 1], [-6.6, 4.5, 20.6, .36, 0], [6.8, .3, 21.2, .32, 1]];
-  seeds.forEach(([x, y, z, r, mi], i) => {
+  seeds.slice(0, 3).forEach(([x, y, z, r, mi], i) => {
     const m = new THREE.Mesh(blobGeo, glossMats[mi]); m.scale.setScalar(r); m.position.set(x, y, z);
     m.userData = { home: m.position.clone(), vel: V(0, 0, 0), ph: i * 1.7 };
     segA.add(m); blobs.push(m);
@@ -544,8 +544,8 @@ async function start() {
         if (m.userData.subtle) return;
         const isFx = m.isLineBasicMaterial || m.isPointsMaterial || (m.isMeshBasicMaterial && m.blending === THREE.AdditiveBlending && !m.map);
         if (!isFx || !m.color) return;
-        m.userData.subtle = true; m.color.multiplyScalar(.22);
-        if (m.isPointsMaterial) m.size *= .7;
+        m.userData.subtle = true; m.color.multiplyScalar(.12);
+        if (m.isPointsMaterial) { m.size = Math.min(m.size * .5, .02); m.sizeAttenuation = true; }
       });
     });
     halos.forEach((h) => { h.visible = false; });
