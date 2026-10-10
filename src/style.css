@@ -311,3 +311,35 @@ html.plain .shade { display:none; }
   #menu .acts { grid-template-columns:1fr 1fr; }
 }
 @media (prefers-reduced-motion: reduce) { #aboutModal, #aboutModal .aboutCard { transition:none; } }
+
+/* desktop: the intro video is drawn onto the 3D card; keep the element technically "visible" so it keeps playing */
+/* desktop: the real video sits exactly over the 3D intro card while you're home */
+.introCard { position:fixed; left:0; top:0; width:0; height:0; overflow:hidden; background:#000; cursor:pointer;
+  border:2px solid color-mix(in srgb, var(--or) 90%, transparent); box-shadow:0 0 60px -10px color-mix(in srgb, var(--or) 55%, transparent);
+  transition:opacity .45s ease; }
+.introCard.gone { opacity:0; pointer-events:none; }
+.introCard video { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.introCard .cap { position:absolute; left:0; right:0; bottom:0; padding:18px 22px 16px; background:linear-gradient(to top, rgba(0,0,0,.82), rgba(0,0,0,0)); }
+.introCard .cap span { display:block; font:700 11px var(--font-mono); letter-spacing:.16em; text-transform:uppercase; color:var(--or); }
+.introCard .cap b { display:block; font-size:clamp(18px, 2vw, 28px); font-weight:800; color:#fbf7f2; margin-top:4px; }
+.introCard .snd { position:absolute; top:14px; right:14px; font:700 11px var(--font-mono); letter-spacing:.1em; text-transform:uppercase;
+  color:#fbf7f2; background:rgba(0,0,0,.6); border:1px solid var(--or); border-radius:4px; padding:8px 12px; cursor:pointer; }
+.introCard .snd:not(.on) { animation:sndPulse 1.6s ease-in-out infinite; }
+@keyframes sndPulse { 50% { box-shadow:0 0 0 6px color-mix(in srgb, var(--or) 25%, transparent); } }
+.introCard .bar { position:absolute; left:0; right:0; bottom:0; height:3px; background:rgba(255,255,255,.15); }
+.introCard .bar em { display:block; height:100%; width:0; background:var(--or); }
+html.plain .introCard { display:none; }
+@media (max-aspect-ratio: 1/1) { .introCard { display:none; } }
+/* phone: the trio's main card is the video */
+@media (max-aspect-ratio: 1/1) {
+  .homeTrio { pointer-events:auto; }
+  .homeTrio .main.vid { padding:0; justify-content:flex-end; align-items:stretch; text-align:left; cursor:pointer; }
+  .homeTrio .main.vid video { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; background:#000; }
+  .homeTrio .main.vid .cap { position:relative; display:flex; align-items:flex-end; justify-content:space-between; gap:6px; padding:8px;
+    background:linear-gradient(to top, rgba(0,0,0,.8), rgba(0,0,0,0)); }
+  .homeTrio .main.vid .cap b { font-size:13px; color:#fbf7f2; line-height:1.1; }
+  .homeTrio .main.vid .snd { font:700 8.5px var(--font-mono); letter-spacing:.06em; text-transform:uppercase; color:#fbf7f2;
+    background:rgba(0,0,0,.55); border:1px solid var(--or); border-radius:3px; padding:4px 6px; cursor:pointer; white-space:nowrap; }
+  .homeTrio .main.vid .snd.on { border-color:rgba(255,255,255,.4); }
+  .homeTrio.gone { pointer-events:none; }
+}

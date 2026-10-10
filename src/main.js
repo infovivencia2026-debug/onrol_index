@@ -49,6 +49,7 @@ if (!hasGL) { showFallback(); }
 else { start().catch((err) => { console.error(err); showFallback(); }); }
 
 async function start() {
+  var introReady = false;
   await Promise.race([
     Promise.all([
       document.fonts.load(`800 170px "Plus Jakarta Sans"`),
@@ -368,6 +369,7 @@ async function start() {
 
   const X = V(1, 0, 0), Y = V(0, 1, 0), Z = V(0, 0, 1);
   const introScreen = makeScreen(segA, V(0, 2.1, 10), Z, Y, 'intro', 0);
+  introScreen.userData.action = 'sound'; clickable.push(introScreen);
   makeScreen(segA, V(0, 2.1, -4), Z, Y, 'learn', 1);
   rackRow(segA, 1, V(0, 0, -7), V(0, 0, -1), X);
   makeScreen(segA, V(0, 2.1, -32), Z, Y, 'build', 2);
@@ -500,6 +502,7 @@ async function start() {
     ray.setFromCamera(new THREE.Vector2((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1), camera);
     const hit = ray.intersectObjects(clickable)[0];
     if (hit?.object.userData.href) { track('apply_click', { from: 'screen' }); open(hit.object.userData.href, '_blank', 'noopener'); return; }
+    if (hit?.object.userData.action === 'sound') { toggleIntroSound(); return; }
     focus = hit ? hit.object : null;
   });
 
@@ -581,6 +584,7 @@ async function start() {
     aboutOpen = true; aboutReturn = document.activeElement; stopAuto(); setMenu(false);
     aboutModal.hidden = false; requestAnimationFrame(() => aboutModal.classList.add('on'));
     renderer.setAnimationLoop(null);                          // pause the 3D scene while watching
+    if (introVid) introVid.pause();
     aboutVideo.play().catch(() => {});                        // user clicked, so sound is allowed
     $('aboutClose').focus();
     track('about_open', { from });
@@ -651,6 +655,7 @@ async function start() {
     camera.aspect = innerWidth / innerHeight;
     baseFov = camera.aspect < 1 ? 68 : 58;
     layoutPosters();
+    if (introReady) pickIntroVideo();             // var-hoisted flag: safe before the video code runs
     camera.updateProjectionMatrix();
     computeStops();
   }
@@ -672,6 +677,66 @@ async function start() {
 
   const flash = $('flash');
   function pierce() { if (reducedMotion) return; flash.classList.remove('go'); void flash.offsetWidth; flash.classList.add('go'); fovKick = 1; }
+
+  // ---------- intro video: the main card plays when you enter ----------
+  const VIDEO_SRC = './media/about_onrol.mp4';
+  const autoOK = !reducedMotion && tier !== 'low' && !navigator.connection?.saveData;
+  let introVid = null, userPaused = false;
+  function pickIntroVideo() {
+    const want = camera.aspect < 1 ? $('trioVid') : $('introVid');
+    if (want === introVid) return;
+    if (introVid) introVid.pause();
+    introVid = want;
+    if (!introVid.src) { introVid.preload = autoOK ? 'auto' : 'metadata'; introVid.src = VIDEO_SRC; introVid.load(); }
+
+  }
+  function updateSoundUI() {
+    if (!introVid) return;
+    [['trioSound', 'Tap for sound'], ['introSound', 'Click for sound']].forEach(([id, prompt]) => {
+      const b = $(id);
+      b.textContent = introVid.muted ? '\u{1F507} ' + prompt : '\u{1F50A} Sound on';
+      b.classList.toggle('on', !introVid.muted);
+      b.setAttribute('aria-label', introVid.muted ? 'Turn sound on' : 'Mute');
+    });
+  }
+  function toggleIntroSound() {
+    if (!introVid) return;
+    if (introVid.paused) { userPaused = false; introVid.play().catch(() => {}); }
+    introVid.muted = !introVid.muted;
+    if (!introVid.muted && introVid.currentTime > 1 && introVid.loop) introVid.currentTime = 0;   // sound on → start from the top
+    introVid.loop = introVid.muted;                           // with sound, play once through
+    updateSoundUI(); track('intro_sound', { on: !introVid.muted });
+  }
+  introReady = true; pickIntroVideo(); updateSoundUI();
+  $('trioSound').onclick = (e) => { e.stopPropagation(); toggleIntroSound(); };
+  $('trioMain').onclick = () => toggleIntroSound();
+  $('introSound').onclick = (e) => { e.stopPropagation(); toggleIntroSound(); };
+  $('introCard').onclick = () => toggleIntroSound();
+  // project the 3D intro card's corners to the screen so the HTML video sits exactly on it
+  const cardCorners = (() => { const w = W * 2 - .2, h = w * SCREEN_H / SCREEN_W; return [[-w/2, -h/2], [w/2, -h/2], [w/2, h/2], [-w/2, h/2]].map(([x, y]) => V(x, y, 0)); })();
+  const pv = V(0, 0, 0);
+  function placeIntroCard(show) {
+    const el = $('introCard');
+    el.classList.toggle('gone', !show);
+    introScreen.visible = !show && !(portraitHome && !focus && currentU < STOPS[0] + .02);
+    if (!show) return;
+    camera.updateMatrixWorld(); introScreen.updateMatrixWorld();
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    cardCorners.forEach((c) => {
+      pv.copy(c).applyMatrix4(introScreen.matrixWorld).project(camera);
+      const x = (pv.x + 1) / 2 * innerWidth, y = (1 - pv.y) / 2 * innerHeight;
+      x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y);
+    });
+    el.style.left = x0 + 'px'; el.style.top = y0 + 'px'; el.style.width = (x1 - x0) + 'px'; el.style.height = (y1 - y0) + 'px';
+    if (introVid?.duration) $('introProg').style.width = (introVid.currentTime / introVid.duration * 100) + '%';
+  }
+  ['introVid', 'trioVid'].forEach((id) => $(id).addEventListener('ended', () => { const v = $(id); v.muted = true; v.loop = true; v.play().catch(() => {}); updateSoundUI(); track('intro_complete'); }));
+  function syncIntroVideo() {
+    if (!introVid) return;
+    const atHome = !focus && !plainOn && !aboutOpen && currentU < STOPS[0] + .03;
+    if (atHome && introVid.paused && !userPaused && (autoOK || !introVid.muted)) introVid.play().catch(() => {});
+    if (!atHome && !introVid.paused) introVid.pause();
+  }
 
   // ---------- phone home trio ----------
   const trio = $('homeTrio');
@@ -755,9 +820,10 @@ async function start() {
       s.side = sd;
     });
     // phone home trio: hide the 3D intro screen behind it, fade the trio once you move on
+    syncIntroVideo();
     const atHome = portraitHome && !focus && currentU < STOPS[0] + .02;
     trio.classList.toggle('gone', !atHome);
-    introScreen.visible = !atHome;
+    placeIntroCard(!portraitHome && !focus && !plainOn && !aboutOpen && currentU < STOPS[0] + .03);
     if (atHome) {
       const flip = Math.floor(t / 4) % 2;
       if (flip !== trioFlip) { trioFlip = flip; swapTrio(flip); }

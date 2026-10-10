@@ -154,9 +154,41 @@ function cta(g, P, t) {
   g.font = `800 28px ${FONT_UI}`; g.textAlign = 'center'; g.fillText('Apply now  ↗', 512, 444);
 }
 
+// ---------- intro card as a video player ----------
+function videoCard(g, P, t, art) {
+  const v = art.video, x = 14, y = 14, w = 996, h = 572;
+  g.clearRect(0, 0, SCREEN_W, SCREEN_H);
+  // cover-fit the video into the frame
+  const vr = v.videoWidth / v.videoHeight, fr = w / h;
+  let sw = v.videoWidth, sh = v.videoHeight, sx = 0, sy = 0;
+  if (vr > fr) { sw = sh * fr; sx = (v.videoWidth - sw) / 2; } else { sh = sw / fr; sy = (v.videoHeight - sh) / 2; }
+  g.drawImage(v, sx, sy, sw, sh, x, y, w, h);
+  // bottom caption strip
+  const grd = g.createLinearGradient(0, y + h - 150, 0, y + h);
+  grd.addColorStop(0, 'rgba(0,0,0,0)'); grd.addColorStop(1, 'rgba(0,0,0,.78)');
+  g.fillStyle = grd; g.fillRect(x, y + h - 150, w, 150);
+  g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+  g.font = `800 44px ${FONT_UI}`; g.fillStyle = '#fbf7f2'; g.fillText('About ONROL', 52, y + h - 46);
+  g.font = `700 18px ${FONT_MONO}`; g.fillStyle = P.accent; g.fillText('AI EXECUTION SCHOOL · HYDERABAD', 52, y + h - 18);
+  // progress bar
+  const p = v.duration ? v.currentTime / v.duration : 0;
+  g.fillStyle = 'rgba(255,255,255,.18)'; g.fillRect(x, y + h - 4, w, 4);
+  g.fillStyle = P.accent; g.fillRect(x, y + h - 4, w * p, 4);
+  // sound chip (top-right)
+  const label = v.muted ? '\u{1F507}  CLICK FOR SOUND' : (v.paused ? '\u25B6  PLAY' : '\u{1F50A}  SOUND ON');
+  g.font = `700 18px ${FONT_MONO}`; const cw = g.measureText(label).width + 36;
+  const pulse = v.muted ? .55 + .45 * Math.sin(t * 3) : 1;
+  g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(SCREEN_W - 52 - cw, 40, cw, 44);
+  g.strokeStyle = alpha(P.accent, pulse); g.lineWidth = 2; g.strokeRect(SCREEN_W - 52 - cw, 40, cw, 44);
+  g.fillStyle = '#fbf7f2'; g.textAlign = 'left'; g.fillText(label, SCREEN_W - 52 - cw + 18, 69);
+  // frame
+  g.strokeStyle = alpha(P.accent, .9); g.lineWidth = 3; g.strokeRect(x, y, w, h);
+  g.fillStyle = P.accent; [[14,14],[1010,14],[14,586],[1010,586]].forEach(([cx, cy]) => g.fillRect(cx - 5, cy - 5, 10, 10));
+}
+
 // ---------- the six screens ----------
 export const SCREENS = {
-  intro:  { kicker:'AI EXECUTION SCHOOL', index:'00 / 04', draw(g, P, t) { frame(g, P, this.kicker, this.index); rings(g, P, t, 512, 300); word(g, P, 'ONROL', 512, 330, 760, 'center', 190); g.textAlign='center'; g.font=`600 30px ${FONT_UI}`; g.fillStyle=P.tag; g.fillText('Build your first AI product in 21 days', 512, 430); } },
+  intro:  { kicker:'AI EXECUTION SCHOOL', index:'00 / 04', draw(g, P, t, art) { if (art && art.video && art.video.readyState >= 2) return videoCard(g, P, t, art); frame(g, P, this.kicker, this.index); rings(g, P, t, 512, 300); word(g, P, 'ONROL', 512, 330, 760, 'center', 190); g.textAlign='center'; g.font=`600 30px ${FONT_UI}`; g.fillStyle=P.tag; g.fillText('Build your first AI product in 21 days', 512, 430); } },
   learn:  { kicker:'STEP 01 · LEARN', index:'01 / 04', draw(g, P, t) { frame(g, P, this.kicker, this.index); neural(g, P, t); word(g, P, 'LEARN', 52, 330, 500); tagline(g, P, 'Learn the AI tools', 52, 420); g.font=`500 20px ${FONT_MONO}`; g.fillStyle=P.dim; g.fillText('Live · mentor-led · 1 hr a day', 52, 520); } },
   build:  { kicker:'STEP 02 · BUILD', index:'02 / 04', draw(g, P, t) { frame(g, P, this.kicker, this.index); blueprint(g, P, t); word(g, P, 'BUILD', 972, 330, 440, 'right'); tagline(g, P, 'Build real projects', 972, 420, 'right'); g.font=`500 20px ${FONT_MONO}`; g.fillStyle=P.dim; g.textAlign='right'; g.fillText('7+ projects · 5 AI systems', 972, 520); } },
   launch: { kicker:'STEP 03 · LAUNCH', index:'03 / 04', draw(g, P, t) { frame(g, P, this.kicker, this.index); globe(g, P, t, 760, 320, 170); word(g, P, 'LAUNCH', 52, 330, 480); tagline(g, P, 'Launch to the web', 52, 420); g.font=`500 20px ${FONT_MONO}`; g.fillStyle=P.dim; g.fillText('Live links · shareable portfolio', 52, 520); } },
@@ -169,7 +201,7 @@ export function createArt(key, accentHex, light, frosted = false) {
   canvas.width = SCREEN_W; canvas.height = SCREEN_H;
   const g = canvas.getContext('2d');
   const art = { canvas, accent: accentHex, light, key, frosted };
-  art.draw = (t) => SCREENS[key].draw(g, palette(art.accent, art.light, art.frosted), t);
+  art.draw = (t) => SCREENS[key].draw(g, palette(art.accent, art.light, art.frosted), t, art);
   art.draw(0);
   return art;
 }

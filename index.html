@@ -88,6 +88,12 @@
   </div>
 </main>
 <div class="ui" id="hint" aria-hidden="true"><span id="hintText">Scroll to enter</span><i id="hintArrow">↓</i></div>
+<div id="introCard" class="introCard gone" role="region" aria-label="About ONROL video">
+  <video id="introVid" muted playsinline loop preload="none" poster="./media/about_poster.jpg"></video>
+  <div class="cap"><span>AI Execution School · Hyderabad</span><b>About ONROL</b></div>
+  <button id="introSound" class="snd" aria-label="Turn sound on">&#x1F507; Click for sound</button>
+  <i class="bar"><em id="introProg"></em></i>
+</div>
 <div id="scrim"></div>
 <div id="aboutModal" role="dialog" aria-modal="true" aria-labelledby="aboutModalTitle" hidden>
   <div class="aboutCard">
@@ -134,7 +140,10 @@
 <div class="ui hr" style="top:122px"></div>
 <section class="homeTrio" id="homeTrio" aria-label="ONROL at a glance">
   <article class="side" id="trioL"><span>Why ONROL</span><b>Live</b><em></em><p>Mentors in the room, not recordings</p></article>
-  <article class="main"><span>AI Execution School</span><b>ONROL</b><p>Build your first AI product in 21 days</p></article>
+  <article class="main vid" id="trioMain">
+    <video id="trioVid" muted playsinline loop preload="none" poster="./media/about_poster.jpg" aria-label="About ONROL video"></video>
+    <div class="cap"><b>About ONROL</b><button id="trioSound" class="snd" aria-label="Turn sound on">&#x1F507; Tap for sound</button></div>
+  </article>
   <article class="side" id="trioR"><span>Why ONROL</span><b>1 hr</b><em>/ day</em><p>Fits around work or college</p></article>
 </section>
 
