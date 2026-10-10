@@ -11,7 +11,7 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { Reflector } from 'three/examples/jsm/objects/Reflector.js';
-import { createArt, SCREEN_W, SCREEN_H } from './screens.js';
+import { createArt, createPoster, USPS, SCREEN_W, SCREEN_H, POSTER_W, POSTER_H } from './screens.js';
 
 const $ = (id) => document.getElementById(id);
 const APPLY_URL = 'https://onrol.in/programs/ai-generalist';
@@ -187,8 +187,8 @@ async function start() {
   const barMat = new THREE.MeshBasicMaterial({ color: new THREE.Color('#ffb070').multiplyScalar(1.4) });
 
   // zone boundaries along the straight corridor
-  const Z_INTRO = [26, 2], Z_LEARN = [2, -26], Z_BUILD = [-26, TURN_Z - W];
-  shellZ(...Z_INTRO, 0); floorGrid(segA, ...Z_INTRO, 0); ceilLightBars(segA, 22, 2);
+  const Z_INTRO = [34, 2], Z_LEARN = [2, -26], Z_BUILD = [-26, TURN_Z - W];
+  shellZ(...Z_INTRO, 0); floorGrid(segA, ...Z_INTRO, 0); ceilLightBars(segA, 30, 2);
   shellZ(...Z_LEARN, 1); floorHex(segA, ...Z_LEARN, 1); ceilArches(segA, ...Z_LEARN, 1);
   shellZ(...Z_BUILD, 2); floorBlueprint(segA, ...Z_BUILD, 2); ceilTruss(segA, ...Z_BUILD, 2);
   floorChevrons(segB, W, SHAFT_X - W, 3); ceilHoops(segB, W + 1, SHAFT_X - W, 3);
@@ -208,7 +208,7 @@ async function start() {
     const pm = new THREE.PointsMaterial({ color: zoneColor(zone, false), size: .03, transparent: true, opacity: .55, blending: THREE.AdditiveBlending, depthWrite: false });
     pm.userData.zone = zone; themed.dust.push(pm); scene.add(new THREE.Points(geo, pm));
   }
-  dust(0, [-4, 4, 0, 4.5, 2, 26]); dust(1, [-4, 4, 0, 4.5, -26, 2]); dust(2, [-4, 4, 0, 4.5, TURN_Z - 4, -26]);
+  dust(0, [-4, 4, 0, 4.5, 2, 34]); dust(1, [-4, 4, 0, 4.5, -26, 2]); dust(2, [-4, 4, 0, 4.5, TURN_Z - 4, -26]);
   dust(3, [0, SHAFT_X, 0, 4.5, TURN_Z - 4, TURN_Z + 4]); dust(4, [SHAFT_X - 4, SHAFT_X + 4, SHAFT_BOTTOM, 4, TURN_Z - 4, TURN_Z + 4]);
 
   // ---------- lighting + floors ----------
@@ -227,7 +227,7 @@ async function start() {
     const satin = new THREE.Mesh(new THREE.PlaneGeometry(w, l), new THREE.MeshBasicMaterial({ color: '#070302', transparent: true, opacity: .55, depthWrite: false }));
     satin.rotation.x = -Math.PI / 2; satin.position.copy(pos).add(V(0, .002, 0)); parent.add(satin); themed.satins.push(satin.material); themed.satinMeshes.push(satin);
   }
-  floorPlane(segA, W * 2, 26 - (TURN_Z - W), V(0, -0.01, (26 + TURN_Z - W) / 2));
+  floorPlane(segA, W * 2, 34 - (TURN_Z - W), V(0, -0.01, (34 + TURN_Z - W) / 2));
   floorPlane(segB, SHAFT_X - W * 2, W * 2, V(SHAFT_X / 2, -0.01, 0));
   function dropReflections() {
     themed.reflectors.forEach((r) => { r.visible = false; });
@@ -310,6 +310,28 @@ async function start() {
     if (!opts.solid) screens.push({ mesh: m, side: 1 });
     return m;
   }
+  // home posters: USPs on the left and right walls, angled toward the visitor
+  const posters = [];
+  function makePoster(usp, side, z) {
+    const art = createPoster(usp, isLight ? ZONES[0].light : ZONES[0].dark, isLight);
+    const tex = new THREE.CanvasTexture(art.canvas); tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    const h = 2.5, w = h * POSTER_W / POSTER_H;
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false }));
+    m.position.set(side * (W - .35), 2.0, z);
+    const a = .38;                                            // turn the poster toward the approaching camera
+    m.lookAt(m.position.clone().add(V(-side * Math.cos(a), 0, Math.sin(a))));
+    segA.add(m);
+    // thin bracket lines tying the poster to the wall
+    poly(segA, [V(side * W, 3.4, z), m.position.clone().add(V(0, 1.25, 0))], 0, .35);
+    poly(segA, [V(side * W, .6, z), m.position.clone().add(V(0, -1.25, 0))], 0, .35);
+    m.userData = { art, tex, zone: 0, lastDraw: -1 };
+    posters.push(m); allScreens.push(m);
+  }
+  makePoster(USPS[0], -1, 17.2); makePoster(USPS[1], 1, 17.2);
+  makePoster(USPS[2], -1, 14.0); makePoster(USPS[3], 1, 14.0);
+  flushLines();
+
   const X = V(1, 0, 0), Y = V(0, 1, 0), Z = V(0, 0, 1);
   makeScreen(segA, V(0, 2.1, 10), Z, Y, 'intro', 0);
   makeScreen(segA, V(0, 2.1, -4), Z, Y, 'learn', 1);
@@ -352,7 +374,7 @@ async function start() {
   // ---------- path ----------
   const H = 1.7, R1 = 7, R2 = 6;
   const path = new THREE.CurvePath();
-  path.add(new THREE.LineCurve3(V(0, H, 24), V(0, H, TURN_Z + R1)));
+  path.add(new THREE.LineCurve3(V(0, H, 32), V(0, H, TURN_Z + R1)));
   path.add(new THREE.CubicBezierCurve3(V(0, H, TURN_Z + R1), V(0, H, TURN_Z + R1 * .45), V(R1 * .45, H, TURN_Z), V(R1, H, TURN_Z)));
   path.add(new THREE.LineCurve3(V(R1, H, TURN_Z), V(SHAFT_X - R2, H, TURN_Z)));
   path.add(new THREE.CubicBezierCurve3(V(SHAFT_X - R2, H, TURN_Z), V(SHAFT_X - R2 * .45, H, TURN_Z), V(SHAFT_X, H - R2 * .45, TURN_Z), V(SHAFT_X, H - R2, TURN_Z)));
@@ -370,7 +392,9 @@ async function start() {
   function computeStops() {
     const hf = Math.atan(Math.tan(THREE.MathUtils.degToRad(baseFov) / 2) * camera.aspect);
     const d = THREE.MathUtils.clamp(3.9 / Math.tan(hf), 6.5, 12);
-    STOPS = [...SCREEN_U.map((u) => clampU(u - d / PATH_LEN)), 1];
+    // home stands further back so the USP posters on both walls are in view
+    const homeExtra = camera.aspect > 1 ? 6.5 : 2.5;
+    STOPS = [...SCREEN_U.map((u, i) => clampU(u - (d + (i === 0 ? homeExtra : 0)) / PATH_LEN)), 1];
   }
 
   // ---------- state ----------
@@ -512,7 +536,7 @@ async function start() {
   $('plainBtn').onclick = () => setPlain(!plainOn);
 
   // ---------- theme ----------
-  const DARK = { hemiSky: '#ffffff', hemiGround: '#120604', hemiI: .25, lightI: 14, ledMul: 2, faceO: 1, ca: .0011, bg: '#070403', body: '#120d0b', metal: .85, glossy: '#0b0705', refl: 0x2a1c14, satin: '#070302', satinO: .55, bloom: .8, vig: 1.35, grain: .022, exposure: 1, barMul: 1.4 };
+  const DARK = { hemiSky: '#ffffff', hemiGround: '#120604', hemiI: .25, lightI: 14, ledMul: 2, faceO: 1, ca: .0011, bg: '#070403', body: '#120d0b', metal: .85, glossy: '#0b0705', refl: 0x2a1c14, satin: '#070302', satinO: .78, bloom: .8, vig: 1.35, grain: .022, exposure: 1, barMul: 1.4 };
   const LIGHT = { hemiSky: '#ffffff', hemiGround: '#d9c9b8', hemiI: 1.6, lightI: 2.5, ledMul: 1, faceO: .45, ca: .0003, bg: '#efe6dc', body: '#d8cdc2', metal: .25, glossy: '#e4d9cd', refl: 0xcfc2b5, satin: '#efe6dc', satinO: .7, bloom: .22, vig: .35, grain: .012, exposure: 1.05, barMul: 1 };
   let T = DARK, caBase = .0011;
   function setTheme(light, save = true) {

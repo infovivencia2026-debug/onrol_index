@@ -171,3 +171,47 @@ export function createArt(key, accentHex, light, frosted = false) {
   art.draw(0);
   return art;
 }
+
+// ---------- home posters (USPs) ----------
+export const POSTER_W = 512, POSTER_H = 768;
+export const USPS = [
+  { n: '01', big: 'LIVE',     sub: ['Mentors in the room,', 'not recordings'] },
+  { n: '02', big: '1 HR',     unit: '/ DAY', sub: ['Fits around work', 'or college'] },
+  { n: '03', big: '70%',      sub: ['Hands-on', 'build time'] },
+  { n: '04', big: 'SHIP',     unit: 'WEEKLY', sub: ['Deployed work,', 'live links'] },
+];
+export function createPoster(usp, accentHex, light) {
+  const canvas = document.createElement('canvas');
+  canvas.width = POSTER_W; canvas.height = POSTER_H;
+  const g = canvas.getContext('2d');
+  const poster = { canvas, accent: accentHex, light };
+  poster.draw = (t) => {
+    const P = palette(poster.accent, poster.light, false);
+    g.clearRect(0, 0, POSTER_W, POSTER_H);
+    g.fillStyle = P.panel; g.fillRect(10, 10, POSTER_W - 20, POSTER_H - 20);
+    g.fillStyle = P.grid; for (let y = 10; y < POSTER_H - 10; y += 6) g.fillRect(10, y, POSTER_W - 20, 1);
+    g.strokeStyle = alpha(P.accent, .8); g.lineWidth = 2; g.strokeRect(10, 10, POSTER_W - 20, POSTER_H - 20);
+    g.fillStyle = P.accent; [[10,10],[POSTER_W-10,10],[10,POSTER_H-10],[POSTER_W-10,POSTER_H-10]].forEach(([x,y]) => g.fillRect(x-5, y-5, 10, 10));
+    g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+    g.font = `700 20px ${FONT_MONO}`; g.fillStyle = P.accent; g.fillText('WHY ONROL', 44, 70);
+    g.textAlign = 'right'; g.fillStyle = P.dim; g.fillText(usp.n + ' / 04', POSTER_W - 44, 70);
+    // slow orbit motif
+    const cx = POSTER_W / 2, cy = 250;
+    for (let i = 0; i < 3; i++) {
+      const r = 70 + i * 34, a0 = t * (.5 + i * .2) * (i % 2 ? -1 : 1);
+      g.strokeStyle = alpha(P.accent, .45 - i * .12); g.lineWidth = 2;
+      g.beginPath(); g.arc(cx, cy, r, a0, a0 + Math.PI * 1.2); g.stroke();
+    }
+    g.fillStyle = P.accent; g.beginPath(); g.arc(cx + Math.cos(t * .8) * 104, cy + Math.sin(t * .8) * 104, 6, 0, 7); g.fill();
+    // stat
+    g.textAlign = 'left';
+    let size = 150; do { g.font = `800 ${size}px ${FONT_UI}`; size -= 4; } while (g.measureText(usp.big).width > POSTER_W - 88 && size > 40);
+    g.fillStyle = P.word; g.fillText(usp.big, 44, 530);
+    if (usp.unit) { g.font = `800 40px ${FONT_UI}`; g.fillStyle = P.accent; g.fillText(usp.unit, 46, 580); }
+    g.fillStyle = P.accent; g.fillRect(44, usp.unit ? 604 : 566, 56, 3);
+    g.font = `600 30px ${FONT_UI}`; g.fillStyle = P.tag;
+    usp.sub.forEach((line, i) => g.fillText(line, 44, (usp.unit ? 650 : 612) + i * 40));
+  };
+  poster.draw(0);
+  return poster;
+}

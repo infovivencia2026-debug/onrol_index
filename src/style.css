@@ -195,3 +195,9 @@ html.og .joy, html.og .stepper, html.og #hint, html.og .tr .row, html.og .foot .
 #homeBtn { margin-bottom:6px; font-size:18px; }
 #homeBtn:disabled { opacity:.3; cursor:default; border-color:var(--line); color:var(--fg); }
 #menu .acts { grid-template-columns:1fr 1fr; }
+
+#plain .usps { list-style:none; display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-top:56px; }
+#plain .usps li { border:1px solid var(--line); padding:20px; border-radius:6px; }
+#plain .usps b { display:block; font-size:28px; font-weight:800; color:var(--or); }
+#plain .usps span { color:var(--dim); font-size:14px; }
+@media (max-width:760px) { #plain .usps { grid-template-columns:1fr 1fr; } }
