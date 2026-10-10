@@ -263,7 +263,7 @@ function learnCard(g, P, t) {
 const BUILD_CODE = [['// my-assistant/app.py', 'c'], ['from onrol import llm, ui', 'k'], ['', ''], ['assistant = llm.agent(', 'f'], ['  goals="data analyst roles",', 's'], ['  tools=["research", "planner"])', 's'], ['', ''], ['ui.chat(assistant).serve()', 'f']];
 function buildCard(g, P, t, light) {
   g.clearRect(0, 0, SCREEN_W, SCREEN_H);
-  windowChrome(g, P, 'app.py — my-assistant', light);
+  windowChrome(g, P, 'app.py · my-assistant', light);
   // sidebar
   g.fillStyle = light ? '#eceef1' : '#12141b'; g.fillRect(16, 78, 210, 470);
   g.font = `500 18px ${FONT_MONO}`; ['app.py', 'prompts.md', 'planner.py', 'tests/'].forEach((f, i) => { g.fillStyle = i === 0 ? P.accent : P.dim; g.fillText(f, 40, 122 + i * 38); });
@@ -320,7 +320,7 @@ function earnCard(g, P, t) {
   rounded(g, 14, 14, 996, 572, 8); g.fillStyle = P.dark ? '#15120a' : '#fbf6ea'; g.fill();
   g.strokeStyle = alpha(P.accent, .7); g.lineWidth = 3; g.stroke();
   g.textAlign = 'left'; word(g, P, 'EARN', 48, 140, 300, 'left', 96);
-  g.font = `600 26px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText('from the skill — pick your direction', 330, 128);
+  g.font = `600 26px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText('from the skill · pick your direction', 330, 128);
   const tiles = [['Career growth', 'ATS-ready resume', 'Project to explain'], ['Freelancing', 'Live links for clients', 'Ship every week'], ['Own products', 'Your own AI tools', 'Build → launch loop']];
   const hi = Math.floor(t / 2.5) % 3;
   tiles.forEach(([h, a, b], i) => {
@@ -330,7 +330,7 @@ function earnCard(g, P, t) {
     g.font = `600 16px ${FONT_MONO}`; g.fillStyle = P.accent; g.fillText('0' + (i + 1), x + 26, y + 44);
     g.font = `800 34px ${FONT_UI}`; g.fillStyle = P.word; g.fillText(h, x + 26, y + 104);
     g.fillStyle = P.accent; g.fillRect(x + 26, y + 128, 50, 3);
-    g.font = `500 21px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText('— ' + a, x + 26, y + 180); g.fillText('— ' + b, x + 26, y + 218);
+    g.font = `500 21px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText(a, x + 26, y + 180); g.fillText(b, x + 26, y + 218);
     // small rising bars
     for (let k = 0; k < 5; k++) { const bh = 14 + k * 11 * (on ? 1 : .6); g.fillStyle = alpha(P.accent, on ? .8 : .3); g.fillRect(x + 26 + k * 24, y + 310 - bh, 16, bh); }
   });
@@ -534,7 +534,7 @@ EARN_TILES.forEach(([head, a, b], i) => {
     g.textAlign = 'left'; g.font = `600 22px ${FONT_MONO}`; g.fillStyle = P.accent; g.fillText('0' + (i + 1), 40, 70);
     g.font = `800 34px ${FONT_UI}`; g.fillStyle = P.word; g.fillText(head, 40, 150);
     g.fillStyle = P.accent; g.fillRect(40, 178, 60, 4);
-    g.font = `500 26px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText('— ' + a, 40, 250); g.fillText('— ' + b, 40, 298);
+    g.font = `500 26px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText(a, 40, 250); g.fillText(b, 40, 298);
     for (let k = 0; k < 5; k++) { const bh = 20 + k * 16 * (on ? 1 : .55); g.fillStyle = alpha(P.accent, on ? .85 : .3); g.fillRect(40 + k * 30, 460 - bh, 20, bh); }
   };
 });

@@ -1025,7 +1025,7 @@ async function start() {
       document.documentElement.style.setProperty('--or', hex);   // single signal-red accent
       [...dotsEl.children].forEach((b, i) => { b.classList.toggle('on', i === si); b.setAttribute('aria-current', i === si ? 'step' : 'false'); });
       $('metaL').textContent = si === 1 ? 'Meet ONROL · 2:45' : ZONES[z].sub;
-      $('metaR').textContent = String(STOP_STEP[si]).padStart(2, '0') + '—04';
+      $('metaR').textContent = String(STOP_STEP[si]).padStart(2, '0') + ' / 04';
       const slug = SLUGS[si] ? '#' + SLUGS[si] : location.pathname + location.search;
       if (started && location.hash !== '#' + SLUGS[si]) history.replaceState(null, '', slug);
       if (started && si !== lastTracked) { lastTracked = si; track('step_view', { step: STOP_NAMES[si].toLowerCase() }); }
