@@ -3,7 +3,7 @@
 
 export const SCREEN_W = 1024, SCREEN_H = 600;
 
-const FONT_UI = '"Inter", system-ui, sans-serif';
+const FONT_UI = '"IBM Plex Sans", system-ui, sans-serif';
 const FONT_MONO = '"IBM Plex Mono", ui-monospace, monospace';
 
 function palette(accent, light, frosted) {

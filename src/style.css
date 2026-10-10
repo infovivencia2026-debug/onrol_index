@@ -9,7 +9,7 @@
   --btn-bg:#fbfaf8; --btn-fg:#070403;
   --bar:#000; --vig:rgba(0,0,0,.85);
   --link:#e6d5c4; --head-shadow:0 2px 24px rgba(0,0,0,.8);
-  --font-ui:"Inter", system-ui, sans-serif;
+  --font-ui:"IBM Plex Sans", system-ui, sans-serif;
   --font-mono:"IBM Plex Mono", ui-monospace, monospace;
   color-scheme:dark;
 }
@@ -421,7 +421,7 @@ html.plain .introCard { display:none; }
 
 @media (max-width:760px) { .joy { display:none !important; } .bottom .head { max-width:100%; } }
 
-body { font-feature-settings:'ss01','cv11'; }
+
 .tl b, .tr b, .btn { letter-spacing:.01em; }
 
 /* Lusion-style controls: solid black pills, white on hover */

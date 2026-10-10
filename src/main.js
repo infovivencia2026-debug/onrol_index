@@ -1,11 +1,8 @@
-// Inter for interface + headlines, IBM Plex Mono for labels, data and code (latin subsets)
-import '@fontsource/inter/latin-300.css';
-import '@fontsource/inter/latin-400.css';
-import '@fontsource/inter/latin-500.css';
-import '@fontsource/inter/latin-600.css';
-import '@fontsource/inter/latin-700.css';
-import '@fontsource/inter/latin-800.css';
-import '@fontsource/inter/latin-900.css';
+// IBM Plex Sans for interface + headlines, IBM Plex Mono for labels, data and code (latin subsets)
+import '@fontsource/ibm-plex-sans/latin-300.css';
+import '@fontsource/ibm-plex-sans/latin-400.css';
+import '@fontsource/ibm-plex-sans/latin-500.css';
+import '@fontsource/ibm-plex-sans/latin-600.css';
 import '@fontsource/ibm-plex-mono/latin-300.css';
 import '@fontsource/ibm-plex-mono/latin-400.css';
 import '@fontsource/ibm-plex-mono/latin-500.css';
@@ -60,8 +57,8 @@ async function start() {
   var introReady = false;
   await Promise.race([
     Promise.all([
-      document.fonts.load(`500 170px "Inter"`),
-      document.fonts.load(`400 30px "Inter"`),
+      document.fonts.load(`500 170px "IBM Plex Sans"`),
+      document.fonts.load(`400 30px "IBM Plex Sans"`),
       document.fonts.load(`400 20px "IBM Plex Mono"`),
       document.fonts.load(`500 20px "IBM Plex Mono"`),
     ]),
