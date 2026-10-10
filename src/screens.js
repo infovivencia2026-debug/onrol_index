@@ -204,7 +204,7 @@ function videoCard(g, P, t, art) {
   g.fillStyle = 'rgba(255,255,255,.18)'; g.fillRect(x, y + h - 4, w, 4);
   g.fillStyle = P.accent; g.fillRect(x, y + h - 4, w * p, 4);
   // sound chip (top-right)
-  const label = v.muted ? '\u{1F507}  CLICK FOR SOUND' : (v.paused ? '\u25B6  PLAY' : '\u{1F50A}  SOUND ON');
+  const label = v.muted ? 'SOUND OFF' : (v.paused ? 'PLAY' : 'SOUND ON');
   g.font = `400 15px ${FONT_MONO}`; const cw = g.measureText(label).width + 36;
   const pulse = v.muted ? .55 + .45 * Math.sin(t * 3) : 1;
   g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(SCREEN_W - 52 - cw, 40, cw, 44);
@@ -293,7 +293,7 @@ function launchCard(g, P, t, light) {
   g.clearRect(0, 0, SCREEN_W, SCREEN_H);
   windowChrome(g, P, '', light);
   pill(g, 160, 30, 600, 34, light ? '#fff' : '#0c0e14', alpha(P.accent, .35));
-  g.font = `400 16px ${FONT_MONO}`; g.textAlign = 'left'; g.fillStyle = P.accent; g.fillText('🔒', 176, 53);
+  g.font = `400 16px ${FONT_MONO}`; g.textAlign = 'left'; g.fillStyle = P.accent; g.fillRect(178, 41, 9, 7);
   g.fillStyle = P.word; g.fillText('https://your-name.dev', 206, 53);
   const live = (t % 6) > 1.4;
   pill(g, 820, 30, 160, 34, live ? P.accent : 'transparent', live ? null : alpha(P.accent, .5));

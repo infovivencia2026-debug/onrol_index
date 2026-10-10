@@ -870,7 +870,7 @@ async function start() {
     if (!introVid) return;
     [['introSound', coarse ? 'Tap for sound' : 'Click for sound']].forEach(([id, prompt]) => {
       const b = $(id);
-      b.textContent = introVid.muted ? '\u{1F507} ' + prompt : '\u{1F50A} Sound on';
+      b.textContent = introVid.muted ? 'Sound off' : 'Sound on';
       b.classList.toggle('on', !introVid.muted);
       b.setAttribute('aria-label', introVid.muted ? 'Turn sound on' : 'Mute');
     });
