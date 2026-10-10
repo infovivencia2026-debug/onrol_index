@@ -504,3 +504,17 @@ html.plain .cap { display:none; }
 .cap li span { font-size:9px !important; margin-top:3px; }
 #hint { display:none !important; }
 @media (max-width:760px) { .cap { bottom:calc(5.5vh + 120px) !important; flex-direction:column; align-items:flex-start; gap:10px; } .cap ul { border-left:0; padding:0; } }
+
+/* APPLY: card centred, site links become a footer strip at the very bottom */
+.endnav { left:42px !important; right:42px !important; top:auto !important; bottom:calc(5.5vh + 4px) !important; width:auto !important; max-height:none !important;
+  transform:translateY(16px) !important; padding:16px 22px !important; display:grid; grid-template-columns:auto 1fr; gap:6px 32px; align-items:start; }
+.endnav.on { transform:none !important; }
+.endnav .brand { margin:0; grid-row:1 / span 2; font-size:15px; }
+.endnav .more { margin:0; }
+.endnav .cols { grid-template-columns:repeat(3, auto) !important; justify-content:start; gap:4px 40px !important; }
+.endnav .cols > div { display:flex; flex-wrap:wrap; gap:0 14px; align-items:baseline; }
+.endnav h3 { margin:0 6px 0 0 !important; }
+.endnav a { font-size:12px !important; padding:2px 0 !important; }
+.endnav small { grid-column:2; margin-top:4px; padding-top:6px; }
+html:has(.endnav.on) .bottom, html:has(.endnav.on) .cap { opacity:0; pointer-events:none; }
+@media (max-width:760px) { .endnav { left:12px !important; right:12px !important; grid-template-columns:1fr; } .endnav .cols { grid-template-columns:1fr !important; } .endnav small { grid-column:1; } }

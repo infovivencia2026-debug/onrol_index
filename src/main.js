@@ -289,8 +289,8 @@ async function start() {
     face.userData = { id: ZONES[zone].name }; clickable.push(face);
     return grp;
   }
-  function rackRow(parent, zone, start, along, across, up = V(0, 1, 0)) {
-    for (let j = 0; j < 6; j++) [-1, 1].forEach((side) => {
+  function rackRow(parent, zone, start, along, across, up = V(0, 1, 0), count = 6) {
+    for (let j = 0; j < count; j++) [-1, 1].forEach((side) => {
       const r = makeRack(zone, j + (side > 0 ? 1 : 0));
       const spacing = up.y === 1 ? RACK_W + .25 : RACK_H + .4;
       r.position.copy(start).addScaledVector(along, j * spacing).addScaledVector(across, side * (RACK_X + RACK_D / 2));
@@ -401,7 +401,7 @@ async function start() {
   rackRow(segA, 2, V(0, 0, -22.5), V(0, 0, -1), X);
   for (let k = -2; k <= 2; k++) { const r = makeRack(2, k + 2); r.rotation.y = -Math.PI / 2; r.position.set(k * (RACK_W + .2), 0, TURN_Z - W - RACK_D / 2); scene.add(r); }
   rackRow(segB, 3, V(14, 0, 0), X, Z);
-  rackRow(segC, 4, V(0, -14, 0), V(0, -1, 0), Z, X);
+  rackRow(segC, 4, V(0, -14, 0), V(0, -1, 0), Z, X, 2);   // none near START HERE
 
   // LEARN — split: class sheet turned in from the left, week schedule standing on the right
   const learnCard = makeScreen(segA, V(0, 2.1, -4), Z, Y, 'learn', 1, { scale: .8, lx: -1.15, yaw: .22 });
@@ -987,7 +987,7 @@ async function start() {
     velU = THREE.MathUtils.clamp(velU, -.2, .2);
     currentU = clampU(currentU + velU * dt);
     // at the end (wide screens) turn slightly right so the Apply screen sits left of the link panel
-    const endTurn = camera.aspect > 1.1 && !focus ? -.22 * THREE.MathUtils.smoothstep(currentU, .93, 1) : 0;
+    const endTurn = 0;   // APPLY card stays centred
     yaw += ((joy.active ? -joy.x * .7 : 0) + endTurn - yaw) * (1 - Math.exp(-dt * 5));
 
     if (focus) {
