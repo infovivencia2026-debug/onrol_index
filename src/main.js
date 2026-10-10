@@ -64,12 +64,12 @@ async function start() {
 
   // ---------- levels: each has its own color ----------
   const ZONES = [
-    { key: 'intro',  name: 'Intro',  sub: 'The path / 4 steps',   dark: '#cfd3d9', light: '#1a1c1f' },
-    { key: 'learn',  name: 'Learn',  sub: 'Learn the AI tools',   dark: '#cfd3d9', light: '#1a1c1f' },
-    { key: 'build',  name: 'Build',  sub: 'Build real projects',  dark: '#cfd3d9', light: '#1a1c1f' },
-    { key: 'launch', name: 'Launch', sub: 'Launch to the web',    dark: '#cfd3d9', light: '#1a1c1f' },
-    { key: 'earn',   name: 'Earn',   sub: 'Earn from the skill',  dark: '#cfd3d9', light: '#1a1c1f' },
-    { key: 'apply',  name: 'Apply',  sub: 'No payment to apply',  dark: '#cfd3d9', light: '#1a1c1f' },
+    { key: 'intro',  name: 'Intro',  sub: 'The path / 4 steps',   dark: '#ff2a1a', light: '#d81e0f' },
+    { key: 'learn',  name: 'Learn',  sub: 'Learn the AI tools',   dark: '#2ee6c9', light: '#00796b' },
+    { key: 'build',  name: 'Build',  sub: 'Build real projects',  dark: '#9b8cff', light: '#4b36d6' },
+    { key: 'launch', name: 'Launch', sub: 'Launch to the web',    dark: '#ff4f8b', light: '#c2185b' },
+    { key: 'earn',   name: 'Earn',   sub: 'Earn from the skill',  dark: '#ffb020', light: '#9a6200' },
+    { key: 'apply',  name: 'Apply',  sub: 'No payment to apply',  dark: '#ff2a1a', light: '#d81e0f' },
   ];
   const zoneColor = (z, light) => new THREE.Color(light ? ZONES[z].light : ZONES[z].dark);
   const ZONE_COL = [ZONES.map((z, i) => zoneColor(i, false)), ZONES.map((z, i) => zoneColor(i, true))];
@@ -984,7 +984,7 @@ async function start() {
     if (si !== lastZone) {
       lastZone = si;
       const hex = isLight ? ZONES[z].light : ZONES[z].dark;
-      document.documentElement.style.setProperty('--or', isLight ? '#d81e0f' : '#ff2a1a');   // single signal-red accent
+      document.documentElement.style.setProperty('--or', hex);   // single signal-red accent
       [...dotsEl.children].forEach((b, i) => { b.classList.toggle('on', i === si); b.setAttribute('aria-current', i === si ? 'step' : 'false'); });
       $('metaL').textContent = si === 1 ? 'Meet ONROL · 2:45' : ZONES[z].sub;
       $('metaR').textContent = String(STOP_STEP[si]).padStart(2, '0') + '—04';

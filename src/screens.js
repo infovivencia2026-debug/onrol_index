@@ -7,7 +7,6 @@ const FONT_UI = '"Plus Jakarta Sans", system-ui, sans-serif';
 const FONT_MONO = '"JetBrains Mono", monospace';
 
 function palette(accent, light, frosted) {
-  accent = light ? '#d81e0f' : '#ff2a1a';   // monochrome site, one red accent
   // frosted: the 3D glass behind the card does the blurring, so the painted panel is only a light tint
   const panel = light ? (frosted ? 'rgba(250,246,241,.72)' : 'rgba(250,246,241,.97)') : (frosted ? 'rgba(16,18,26,.72)' : 'rgb(16,18,26)');
   return light
