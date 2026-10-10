@@ -413,7 +413,11 @@ async function start() {
   satellite(earnCard, 'tile1', 2.05, 0, -.75, .9, 0);
   satellite(earnCard, 'tile2', 2.05, 2.35, -.75, .55, -.32);
 
-  const animators = [];   // no decorative props: the path stays clean between levels
+  const animators = [];
+  // ---------- stage modules: src/stages/*.js each own one stop (or the travel) ----------
+  const STAGE_MODULES = import.meta.glob('./stages/*.js', { eager: true });
+  const stageMods = [];
+  const cards = { home: introScreen, watch: videoScreen, learn: learnCard, build: buildCard, launch: launchCard, earn: earnCard, apply: null };
 
   // ---------- post-processing ----------
   const composer = new EffectComposer(renderer);
@@ -702,6 +706,7 @@ async function start() {
     $('themeBtn').textContent = $('mTheme').textContent = light ? 'Dark' : 'Light';
     $('themeBtn').setAttribute('aria-label', light ? 'Switch to dark mode' : 'Switch to light mode');
     lastZone = -1;                                   // re-apply the level accent for this theme
+    stageMods.forEach((m) => { try { m.setTheme?.(light); } catch {} });
     if (save) { try { localStorage.setItem('onrol-theme', light ? 'light' : 'dark'); } catch {} track('theme', { mode: light ? 'light' : 'dark' }); }
   }
   $('themeBtn').onclick = () => setTheme(!isLight);
@@ -930,6 +935,17 @@ async function start() {
     frameNo++;
     const idle = Math.abs(velU) < 1e-4 && !joy.active && !auto && !focus && fovKick < .01;
     updateTrack(currentU, t);
+    if (!stageMods.inited) {
+      stageMods.inited = true;
+      cards.apply = endScreen;
+      const ctx = { THREE, scene, camera, renderer, segA, segB, segC, V, ZONES, zoneColor, lineMat, seg, poly, flushLines, cards, path,
+        SHAFT_X, TURN_Z, SHAFT_BOTTOM, W, WI, CEIL, H, tier, reducedMotion,
+        get isLight() { return isLight; }, get currentU() { return currentU; }, get STOPS() { return STOPS; }, get stopIndex() { return stopAt(currentU); } };
+      for (const [file, mod] of Object.entries(STAGE_MODULES)) {
+        try { const api = mod.default?.(ctx); if (api) stageMods.push(api); } catch (e) { console.warn('stage module failed', file, e); }
+      }
+    }
+    for (const m of stageMods) { try { m.update?.(t, dt); } catch (e) { console.warn(e); } }
     if (!(idle && frameNo % 2)) { if (bloom.enabled) composer.render(); else renderer.render(scene, camera); }
 
     // adaptive resolution: keep motion smooth on any PC
