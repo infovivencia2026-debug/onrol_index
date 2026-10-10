@@ -193,13 +193,146 @@ function videoCard(g, P, t, art) {
 }
 
 // ---------- the six screens ----------
+// ---------- unique card formats: each level is a different kind of object ----------
+function pill(g, x, y, w, h, fill, stroke) { rounded(g, x, y, w, h, h / 2); if (fill) { g.fillStyle = fill; g.fill(); } if (stroke) { g.strokeStyle = stroke; g.lineWidth = 2; g.stroke(); } }
+function windowChrome(g, P, title, light) {
+  rounded(g, 14, 14, 996, 572, 22);
+  g.fillStyle = light ? '#f4f5f7' : '#0e1016'; g.fill();
+  g.strokeStyle = P.dark ? 'rgba(255,255,255,.16)' : 'rgba(0,0,0,.12)'; g.lineWidth = 2; g.stroke();
+  g.save(); rounded(g, 14, 14, 996, 64, 22); g.clip();
+  g.fillStyle = light ? '#e7e9ed' : '#171a22'; g.fillRect(14, 14, 996, 64); g.restore();
+  g.fillStyle = light ? '#e7e9ed' : '#171a22'; g.fillRect(14, 56, 996, 22);
+  ['#ff5f57', '#febc2e', '#28c840'].forEach((c, i) => { g.fillStyle = c; g.beginPath(); g.arc(52 + i * 30, 46, 9, 0, 7); g.fill(); });
+  g.font = `500 20px ${FONT_MONO}`; g.textAlign = 'left'; g.fillStyle = light ? '#555' : '#9aa1ad'; g.fillText(title, 160, 53);
+}
+
+// LEARN — a live class sheet: tools tick off one by one, mentor note
+function learnCard(g, P, t) {
+  g.clearRect(0, 0, SCREEN_W, SCREEN_H);
+  rounded(g, 14, 14, 996, 572, 30); g.fillStyle = P.dark ? '#0d1a19' : '#eefaf8'; g.fill();
+  g.strokeStyle = alpha(P.accent, .55); g.lineWidth = 2; g.stroke();
+  // accent band
+  g.save(); rounded(g, 14, 14, 996, 572, 30); g.clip(); g.fillStyle = alpha(P.accent, .16); g.fillRect(14, 14, 340, 572); g.restore();
+  g.fillStyle = P.accent; g.beginPath(); g.arc(56, 62, 8 + Math.sin(t * 4) * 1.5, 0, 7); g.fill();
+  g.font = `700 20px ${FONT_UI}`; g.textAlign = 'left'; g.fillStyle = P.accent; g.fillText('LIVE · DAY 03', 76, 69);
+  word(g, P, 'LEARN', 48, 220, 280, 'left', 110);
+  g.font = `600 26px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText('the AI tools,', 50, 272); g.fillText('in a live room', 50, 306);
+  // mentor bubble
+  rounded(g, 46, 420, 270, 116, 18); g.fillStyle = P.dark ? 'rgba(255,255,255,.06)' : '#fff'; g.fill();
+  g.fillStyle = P.accent; g.beginPath(); g.arc(78, 452, 16, 0, 7); g.fill();
+  g.font = `800 16px ${FONT_UI}`; g.fillStyle = P.dark ? '#0d1a19' : '#fff'; g.textAlign = 'center'; g.fillText('M', 78, 458);
+  g.textAlign = 'left'; g.font = `700 18px ${FONT_UI}`; g.fillStyle = P.word; g.fillText('Mentor', 104, 458);
+  g.font = `500 17px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText('Try it in two tools', 62, 494); g.fillText('and compare.', 62, 518);
+  // checklist
+  const tools = [['ChatGPT', 'drafting & reasoning'], ['Gemini', 'across Google tools'], ['Claude', 'long documents'], ['Perplexity', 'research with sources'], ['NotebookLM', 'study your notes']];
+  const done = Math.floor((t % 7) / 1.1);
+  tools.forEach(([n, d], i) => {
+    const y = 110 + i * 92, ok = i < done;
+    g.strokeStyle = P.dark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.08)'; g.lineWidth = 1; g.beginPath(); g.moveTo(400, y + 66); g.lineTo(966, y + 66); g.stroke();
+    rounded(g, 400, y + 8, 40, 40, 10); g.fillStyle = ok ? P.accent : 'transparent'; g.fill(); g.strokeStyle = ok ? P.accent : alpha(P.accent, .5); g.lineWidth = 2; g.stroke();
+    if (ok) { g.strokeStyle = P.dark ? '#0d1a19' : '#fff'; g.lineWidth = 4; g.beginPath(); g.moveTo(410, y + 28); g.lineTo(418, y + 37); g.lineTo(431, y + 19); g.stroke(); }
+    g.font = `700 30px ${FONT_UI}`; g.fillStyle = ok ? P.word : P.dim; g.fillText(n, 462, y + 40);
+    g.font = `500 19px ${FONT_MONO}`; g.textAlign = 'right'; g.fillStyle = P.dim; g.fillText(d, 966, y + 38); g.textAlign = 'left';
+  });
+}
+
+// BUILD — a code editor: line numbers, typed code, test status bar
+const BUILD_CODE = [['// my-assistant/app.py', 'c'], ['from onrol import llm, ui', 'k'], ['', ''], ['assistant = llm.agent(', 'f'], ['  goals="data analyst roles",', 's'], ['  tools=["research", "planner"])', 's'], ['', ''], ['ui.chat(assistant).serve()', 'f']];
+function buildCard(g, P, t, light) {
+  g.clearRect(0, 0, SCREEN_W, SCREEN_H);
+  windowChrome(g, P, 'app.py — my-assistant', light);
+  // sidebar
+  g.fillStyle = light ? '#eceef1' : '#12141b'; g.fillRect(16, 78, 210, 470);
+  g.font = `500 18px ${FONT_MONO}`; ['app.py', 'prompts.md', 'planner.py', 'tests/'].forEach((f, i) => { g.fillStyle = i === 0 ? P.accent : P.dim; g.fillText(f, 40, 122 + i * 38); });
+  word(g, P, 'BUILD', 40, 470, 170, 'left', 64, alpha(P.accent, .9));
+  g.font = `600 17px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText('real projects', 42, 504);
+  // code
+  const chars = Math.floor((t % 9) * 34); let left = chars;
+  const col = { c: P.dim, k: P.accent, f: P.word, s: light ? '#9a3d00' : '#ffb27a', '': P.word };
+  g.font = `500 24px ${FONT_MONO}`;
+  BUILD_CODE.forEach(([line, k], i) => {
+    const y = 128 + i * 46;
+    g.fillStyle = P.dim; g.textAlign = 'right'; g.fillText(String(i + 1), 290, y); g.textAlign = 'left';
+    const shown = line.slice(0, Math.max(0, left)); left -= line.length + 1;
+    g.fillStyle = col[k]; g.fillText(shown, 316, y);
+    if (left < 0 && left > -line.length - 2 && Math.floor(t * 2) % 2) { g.fillStyle = P.accent; g.fillRect(316 + g.measureText(shown).width + 2, y - 20, 12, 26); }
+  });
+  // status bar
+  const ok = left > 0;
+  g.save(); rounded(g, 14, 14, 996, 572, 22); g.clip();
+  g.fillStyle = ok ? P.accent : (light ? '#dfe2e6' : '#1b1e27'); g.fillRect(14, 548, 996, 38); g.restore();
+  g.font = `600 18px ${FONT_MONO}`; g.fillStyle = ok ? (P.dark ? '#0b0c10' : '#fff') : P.dim;
+  g.fillText(ok ? '✓ 12 tests passed · ready to ship' : '● building…', 34, 573);
+}
+
+// LAUNCH — a browser: live URL, deploy pill, the page itself
+function launchCard(g, P, t, light) {
+  g.clearRect(0, 0, SCREEN_W, SCREEN_H);
+  windowChrome(g, P, '', light);
+  pill(g, 160, 30, 600, 34, light ? '#fff' : '#0c0e14', alpha(P.accent, .35));
+  g.font = `500 19px ${FONT_MONO}`; g.textAlign = 'left'; g.fillStyle = P.accent; g.fillText('🔒', 176, 53);
+  g.fillStyle = P.word; g.fillText('https://your-name.dev', 206, 53);
+  const live = (t % 6) > 1.4;
+  pill(g, 820, 30, 160, 34, live ? P.accent : 'transparent', live ? null : alpha(P.accent, .5));
+  g.font = `700 17px ${FONT_UI}`; g.textAlign = 'center'; g.fillStyle = live ? (P.dark ? '#0b0c10' : '#fff') : P.accent;
+  g.fillText(live ? '● LIVE' : 'deploying…', 900, 53);
+  // the page: gradient hero
+  g.save(); rounded(g, 14, 14, 996, 572, 22); g.clip();
+  const gr = g.createLinearGradient(0, 78, 0, 586); gr.addColorStop(0, alpha(P.accent, .28)); gr.addColorStop(1, alpha(P.accent, 0));
+  g.fillStyle = gr; g.fillRect(14, 78, 996, 508); g.restore();
+  word(g, P, 'LAUNCH', 512, 290, 760, 'center', 150);
+  g.textAlign = 'center'; g.font = `600 28px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText('Your project, live on the web with its own link', 512, 350);
+  // deploy steps
+  ['Build', 'Checks', 'Deploy', 'Live'].forEach((s, i) => {
+    const on = (t % 6) > .35 * (i + 1), x = 232 + i * 186;
+    pill(g, x, 420, 150, 46, on ? alpha(P.accent, .18) : 'transparent', alpha(P.accent, on ? .8 : .25));
+    g.font = `600 19px ${FONT_UI}`; g.fillStyle = on ? P.word : P.dim; g.fillText((on ? '✓ ' : '') + s, x + 75, 450);
+    if (i < 3) { g.strokeStyle = alpha(P.accent, .4); g.lineWidth = 2; g.beginPath(); g.moveTo(x + 152, 443); g.lineTo(x + 184, 443); g.stroke(); }
+  });
+}
+
+// EARN — a portfolio board: three direction tiles
+function earnCard(g, P, t) {
+  g.clearRect(0, 0, SCREEN_W, SCREEN_H);
+  rounded(g, 14, 14, 996, 572, 8); g.fillStyle = P.dark ? '#15120a' : '#fbf6ea'; g.fill();
+  g.strokeStyle = alpha(P.accent, .7); g.lineWidth = 3; g.stroke();
+  g.textAlign = 'left'; word(g, P, 'EARN', 48, 140, 300, 'left', 96);
+  g.font = `600 26px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText('from the skill — pick your direction', 330, 128);
+  const tiles = [['Career growth', 'ATS-ready resume', 'Project to explain'], ['Freelancing', 'Live links for clients', 'Ship every week'], ['Own products', 'Your own AI tools', 'Build → launch loop']];
+  const hi = Math.floor(t / 2.5) % 3;
+  tiles.forEach(([h, a, b], i) => {
+    const x = 48 + i * 316, y = 196, on = i === hi;
+    rounded(g, x, y, 296, 340, 16); g.fillStyle = on ? alpha(P.accent, .16) : (P.dark ? 'rgba(255,255,255,.04)' : '#fff'); g.fill();
+    g.strokeStyle = alpha(P.accent, on ? .9 : .25); g.lineWidth = 2; g.stroke();
+    g.font = `700 16px ${FONT_MONO}`; g.fillStyle = P.accent; g.fillText('0' + (i + 1), x + 26, y + 44);
+    g.font = `800 34px ${FONT_UI}`; g.fillStyle = P.word; g.fillText(h, x + 26, y + 104);
+    g.fillStyle = P.accent; g.fillRect(x + 26, y + 128, 50, 3);
+    g.font = `500 21px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText('— ' + a, x + 26, y + 180); g.fillText('— ' + b, x + 26, y + 218);
+    // small rising bars
+    for (let k = 0; k < 5; k++) { const bh = 14 + k * 11 * (on ? 1 : .6); g.fillStyle = alpha(P.accent, on ? .8 : .3); g.fillRect(x + 26 + k * 24, y + 310 - bh, 16, bh); }
+  });
+}
+
+// WATCH — a film frame with sprocket holes and a play button
+function watchCard(g, P, t) {
+  g.clearRect(0, 0, SCREEN_W, SCREEN_H);
+  g.fillStyle = '#050506'; g.fillRect(14, 14, 996, 572);
+  for (let x = 30; x < 1000; x += 46) { g.fillStyle = '#1d1d22'; rounded(g, x, 26, 26, 18, 4); g.fill(); rounded(g, x, 556, 26, 18, 4); g.fill(); }
+  const pr = 1 + Math.sin(t * 2.5) * .04;
+  g.fillStyle = alpha(P.accent, .18); g.beginPath(); g.arc(512, 270, 96 * pr, 0, 7); g.fill();
+  g.fillStyle = '#f7f8fa'; g.beginPath(); g.arc(512, 270, 64, 0, 7); g.fill();
+  g.fillStyle = '#0b0c10'; g.beginPath(); g.moveTo(496, 240); g.lineTo(496, 300); g.lineTo(546, 270); g.closePath(); g.fill();
+  g.textAlign = 'center'; g.font = `800 52px ${FONT_UI}`; g.fillStyle = '#f7f8fa'; g.fillText('Meet ONROL', 512, 432);
+  g.font = `600 22px ${FONT_MONO}`; g.fillStyle = P.accent; g.fillText('THE FOUNDER · 2:45', 512, 476);
+}
+
 export const SCREENS = {
   intro:  { kicker:'AI EXECUTION SCHOOL', index:'00 / 04', draw(g, P, t, art) { if (art && art.video && art.video.readyState >= 2) return videoCard(g, P, t, art); frame(g, P, this.kicker, this.index); rings(g, P, t, 512, 300); word(g, P, 'ONROL', 512, 330, 760, 'center', 190); g.textAlign='center'; g.font=`600 30px ${FONT_UI}`; g.fillStyle=P.tag; g.fillText('Build your first AI product in 21 days', 512, 430); } },
-  watch:  { kicker:'MEET ONROL', index:'2:45', draw(g, P, t) { frame(g, P, this.kicker, this.index); rings(g, P, t, 512, 290); word(g, P, 'About ONROL', 512, 320, 760, 'center', 120); g.textAlign='center'; g.font=`600 30px ${FONT_UI}`; g.fillStyle=P.tag; g.fillText('\u25B6  Watch the 2:45 intro', 512, 420); } },
-  learn:  { kicker:'STEP 01 · LEARN', index:'01 / 04', draw(g, P, t) { frame(g, P, this.kicker, this.index); neural(g, P, t); word(g, P, 'LEARN', 52, 330, 500); tagline(g, P, 'Learn the AI tools', 52, 420); g.font=`500 20px ${FONT_MONO}`; g.fillStyle=P.dim; g.fillText('Live · mentor-led · 1 hr a day', 52, 520); } },
-  build:  { kicker:'STEP 02 · BUILD', index:'02 / 04', draw(g, P, t) { frame(g, P, this.kicker, this.index); blueprint(g, P, t); word(g, P, 'BUILD', 972, 330, 440, 'right'); tagline(g, P, 'Build real projects', 972, 420, 'right'); g.font=`500 20px ${FONT_MONO}`; g.fillStyle=P.dim; g.textAlign='right'; g.fillText('7+ projects · 5 AI systems', 972, 520); } },
-  launch: { kicker:'STEP 03 · LAUNCH', index:'03 / 04', draw(g, P, t) { frame(g, P, this.kicker, this.index); globe(g, P, t, 760, 320, 170); word(g, P, 'LAUNCH', 52, 330, 480); tagline(g, P, 'Launch to the web', 52, 420); g.font=`500 20px ${FONT_MONO}`; g.fillStyle=P.dim; g.fillText('Live links · shareable portfolio', 52, 520); } },
-  earn:   { kicker:'STEP 04 · EARN', index:'04 / 04', draw(g, P, t) { frame(g, P, this.kicker, this.index); chart(g, P, t); word(g, P, 'EARN', 52, 330, 440); tagline(g, P, 'Earn from the skill', 52, 420); g.font=`500 20px ${FONT_MONO}`; g.fillStyle=P.dim; g.fillText('Freelance · roles · your own product', 52, 520); } },
+  watch:  { draw(g, P, t) { watchCard(g, P, t); } },
+  learn:  { draw(g, P, t) { learnCard(g, P, t); } },
+  build:  { draw(g, P, t) { buildCard(g, P, t, !P.dark); } },
+  launch: { draw(g, P, t) { launchCard(g, P, t, !P.dark); } },
+  earn:   { draw(g, P, t) { earnCard(g, P, t); } },
   apply:  { kicker:'NO PAYMENT TO APPLY', index:'', draw(g, P, t) { frame(g, P, this.kicker, this.index); cta(g, P, t); word(g, P, 'START HERE', 512, 300, 820, 'center', 150); g.textAlign='center'; g.font=`600 28px ${FONT_UI}`; g.fillStyle=P.tag; g.fillText('Your first AI product, 21 days from now', 512, 360); } },
 };
 

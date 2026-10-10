@@ -849,7 +849,7 @@ async function start() {
     camera.lookAt(tmp.copy(camLook).sub(camPos).applyAxisAngle(camUp, yaw).add(camPos));
     const t0 = path.getTangentAt(currentU), t1 = path.getTangentAt(clampU(currentU + .03));
     const bank = THREE.MathUtils.clamp(tA.crossVectors(t0, t1).dot(camUp) * 3.5, -.1, .1);
-    roll += ((focus ? 0 : bank) - roll) * (1 - Math.exp(-dt * 2));
+    roll += ((focus ? 0 : bank * Math.min(1, Math.abs(velU) * 40)) - roll) * (1 - Math.exp(-dt * 2));
     camera.rotateZ(roll);
 
     // screens: fly-through fade + penetration flash + animate the ones nearby (~30fps)
