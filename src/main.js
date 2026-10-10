@@ -532,7 +532,7 @@ async function start() {
       bTmp.copy(u.home).add(V(Math.sin(t * .6 + u.ph) * .25, Math.cos(t * .5 + u.ph) * .3, 0)).sub(b.position).multiplyScalar(2.2 * dt);
       u.vel.add(bTmp);
       // push away from the cursor
-      if (hasHit) { bTmp.copy(b.position).sub(blobHit); const dd = bTmp.length(); if (dd < 2.6) u.vel.addScaledVector(bTmp.normalize(), (2.6 - dd) * 4 * dt); }
+      if (hasHit) { bTmp.copy(b.position).sub(blobHit); const dd = bTmp.length(); if (dd < 4) u.vel.addScaledVector(bTmp.normalize(), (4 - dd) * 11 * dt); }
       u.vel.multiplyScalar(Math.exp(-dt * 2.4));
       b.position.addScaledVector(u.vel, dt * 6);
       b.rotation.y += dt * .2;
@@ -970,9 +970,9 @@ async function start() {
       look.normalize();
       const ahead = pos.clone().addScaledVector(look, 6);
       const side = V(0, 0, 0).crossVectors(path.getTangentAt(currentU), camUp).normalize();
-      if (!coarse) pos.addScaledVector(side, mouse.x * .14).addScaledVector(camUp, mouse.y * .14);
+      if (!coarse) pos.addScaledVector(side, mouse.x * .45).addScaledVector(camUp, mouse.y * .3);
       camPos.lerp(pos, 1 - Math.exp(-dt * 10));
-      camLook.lerp(ahead, 1 - Math.exp(-dt * 4));
+      camLook.lerp(ahead.addScaledVector(side, mouse.x * .9).addScaledVector(camUp, mouse.y * .6), 1 - Math.exp(-dt * 4));   // look toward the cursor
     }
     dir.subVectors(camLook, camPos).normalize();
     const down = THREE.MathUtils.clamp(-dir.y, 0, 1);
