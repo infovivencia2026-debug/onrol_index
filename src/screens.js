@@ -21,6 +21,14 @@ const alpha = (hex, a) => {
 // deterministic pseudo-random so motifs don't change between redraws
 function rng(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
 
+function hud(g, P, w, h, t) {
+  const f = P.dark ? 'rgba(232,234,237,' : 'rgba(17,17,17,';
+  g.strokeStyle = f + '.55)'; g.lineWidth = 1.5;
+  [[22, 22], [w - 22, 22], [22, h - 22], [w - 22, h - 22]].forEach(([x, y]) => { g.beginPath(); g.moveTo(x - 9, y); g.lineTo(x + 9, y); g.moveTo(x, y - 9); g.lineTo(x, y + 9); g.stroke(); });
+  // thin top rule with a travelling red marker
+  g.fillStyle = f + '.18)'; g.fillRect(40, 10, w - 80, 1.5);
+  g.fillStyle = P.accent; g.fillRect(40 + ((t * .12) % 1) * (w - 96), 8, 16, 5);
+}
 function rounded(g, x, y, w, h, r) {
   g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);
   g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
@@ -28,13 +36,13 @@ function rounded(g, x, y, w, h, r) {
 function frame(g, P, kicker, index) {
   g.clearRect(0, 0, SCREEN_W, SCREEN_H);
   // modern glass card: rounded, soft gradient, hairline border, small accent dot
-  rounded(g, 14, 14, 996, 572, 36);
+  rounded(g, 14, 14, 996, 572, 6);
   const bg = g.createLinearGradient(0, 14, 0, 586);
   bg.addColorStop(0, P.panel); bg.addColorStop(1, P.dark ? 'rgb(10,11,16)' : 'rgb(255,255,255)');
   g.fillStyle = bg; g.fill();
   g.strokeStyle = P.dark ? 'rgba(255,255,255,.14)' : 'rgba(0,0,0,.1)'; g.lineWidth = 2; g.stroke();
-  g.fillStyle = P.accent; g.beginPath(); g.arc(60, 63, 7, 0, 7); g.fill();
-  g.font = `600 20px ${FONT_UI}`; g.textBaseline = 'alphabetic';
+  g.fillStyle = P.accent; g.fillRect(52, 46, g.measureText ? 14 : 14, 24);
+  g.font = `700 18px ${FONT_MONO}`; g.textBaseline = 'alphabetic';
   g.textAlign = 'left'; g.fillStyle = P.tag; g.fillText(kicker, 80, 70);
   if (index) { g.textAlign = 'right'; g.fillStyle = P.dim; g.fillText(index, 972, 70); }
 }
@@ -342,7 +350,7 @@ export function createArt(key, accentHex, light, frosted = false) {
   canvas.width = SCREEN_W; canvas.height = SCREEN_H;
   const g = canvas.getContext('2d');
   const art = { canvas, accent: accentHex, light, key, frosted };
-  art.draw = (t) => SCREENS[key].draw(g, palette(art.accent, art.light, art.frosted), t, art);
+  art.draw = (t) => { const P = palette(art.accent, art.light, art.frosted); SCREENS[key].draw(g, P, t, art); if (!(art.video && art.video.readyState >= 2)) hud(g, P, SCREEN_W, SCREEN_H, t); };
   art.draw(0);
   return art;
 }
@@ -403,27 +411,36 @@ export function createPoster(usp, accentHex, light) {
   const g = canvas.getContext('2d');
   const poster = { canvas, accent: accentHex, light, usp };
   poster.draw = (t) => {
-    const usp = poster.usp;
-    const P = palette(poster.accent, poster.light, false);
-    g.clearRect(0, 0, POSTER_W, POSTER_H);
-    rounded(g, 10, 10, POSTER_W - 20, POSTER_H - 20, 34);
-    g.fillStyle = P.panel; g.fill();
-    g.strokeStyle = P.dark ? 'rgba(255,255,255,.14)' : 'rgba(0,0,0,.1)'; g.lineWidth = 2; g.stroke();
-
-    g.textAlign = 'left'; g.textBaseline = 'alphabetic';
-    g.font = `600 20px ${FONT_UI}`; g.fillStyle = P.accent; g.fillText('Why ONROL', 44, 70);
-    g.textAlign = 'right'; g.fillStyle = P.dim; g.fillText(usp.n + ' / 04', POSTER_W - 44, 70);
-    // one bold motif per USP
-    const cx = POSTER_W / 2, cy = 255;
-    MOTIFS[usp.motif](g, P, t, cx, cy);
-    // stat
+    const usp = poster.usp, P = palette(poster.accent, poster.light, false), W2 = POSTER_W, H2 = POSTER_H;
+    const ink = P.dark ? '#e8eaed' : '#111', faint = P.dark ? 'rgba(232,234,237,' : 'rgba(17,17,17,';
+    g.clearRect(0, 0, W2, H2);
+    // sharp editorial panel
+    g.fillStyle = P.dark ? '#08090b' : '#f7f7f5'; g.fillRect(8, 8, W2 - 16, H2 - 16);
+    g.strokeStyle = faint + '.22)'; g.lineWidth = 2; g.strokeRect(8, 8, W2 - 16, H2 - 16);
+    // dot-scan field (point cloud)
+    for (let y = 120; y < 420; y += 14) for (let x = 36; x < W2 - 36; x += 14) {
+      const d = Math.hypot(x - W2 / 2, y - 270) / 190, w = Math.sin(x * .05 + t * 1.2) * Math.cos(y * .04 - t * .8);
+      const a = Math.max(0, (1 - d) * (.25 + .35 * w));
+      if (a > .02) { g.fillStyle = faint + a.toFixed(3) + ')'; g.fillRect(x, y, 2, 2); }
+    }
+    // corner crosshairs
+    g.strokeStyle = faint + '.5)'; g.lineWidth = 1.5;
+    [[28, 28], [W2 - 28, 28], [28, H2 - 28], [W2 - 28, H2 - 28]].forEach(([x, y]) => { g.beginPath(); g.moveTo(x - 8, y); g.lineTo(x + 8, y); g.moveTo(x, y - 8); g.lineTo(x, y + 8); g.stroke(); });
+    // red tag + index
+    g.fillStyle = P.accent; g.fillRect(36, 52, 168, 34);
+    g.font = `700 17px ${FONT_MONO}`; g.textAlign = 'left'; g.fillStyle = '#fff'; g.fillText('WHY ONROL', 48, 75);
+    g.textAlign = 'right'; g.fillStyle = faint + '.6)'; g.fillText(usp.n + ' / 04', W2 - 36, 75);
+    // HUD rule with ticks
+    g.fillStyle = faint + '.35)'; g.fillRect(36, 448, W2 - 72, 1.5);
+    for (let k = 0; k <= 10; k++) g.fillRect(36 + k * (W2 - 72) / 10, k % 5 ? 444 : 440, 1.5, k % 5 ? 4 : 8);
+    g.fillStyle = P.accent; g.fillRect(36 + ((t * .15) % 1) * (W2 - 80), 444, 8, 8);
+    // big stat
     g.textAlign = 'left';
-    let size = 150; do { g.font = `800 ${size}px ${FONT_UI}`; size -= 4; } while (g.measureText(usp.big).width > POSTER_W - 88 && size > 40);
-    g.fillStyle = P.word; g.fillText(usp.big, 44, 530);
-    if (usp.unit) { g.font = `800 40px ${FONT_UI}`; g.fillStyle = P.accent; g.fillText(usp.unit, 46, 580); }
-    g.fillStyle = P.accent; g.fillRect(44, usp.unit ? 604 : 566, 56, 3);
-    g.font = `600 30px ${FONT_UI}`; g.fillStyle = P.tag;
-    usp.sub.forEach((line, i) => g.fillText(line, 44, (usp.unit ? 650 : 612) + i * 40));
+    let size = 150; do { g.font = `800 ${size}px ${FONT_UI}`; size -= 4; } while (g.measureText(usp.big).width > W2 - 80 && size > 40);
+    g.fillStyle = ink; g.fillText(usp.big, 34, 590);
+    if (usp.unit) { g.font = `700 22px ${FONT_MONO}`; g.fillStyle = P.accent; g.fillText(usp.unit.toUpperCase(), 38, 626); }
+    g.font = `600 19px ${FONT_MONO}`; g.fillStyle = faint + '.75)';
+    usp.sub.forEach((line, i) => g.fillText(line.toUpperCase(), 38, (usp.unit ? 668 : 640) + i * 28));
   };
   poster.draw(0);
   return poster;
@@ -433,9 +450,9 @@ export function createPoster(usp, accentHex, light) {
 const PANEL_SIZE = { schedule: [440, 600], files: [420, 600], preview: [460, 640], pipeline: [380, 760], tile0: [440, 520], tile1: [440, 520], tile2: [440, 520], earnHead: [1024, 300] };
 function panelBase(g, P, w, h, r = 26) {
   g.clearRect(0, 0, w, h);
-  rounded(g, 8, 8, w - 16, h - 16, r);
-  g.fillStyle = P.dark ? 'rgb(14,16,22)' : '#ffffff'; g.fill();
-  g.strokeStyle = alpha(P.accent, .45); g.lineWidth = 2; g.stroke();
+  rounded(g, 8, 8, w - 16, h - 16, Math.min(r, 6));
+  g.fillStyle = P.dark ? '#08090b' : '#f7f7f5'; g.fill();
+  g.strokeStyle = P.dark ? 'rgba(232,234,237,.22)' : 'rgba(17,17,17,.2)'; g.lineWidth = 2; g.stroke();
 }
 const PANELS = {
   schedule(g, P, t, w, h) {                                   // LEARN: the first six days
@@ -512,7 +529,7 @@ export function createPanel(kind, accentHex, light) {
   const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
   const g = canvas.getContext('2d');
   const art = { canvas, accent: accentHex, light, w, h };
-  art.draw = (t) => PANELS[kind](g, palette(art.accent, art.light, false), t, w, h);
+  art.draw = (t) => { const P = palette(art.accent, art.light, false); PANELS[kind](g, P, t, w, h); hud(g, P, w, h, t); };
   art.draw(0);
   return art;
 }
