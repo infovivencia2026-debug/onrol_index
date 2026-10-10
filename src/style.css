@@ -423,3 +423,9 @@ html.plain .introCard { display:none; }
 
 body { font-feature-settings:'ss01','cv11'; }
 .tl b, .tr b, .btn { letter-spacing:.01em; }
+
+/* Lusion-style controls: solid black pills, white on hover */
+:root[data-theme="light"] .btn { background:#0d0e12; color:#fff; border-color:#0d0e12; }
+:root[data-theme="light"] .btn:hover { background:#fff; color:#0d0e12; border-color:#0d0e12; }
+:root[data-theme="light"] .foot a, :root[data-theme="light"] .mbar a { background:#0d0e12; color:#fff; }
+:root[data-theme="light"] .head { color:#0d0e12; letter-spacing:-.04em !important; }

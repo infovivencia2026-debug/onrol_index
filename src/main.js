@@ -14,6 +14,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { Reflector } from 'three/examples/jsm/objects/Reflector.js';
 import { createArt, createPanel, createPoster, USPS, SCREEN_W, SCREEN_H, POSTER_W, POSTER_H } from './screens.js';
 
@@ -499,6 +500,41 @@ async function start() {
   const lp = new THREE.Mesh(new THREE.PlaneGeometry(5, 8), new THREE.MeshBasicMaterial({ map: poolTex, transparent: true, opacity: .22, blending: THREE.AdditiveBlending, depthWrite: false }));
   lp.rotation.x = -Math.PI / 2; lp.position.set(10, .03, 0); segB.add(lp); pools.push(lp);
   pools.forEach((m) => { m.material.userData.subtle = true; });   // keep the pools at full strength
+  // ---------- Lusion-style hero: glossy spheres that float and move away from the cursor ----------
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  const envTex = pmrem.fromScene(new RoomEnvironment(), .04).texture;   // baked once
+  const glossMats = [
+    new THREE.MeshStandardMaterial({ color: '#ffffff', metalness: .1, roughness: .12, envMap: envTex, envMapIntensity: 1.2 }),
+    new THREE.MeshStandardMaterial({ color: '#ff2a1a', metalness: .2, roughness: .18, envMap: envTex, envMapIntensity: 1.1 }),
+    new THREE.MeshStandardMaterial({ color: '#111216', metalness: .6, roughness: .2, envMap: envTex, envMapIntensity: 1.4 }),
+  ];
+  glossMats.forEach((m) => { m.userData.subtle = true; });
+  const blobs = [], blobGeo = new THREE.SphereGeometry(1, tier === 'low' ? 24 : 48, tier === 'low' ? 16 : 32);
+  const seeds = [[-3.95, 4.05, 22, .42, 1], [4.05, .55, 22.6, .55, 0], [-3.8, .35, 21.6, .3, 2], [3.9, 4.15, 21.3, .3, 2], [0, 4.7, 21, .2, 1], [-6.6, 4.5, 20.6, .36, 0], [6.8, .3, 21.2, .32, 1]];
+  seeds.forEach(([x, y, z, r, mi], i) => {
+    const m = new THREE.Mesh(blobGeo, glossMats[mi]); m.scale.setScalar(r); m.position.set(x, y, z);
+    m.userData = { home: m.position.clone(), vel: V(0, 0, 0), ph: i * 1.7 };
+    segA.add(m); blobs.push(m);
+  });
+  const blobRay = new THREE.Raycaster(), blobPlane = new THREE.Plane(new THREE.Vector3(0, 0, 1), -22), blobHit = V(0, 0, 0), bTmp = V(0, 0, 0);
+  function updateBlobs(t, dt) {
+    const near = currentU < STOPS[1];
+    blobs.forEach((b) => { b.visible = near; });
+    if (!near || reducedMotion) return;
+    blobRay.setFromCamera({ x: mouse.x, y: mouse.y }, camera);
+    const hasHit = blobRay.ray.intersectPlane(blobPlane, blobHit);
+    blobs.forEach((b) => {
+      const u = b.userData;
+      // spring home + gentle float
+      bTmp.copy(u.home).add(V(Math.sin(t * .6 + u.ph) * .25, Math.cos(t * .5 + u.ph) * .3, 0)).sub(b.position).multiplyScalar(2.2 * dt);
+      u.vel.add(bTmp);
+      // push away from the cursor
+      if (hasHit) { bTmp.copy(b.position).sub(blobHit); const dd = bTmp.length(); if (dd < 2.6) u.vel.addScaledVector(bTmp.normalize(), (2.6 - dd) * 4 * dt); }
+      u.vel.multiplyScalar(Math.exp(-dt * 2.4));
+      b.position.addScaledVector(u.vel, dt * 6);
+      b.rotation.y += dt * .2;
+    });
+  }
   // calm the scene: every line / point / glow drawn at ~40% strength, card halos off
   let subtleDone = false;
   function makeSubtle() {
@@ -1029,6 +1065,7 @@ async function start() {
       }
     }
     if (!subtleDone) { subtleDone = true; makeSubtle(); }
+    updateBlobs(t, dt);
     for (const m of stageMods) { try { m.update?.(t, dt); } catch (e) { console.warn(e); } }
     if (!(idle && frameNo % 2)) { if (bloom.enabled) composer.render(); else renderer.render(scene, camera); }
 
