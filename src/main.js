@@ -866,7 +866,7 @@ async function start() {
   }
   snapCamera();
   const fogDark = new THREE.Color(), fogTarget = new THREE.Color(), accent = new THREE.Color();
-  let spinTop = -1, perfT = 0, perfN = 0, lastTracked = -1, frameNo = 0, lastZone = -1, roll = 0, prevU = 0, velU = 0, fovNow = baseFov, fpsT = 0, fpsN = 0, fpsChecked = OG;
+  let spinNow = 0, spinTop = -1, perfT = 0, perfN = 0, lastTracked = -1, frameNo = 0, lastZone = -1, roll = 0, prevU = 0, velU = 0, fovNow = baseFov, fpsT = 0, fpsN = 0, fpsChecked = OG;
 
   function frame() {
     const dt = Math.min(clock.getDelta(), .05), t = clock.elapsedTime;
@@ -905,18 +905,13 @@ async function start() {
     camera.lookAt(tmp.copy(camLook).sub(camPos).applyAxisAngle(camUp, yaw).add(camPos));
     const t0 = path.getTangentAt(currentU), t1 = path.getTangentAt(clampU(currentU + .03));
     const bank = THREE.MathUtils.clamp(tA.crossVectors(t0, t1).dot(camUp) * 3.5, -.1, .1);
-    roll += ((focus ? 0 : bank * Math.min(1, Math.abs(velU) * 40)) - roll) * (1 - Math.exp(-dt * 2));
+    roll += (0 - roll) * (1 - Math.exp(-dt * 2));
     camera.rotateZ(roll);
-    // descending the shaft: the view corkscrews one full turn between stops and lands upright at each card
-    if (!focus && !reducedMotion) {
-      if (spinTop < 0) spinTop = nearestU(V(SHAFT_X, H - R2, TURN_Z));
-      if (currentU > spinTop) {
-        const marks = [spinTop, STOPS[5], STOPS[6]];
-        let k = 0; while (k < marks.length - 2 && currentU > marks[k + 1]) k++;
-        const f = THREE.MathUtils.clamp((currentU - marks[k]) / Math.max(1e-4, marks[k + 1] - marks[k]), 0, 1);
-        camera.rotateZ(Math.PI * 2 * THREE.MathUtils.smootherstep(f, 0, 1));
-      }
-    }
+    // descending the shaft only: one slow, eased turn spread over the whole descent, damped so it never jerks
+    if (spinTop < 0) spinTop = nearestU(V(SHAFT_X, H - R2, TURN_Z));
+    const spinF = focus || reducedMotion ? spinNow / (Math.PI * 2) : THREE.MathUtils.clamp((currentU - spinTop) / Math.max(1e-4, STOPS[6] - spinTop), 0, 1);
+    spinNow += (Math.PI * 2 * THREE.MathUtils.smootherstep(spinF, 0, 1) - spinNow) * (1 - Math.exp(-dt * 2.2));
+    if (Math.abs(spinNow) > 1e-4) camera.rotateZ(spinNow);
 
     // screens: fly-through fade + penetration flash + animate the ones nearby (~30fps)
     screens.forEach((s) => {
