@@ -30,7 +30,7 @@ function hud(g, P, w, h, t, bottom = true) {
   // barcode bottom-left
   let bx = 34; for (let i = 0; i < 26; i++) { const bw = (i * 37 % 5 === 0) ? 4 : (i % 3 ? 1.5 : 2.5); g.fillStyle = f + '.7)'; g.fillRect(bx, h - 52, bw, 26); bx += bw + 2.5; }
   // pixel cluster
-  for (let i = 0; i < 9; i++) if ((i * 5 + Math.floor(t * 2)) % 4) { g.fillStyle = i === 4 ? P.accent : f + '.6)'; g.fillRect(bx + 18 + (i % 3) * 9, h - 52 + Math.floor(i / 3) * 9, 6, 6); }
+  for (let i = 0; i < 9; i++) if ((i * 5) % 4) { g.fillStyle = i === 4 ? P.accent : f + '.6)'; g.fillRect(bx + 18 + (i % 3) * 9, h - 52 + Math.floor(i / 3) * 9, 6, 6); }
   }
   // expand glyph (⤡) at a chamfered corner
   g.strokeStyle = f + '.7)'; g.lineWidth = 2; const ex = w - 40, ey = 34;
@@ -38,7 +38,7 @@ function hud(g, P, w, h, t, bottom = true) {
   g.moveTo(ex + 8, ey + 8); g.lineTo(ex + 8, ey + 1); g.moveTo(ex + 8, ey + 8); g.lineTo(ex + 1, ey + 8); g.stroke();
   // circuit trace along the left edge with a red node
   g.strokeStyle = f + '.3)'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(14, h * .3); g.lineTo(24, h * .34); g.lineTo(24, h * .58); g.lineTo(14, h * .62); g.stroke();
-  g.fillStyle = P.accent; g.fillRect(21, h * .34 + ((t * .2) % 1) * h * .24, 6, 6);
+  g.fillStyle = P.accent; g.fillRect(21, h * .34 + 0.5 * h * .24, 6, 6);
 }
 function rounded(g, x, y, w, h, r) {
   // reference vibe: hard chamfered (cut) corners instead of round ones

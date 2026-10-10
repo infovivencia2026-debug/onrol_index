@@ -305,7 +305,7 @@ async function start() {
     tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
     const w = (opts.scale || 1) * (W * 2 - .2);
     const m = new THREE.Mesh(new THREE.PlaneGeometry(w, w * SCREEN_H / SCREEN_W),
-      new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide, depthWrite: true }));   // opaque card hides lines behind it
+      new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide, depthWrite: true, fog: false }));   // opaque card hides lines behind it
     const rig = new THREE.Object3D(); rig.position.copy(pos); rig.up.copy(up); parent.add(rig);
     rig.updateWorldMatrix(true, false);
     rig.lookAt(rig.getWorldPosition(V(0, 0, 0)).add(normal));
@@ -333,7 +333,7 @@ async function start() {
     const zone = card.userData.zone;
     const art = createPanel(kind, isLight ? ZONES[zone].light : ZONES[zone].dark, isLight);
     const tex = new THREE.CanvasTexture(art.canvas); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(width, width * art.h / art.w), new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide, depthWrite: true }));
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(width, width * art.h / art.w), new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide, depthWrite: true, fog: false }));
     m.position.set(lx, ly, lz); m.rotation.y = yaw;
     card.userData.rig.add(m);
     m.userData = { art, tex, zone, lastDraw: -1 };
@@ -361,7 +361,7 @@ async function start() {
     const tex = new THREE.CanvasTexture(art.canvas); tex.colorSpace = THREE.SRGBColorSpace;
     tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
     const h = 3.7, w = h * POSTER_W / POSTER_H;
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false }));
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, fog: false }));
     m.position.set(side * (WI - .7), 2.05, z);
     const a = .78;                                            // turn the poster toward the approaching camera
     m.lookAt(m.position.clone().add(V(-side * Math.cos(a), 0, Math.sin(a))));
@@ -903,7 +903,7 @@ async function start() {
   }
   snapCamera();
   const fogDark = new THREE.Color(), fogTarget = new THREE.Color(), accent = new THREE.Color();
-  let spinNow = 0, spinTop = -1, perfT = 0, perfN = 0, lastTracked = -1, frameNo = 0, lastZone = -1, roll = 0, prevU = 0, velU = 0, fovNow = baseFov, fpsT = 0, fpsN = 0, fpsChecked = OG;
+  let calm = 0, spinNow = 0, spinTop = -1, perfT = 0, perfN = 0, lastTracked = -1, frameNo = 0, lastZone = -1, roll = 0, prevU = 0, velU = 0, fovNow = baseFov, fpsT = 0, fpsN = 0, fpsChecked = OG;
 
   function frame() {
     const dt = Math.min(clock.getDelta(), .05), t = clock.elapsedTime;
@@ -995,6 +995,10 @@ async function start() {
     accent.copy(ZONE_COL[+isLight][z]);
     fogTarget.set(T.bg).lerp(accent, isLight ? .06 : .05);
     scene.fog.color.lerp(fogTarget, 1 - Math.exp(-dt * 2));
+    // parked at a card: the room fades into fog so only the card stays crisp
+    const parked = !auto && !joy.active && Math.abs(velU) < .004 && Math.abs(targetU - currentU) < .002;
+    calm += ((parked ? 1 : 0) - calm) * (1 - Math.exp(-dt * (parked ? 1.5 : 6)));
+    scene.fog.density = (isLight ? .03 : .058) + calm * (isLight ? .05 : .09);
     scene.background.copy(scene.fog.color);
 
     fovKick *= Math.exp(-dt * 3);
