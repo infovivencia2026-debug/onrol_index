@@ -1,8 +1,9 @@
-import '@fontsource/plus-jakarta-sans/600.css';
-import '@fontsource/plus-jakarta-sans/700.css';
-import '@fontsource/plus-jakarta-sans/800.css';
-import '@fontsource/jetbrains-mono/500.css';
-import '@fontsource/jetbrains-mono/700.css';
+// latin subset only: smaller font downloads
+import '@fontsource/plus-jakarta-sans/latin-600.css';
+import '@fontsource/plus-jakarta-sans/latin-700.css';
+import '@fontsource/plus-jakarta-sans/latin-800.css';
+import '@fontsource/jetbrains-mono/latin-500.css';
+import '@fontsource/jetbrains-mono/latin-700.css';
 import './style.css';
 import * as THREE from 'three';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
@@ -62,12 +63,12 @@ async function start() {
 
   // ---------- levels: each has its own color ----------
   const ZONES = [
-    { key: 'intro',  name: 'Intro',  sub: 'The path / 4 steps',   dark: '#ff7d1a', light: '#b03e00' },
-    { key: 'learn',  name: 'Learn',  sub: 'Learn the AI tools',   dark: '#22d3c5', light: '#00736b' },
-    { key: 'build',  name: 'Build',  sub: 'Build real projects',  dark: '#8b7bff', light: '#3d27c4' },
-    { key: 'launch', name: 'Launch', sub: 'Launch to the web',    dark: '#ff4f7b', light: '#b30a3a' },
-    { key: 'earn',   name: 'Earn',   sub: 'Earn from the skill',  dark: '#ffc23d', light: '#805300' },
-    { key: 'apply',  name: 'Apply',  sub: 'No payment to apply',  dark: '#ff7d1a', light: '#b03e00' },
+    { key: 'intro',  name: 'Intro',  sub: 'The path / 4 steps',   dark: '#ff8a3d', light: '#b03e00' },
+    { key: 'learn',  name: 'Learn',  sub: 'Learn the AI tools',   dark: '#3dd6c6', light: '#00736b' },
+    { key: 'build',  name: 'Build',  sub: 'Build real projects',  dark: '#9b8cff', light: '#3d27c4' },
+    { key: 'launch', name: 'Launch', sub: 'Launch to the web',    dark: '#ff6b8d', light: '#b30a3a' },
+    { key: 'earn',   name: 'Earn',   sub: 'Earn from the skill',  dark: '#ffcf5c', light: '#805300' },
+    { key: 'apply',  name: 'Apply',  sub: 'No payment to apply',  dark: '#ff8a3d', light: '#b03e00' },
   ];
   const zoneColor = (z, light) => new THREE.Color(light ? ZONES[z].light : ZONES[z].dark);
 
@@ -194,8 +195,8 @@ async function start() {
   const barMat = new THREE.MeshBasicMaterial({ color: new THREE.Color('#ffb070').multiplyScalar(1.4) });
 
   // zone boundaries along the straight corridor
-  const Z_INTRO = [34, 2], Z_LEARN = [2, -26], Z_BUILD = [-26, TURN_Z - W];
-  shellZ(...Z_INTRO, 0, WI); floorGrid(segA, ...Z_INTRO, 0, WI); ceilGrid(segA, 34, 2, 0);
+  const Z_INTRO = [44, 2], Z_LEARN = [2, -26], Z_BUILD = [-26, TURN_Z - W];
+  shellZ(...Z_INTRO, 0, WI); floorGrid(segA, ...Z_INTRO, 0, WI); ceilGrid(segA, 44, 2, 0);
   shellZ(...Z_LEARN, 1); floorHex(segA, ...Z_LEARN, 1); ceilArches(segA, ...Z_LEARN, 1);
   shellZ(...Z_BUILD, 2); floorBlueprint(segA, ...Z_BUILD, 2); ceilTruss(segA, ...Z_BUILD, 2);
   floorChevrons(segB, W, SHAFT_X - W, 3); ceilHoops(segB, W + 1, SHAFT_X - W, 3);
@@ -209,20 +210,20 @@ async function start() {
   flushLines();
 
   // ---------- dust ----------
-  const dustN = { high: 1400, mid: 700, low: 300 }[tier];
+  const dustN = { high: 260, mid: 160, low: 0 }[tier];          // a few soft motes, not a particle storm
   function dust(zone, box) {
     const dp = new Float32Array(dustN * 3);
     for (let i = 0; i < dustN; i++) { dp[i*3] = box[0] + Math.random() * (box[1]-box[0]); dp[i*3+1] = box[2] + Math.random() * (box[3]-box[2]); dp[i*3+2] = box[4] + Math.random() * (box[5]-box[4]); }
     const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(dp, 3));
-    const pm = new THREE.PointsMaterial({ color: zoneColor(zone, false), size: .03, transparent: true, opacity: .55, blending: THREE.AdditiveBlending, depthWrite: false });
+    const pm = new THREE.PointsMaterial({ color: zoneColor(zone, false), size: .025, transparent: true, opacity: .3, blending: THREE.AdditiveBlending, depthWrite: false });
     pm.userData.zone = zone; themed.dust.push(pm); scene.add(new THREE.Points(geo, pm));
   }
-  dust(0, [-WI, WI, 0, 4.5, 2, 34]); dust(1, [-4, 4, 0, 4.5, -26, 2]); dust(2, [-4, 4, 0, 4.5, TURN_Z - 4, -26]);
+  dust(0, [-WI, WI, 0, 4.5, 2, 44]); dust(1, [-4, 4, 0, 4.5, -26, 2]); dust(2, [-4, 4, 0, 4.5, TURN_Z - 4, -26]);
   dust(3, [0, SHAFT_X, 0, 4.5, TURN_Z - 4, TURN_Z + 4]); dust(4, [SHAFT_X - 4, SHAFT_X + 4, SHAFT_BOTTOM, 4, TURN_Z - 4, TURN_Z + 4]);
 
   // ---------- lighting + floors ----------
   const hemi = new THREE.HemisphereLight('#ffffff', '#120604', 0.25); scene.add(hemi);
-  [[0,3,6,0],[0,3,20,0],[0,3,-12,1],[0,3,-38,2],[0,3,-52,2],[14,3,TURN_Z,3],[30,3,TURN_Z,3],[SHAFT_X,-14,TURN_Z,4],[SHAFT_X,-34,TURN_Z,5]].forEach(([x,y,z,zone]) => {
+  [[0,3,6,0],[0,3,16,0],[0,3,30,0],[0,3,-12,1],[0,3,-38,2],[0,3,-52,2],[14,3,TURN_Z,3],[30,3,TURN_Z,3],[SHAFT_X,-14,TURN_Z,4],[SHAFT_X,-34,TURN_Z,5]].forEach(([x,y,z,zone]) => {
     const l = new THREE.PointLight(zoneColor(zone, false), 14, 14, 1.6); l.position.set(x, y, z); l.userData.zone = zone; scene.add(l); themed.lights.push(l);
   });
   function floorPlane(parent, w, l, pos, mirror = true) {
@@ -236,7 +237,7 @@ async function start() {
     const satin = new THREE.Mesh(new THREE.PlaneGeometry(w, l), new THREE.MeshBasicMaterial({ color: '#070302', transparent: true, opacity: .55, depthWrite: false }));
     satin.rotation.x = -Math.PI / 2; satin.position.copy(pos).add(V(0, .002, 0)); parent.add(satin); themed.satins.push(satin.material); themed.satinMeshes.push(satin);
   }
-  floorPlane(segA, WI * 2, 32, V(0, -0.01, 18), false);                       // lobby: soft gloss, no mirrored text
+  floorPlane(segA, WI * 2, 42, V(0, -0.01, 23), false);                       // lobby: soft gloss, no mirrored text
   floorPlane(segA, W * 2, 2 - (TURN_Z - W), V(0, -0.01, (2 + TURN_Z - W) / 2)); // corridor
   floorPlane(segB, SHAFT_X - W * 2, W * 2, V(SHAFT_X / 2, -0.01, 0));
   function dropReflections() {
@@ -330,7 +331,7 @@ async function start() {
   })();
   const halos = [];
   function addHalo(mesh, w, h, zone) {
-    const m = new THREE.Mesh(new THREE.PlaneGeometry(w * 1.6, h * 1.7), new THREE.MeshBasicMaterial({ map: haloTex, color: zoneColor(zone, false), transparent: true, opacity: .22, blending: THREE.AdditiveBlending, depthWrite: false }));
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w * 1.6, h * 1.7), new THREE.MeshBasicMaterial({ map: haloTex, color: zoneColor(zone, false), transparent: true, opacity: .12, blending: THREE.AdditiveBlending, depthWrite: false }));
     m.position.z = -.08; m.renderOrder = -2; mesh.add(m); halos.push(m);
   }
 
@@ -363,13 +364,13 @@ async function start() {
       m.visible = false;                         // phones: the HTML trio shows the USPs
     });
   }
-  makePoster(USPS[0], -1, 16.6); makePoster(USPS[1], 1, 16.6);
-  makePoster(USPS[2], -1, 12.2); makePoster(USPS[3], 1, 12.2);
+  makePoster(USPS[0], -1, 23.4); makePoster(USPS[1], 1, 23.4);     // home = [poster] [ONROL] [poster]
   flushLines();
 
   const X = V(1, 0, 0), Y = V(0, 1, 0), Z = V(0, 0, 1);
-  const introScreen = makeScreen(segA, V(0, 2.1, 10), Z, Y, 'intro', 0);
-  introScreen.userData.action = 'sound'; clickable.push(introScreen);
+  const introScreen = makeScreen(segA, V(0, 2.1, 20), Z, Y, 'intro', 0);
+  const videoScreen = makeScreen(segA, V(0, 2.1, 9), Z, Y, 'watch', 0);     // 2nd stop: the About video
+
   makeScreen(segA, V(0, 2.1, -4), Z, Y, 'learn', 1);
   rackRow(segA, 1, V(0, 0, -7), V(0, 0, -1), X);
   makeScreen(segA, V(0, 2.1, -32), Z, Y, 'build', 2);
@@ -398,7 +399,7 @@ async function start() {
         vec2 d = vUv - .5; float r2 = dot(d,d);
         vec2 off = d * ca * (1. + r2 * 6.);
         vec3 col = vec3(texture2D(tDiffuse, vUv + off).r, texture2D(tDiffuse, vUv).g, texture2D(tDiffuse, vUv - off).b);
-        col = (col - .5) * 1.1 + .5;
+        col = (col - .5) * 1.04 + .5;
         col *= 1. - r2 * vig;
         col += (rand(vUv * 900. + time) - .5) * grain;
         gl_FragColor = vec4(max(col, 0.), 1.);
@@ -410,7 +411,7 @@ async function start() {
   // ---------- path ----------
   const H = 1.7, R1 = 7, R2 = 6;
   const path = new THREE.CurvePath();
-  path.add(new THREE.LineCurve3(V(0, H, 32), V(0, H, TURN_Z + R1)));
+  path.add(new THREE.LineCurve3(V(0, H, 42), V(0, H, TURN_Z + R1)));
   path.add(new THREE.CubicBezierCurve3(V(0, H, TURN_Z + R1), V(0, H, TURN_Z + R1 * .45), V(R1 * .45, H, TURN_Z), V(R1, H, TURN_Z)));
   path.add(new THREE.LineCurve3(V(R1, H, TURN_Z), V(SHAFT_X - R2, H, TURN_Z)));
   path.add(new THREE.CubicBezierCurve3(V(SHAFT_X - R2, H, TURN_Z), V(SHAFT_X - R2 * .45, H, TURN_Z), V(SHAFT_X, H - R2 * .45, TURN_Z), V(SHAFT_X, H - R2, TURN_Z)));
@@ -423,7 +424,7 @@ async function start() {
     for (let i = 0; i <= 800; i++) { const d = path.getPointAt(i / 800).distanceToSquared(p); if (d < bd) { bd = d; best = i / 800; } }
     return best;
   }
-  const SCREEN_U = [V(0, H, 10), V(0, H, -4), V(0, H, -32), V(14, H, TURN_Z), V(SHAFT_X, -8, TURN_Z)].map(nearestU);
+  const SCREEN_U = [V(0, H, 20), V(0, H, 9), V(0, H, -4), V(0, H, -32), V(14, H, TURN_Z), V(SHAFT_X, -8, TURN_Z)].map(nearestU);
   let STOPS = [], baseFov = 58;
   function computeStops() {
     const hf = Math.atan(Math.tan(THREE.MathUtils.degToRad(baseFov) / 2) * camera.aspect);
@@ -431,8 +432,9 @@ async function start() {
     // home stands further back so the USP posters on both walls are in view
     // home stands further back so the USP posters are in view; on phones far enough to fit [poster][ONROL][poster]
     // desktop: stand just far enough back that the outer posters (z 16.6, |x| ≈ 6.5) fit the view width
-    const homeD = camera.aspect > 1 ? Math.max(d + 3, 16.6 + 6.6 / (Math.tan(hf) * .72) - 10) : d + 3;
-    STOPS = [...SCREEN_U.map((u, i) => clampU(u - (i === 0 ? homeD : d) / PATH_LEN)), 1];
+    const homeD = camera.aspect > 1 ? Math.max(d + 3, 3.4 + 6.6 / (Math.tan(hf) * .72)) : d + 3;
+    // the video stop must sit past the ONROL card (z 20), so cap its distance at 10.5
+    STOPS = [...SCREEN_U.map((u, i) => clampU(u - (i === 0 ? homeD : i === 1 ? Math.min(d, 10.5) : d) / PATH_LEN)), 1];
   }
 
   // ---------- state ----------
@@ -455,7 +457,10 @@ async function start() {
     if (next !== undefined) { targetU = next; seen(); }
   }
   const nearestStop = (u) => { let b = 0, bd = Infinity; STOPS.forEach((s, i) => { const d = Math.abs(s - u); if (d < bd) { bd = d; b = i; } }); return b; };
-  const zoneAt = (u) => { let z = 0; STOPS.forEach((s, i) => { if (u >= s - .012) z = i; }); return z; };
+  const STOP_NAMES = ['Intro', 'About', 'Learn', 'Build', 'Launch', 'Earn', 'Apply'];
+  const STOP_ZONE = [0, 0, 1, 2, 3, 4, 5];
+  const STOP_STEP = [0, 0, 1, 2, 3, 4, 4];
+  const stopAt = (u) => { let z = 0; STOPS.forEach((s, i) => { if (u >= s - .012) z = i; }); return z; };
 
   // ---------- input ----------
   let wheelAcc = 0, wheelLock = 0, wheelIdle = 0;
@@ -529,8 +534,8 @@ async function start() {
 
   // ---------- buttons, dots, menu ----------
   const dotsEl = $('dots');
-  ZONES.forEach((z, i) => {
-    const b = document.createElement('button'); b.setAttribute('aria-label', z.name); b.title = z.name;
+  STOP_NAMES.forEach((name, i) => {
+    const b = document.createElement('button'); b.setAttribute('aria-label', name); b.title = name;
     b.onclick = () => goStop(i); dotsEl.appendChild(b);
   });
   function goHome() {
@@ -612,7 +617,7 @@ async function start() {
   aboutVideo.addEventListener('ended', () => track('about_complete'));
 
   // ---------- theme ----------
-  const DARK = { hemiSky: '#ffffff', hemiGround: '#120604', hemiI: .25, lightI: 14, ledMul: 2, faceO: 1, ca: .0005, bg: '#070403', body: '#120d0b', metal: .85, glossy: '#0b0705', refl: 0x2a1c14, satin: '#070302', satinO: .78, bloom: .8, vig: 1.35, grain: .012, exposure: 1, barMul: 1.4 };
+  const DARK = { hemiSky: '#dfe6ff', hemiGround: '#0b0c10', hemiI: .45, lightI: 8, ledMul: 2, faceO: 1, ca: 0, bg: '#0b0c10', body: '#16181f', metal: .7, glossy: '#0d0e13', refl: 0x1c1e26, satin: '#0b0c10', satinO: .82, bloom: .45, vig: .7, grain: 0, exposure: 1, barMul: 1.4 };
   const LIGHT = { hemiSky: '#ffffff', hemiGround: '#d9c9b8', hemiI: 1.5, lightI: 1.5, ledMul: 1, faceO: .95, ca: .0003, bg: '#efe6dc', body: '#cfc3b6', metal: .25, glossy: '#e4d9cd', refl: 0xcfc2b5, satin: '#efe6dc', satinO: .86, bloom: .18, vig: .1, grain: .01, exposure: 1, barMul: 1 };
   let T = DARK, caBase = .0005;
   function setTheme(light, save = true) {
@@ -621,8 +626,8 @@ async function start() {
     document.documentElement.dataset.theme = light ? 'light' : 'dark';
     document.querySelector('meta[name="theme-color"]').content = T.bg;
     scene.background.set(T.bg); scene.fog.color.set(T.bg);   // snap — don't fade in from the other theme
-    themed.lines.forEach((m) => { m.color.copy(zoneColor(m.userData.zone, light)); m.blending = blend; m.opacity = light ? Math.min(1, m.userData.baseO * 2.8 + .12) : m.userData.baseO; m.needsUpdate = true; });
-    themed.dust.forEach((m) => { m.color.copy(zoneColor(m.userData.zone, light)); m.blending = blend; m.opacity = light ? .8 : .55; m.size = light ? .04 : .03; m.needsUpdate = true; });
+    themed.lines.forEach((m) => { m.color.copy(zoneColor(m.userData.zone, light)); m.blending = blend; m.opacity = light ? Math.min(1, m.userData.baseO * 2.2 + .08) : m.userData.baseO * .55; m.needsUpdate = true; });
+    themed.dust.forEach((m) => { m.color.copy(zoneColor(m.userData.zone, light)); m.blending = blend; m.opacity = light ? .4 : .3; m.size = .025; m.needsUpdate = true; });
     themed.faces.forEach((m) => { m.blending = blend; m.opacity = T.faceO; m.color.setScalar(light ? .55 : 1); m.needsUpdate = true; });
     themed.leds.forEach((m) => m.color.copy(zoneColor(m.userData.zone, light)).multiplyScalar(T.ledMul));
     themed.lights.forEach((l) => { l.intensity = T.lightI; });
@@ -662,7 +667,7 @@ async function start() {
   addEventListener('resize', resize); resize();
 
   // ---------- deep links ----------
-  const SLUGS = ['', 'learn', 'build', 'launch', 'earn', 'apply'];
+  const SLUGS = ['', 'watch', 'learn', 'build', 'launch', 'earn', 'apply'];
   function fromHash() {
     const i = SLUGS.indexOf(location.hash.slice(1));
     if (i > 0) { targetU = STOPS[i]; if (!started) currentU = targetU; seen(); }
@@ -679,20 +684,21 @@ async function start() {
   function pierce() { if (reducedMotion) return; flash.classList.remove('go'); void flash.offsetWidth; flash.classList.add('go'); fovKick = 1; }
 
   // ---------- intro video: the main card plays when you enter ----------
-  const VIDEO_SRC = './media/about_onrol.mp4';
+  // card videos are small encodes (phone 3.6 MB, desktop 6.9 MB); the About player streams the full 720p only on demand
+  const VIDEO_SRC = () => camera.aspect < 1 ? './media/about_360.mp4' : './media/about_540.mp4';
   const autoOK = !reducedMotion && tier !== 'low' && !navigator.connection?.saveData;
   let introVid = null, userPaused = false;
   function pickIntroVideo() {
-    const want = camera.aspect < 1 ? $('trioVid') : $('introVid');
+    const want = $('introVid');
     if (want === introVid) return;
     if (introVid) introVid.pause();
     introVid = want;
-    if (!introVid.src) { introVid.preload = autoOK ? 'auto' : 'metadata'; introVid.src = VIDEO_SRC; introVid.load(); }
+    if (!introVid.src) { introVid.preload = autoOK ? 'auto' : 'metadata'; introVid.src = VIDEO_SRC(); introVid.load(); }
 
   }
   function updateSoundUI() {
     if (!introVid) return;
-    [['trioSound', 'Tap for sound'], ['introSound', 'Click for sound']].forEach(([id, prompt]) => {
+    [['introSound', coarse ? 'Tap for sound' : 'Click for sound']].forEach(([id, prompt]) => {
       const b = $(id);
       b.textContent = introVid.muted ? '\u{1F507} ' + prompt : '\u{1F50A} Sound on';
       b.classList.toggle('on', !introVid.muted);
@@ -708,8 +714,6 @@ async function start() {
     updateSoundUI(); track('intro_sound', { on: !introVid.muted });
   }
   introReady = true; pickIntroVideo(); updateSoundUI();
-  $('trioSound').onclick = (e) => { e.stopPropagation(); toggleIntroSound(); };
-  $('trioMain').onclick = () => toggleIntroSound();
   $('introSound').onclick = (e) => { e.stopPropagation(); toggleIntroSound(); };
   $('introCard').onclick = () => toggleIntroSound();
   // project the 3D intro card's corners to the screen so the HTML video sits exactly on it
@@ -718,22 +722,24 @@ async function start() {
   function placeIntroCard(show) {
     const el = $('introCard');
     el.classList.toggle('gone', !show);
-    introScreen.visible = !show && !(portraitHome && !focus && currentU < STOPS[0] + .02);
+    videoScreen.visible = !show;
+    introScreen.visible = !(portraitHome && !focus && currentU < STOPS[0] + .02);   // phone home: the HTML trio replaces it
     if (!show) return;
-    camera.updateMatrixWorld(); introScreen.updateMatrixWorld();
+    camera.updateMatrixWorld(); videoScreen.updateMatrixWorld();
     let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
     cardCorners.forEach((c) => {
-      pv.copy(c).applyMatrix4(introScreen.matrixWorld).project(camera);
+      pv.copy(c).applyMatrix4(videoScreen.matrixWorld).project(camera);
       const x = (pv.x + 1) / 2 * innerWidth, y = (1 - pv.y) / 2 * innerHeight;
       x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y);
     });
     el.style.left = x0 + 'px'; el.style.top = y0 + 'px'; el.style.width = (x1 - x0) + 'px'; el.style.height = (y1 - y0) + 'px';
     if (introVid?.duration) $('introProg').style.width = (introVid.currentTime / introVid.duration * 100) + '%';
   }
-  ['introVid', 'trioVid'].forEach((id) => $(id).addEventListener('ended', () => { const v = $(id); v.muted = true; v.loop = true; v.play().catch(() => {}); updateSoundUI(); track('intro_complete'); }));
+  ['introVid'].forEach((id) => $(id).addEventListener('ended', () => { const v = $(id); v.muted = true; v.loop = true; v.play().catch(() => {}); updateSoundUI(); track('intro_complete'); }));
+  const atVideoStop = () => !focus && !plainOn && !aboutOpen && Math.abs(currentU - STOPS[1]) < .02;
   function syncIntroVideo() {
     if (!introVid) return;
-    const atHome = !focus && !plainOn && !aboutOpen && currentU < STOPS[0] + .03;
+    const atHome = atVideoStop();
     if (atHome && introVid.paused && !userPaused && (autoOK || !introVid.muted)) introVid.play().catch(() => {});
     if (!atHome && !introVid.paused) introVid.pause();
   }
@@ -768,7 +774,7 @@ async function start() {
   }
   snapCamera();
   const fogDark = new THREE.Color(), fogTarget = new THREE.Color(), accent = new THREE.Color();
-  let lastZone = -1, roll = 0, prevU = 0, velU = 0, fovNow = baseFov, fpsT = 0, fpsN = 0, fpsChecked = OG;
+  let frameNo = 0, lastZone = -1, roll = 0, prevU = 0, velU = 0, fovNow = baseFov, fpsT = 0, fpsN = 0, fpsChecked = OG;
 
   function frame() {
     const dt = Math.min(clock.getDelta(), .05), t = clock.elapsedTime;
@@ -823,7 +829,11 @@ async function start() {
     syncIntroVideo();
     const atHome = portraitHome && !focus && currentU < STOPS[0] + .02;
     trio.classList.toggle('gone', !atHome);
-    placeIntroCard(!portraitHome && !focus && !plainOn && !aboutOpen && currentU < STOPS[0] + .03);
+    placeIntroCard(atVideoStop());
+    if (!portraitHome && currentU < STOPS[1]) {
+      const pf = Math.floor(t / 4) % 2;
+      posters.forEach((m, i) => { const next = USPS[i + pf * 2]; if (m.userData.art.usp !== next) { m.userData.art.usp = next; m.userData.art.draw(t); m.userData.tex.needsUpdate = true; } });
+    }
     if (atHome) {
       const flip = Math.floor(t / 4) % 2;
       if (flip !== trioFlip) { trioFlip = flip; swapTrio(flip); }
@@ -835,17 +845,17 @@ async function start() {
     });
 
     // level color: UI accent + fog tint follow the level you're in
-    const z = zoneAt(currentU);
-    if (z !== lastZone) {
-      lastZone = z;
+    const si = stopAt(currentU), z = STOP_ZONE[si];
+    if (si !== lastZone) {
+      lastZone = si;
       const hex = isLight ? ZONES[z].light : ZONES[z].dark;
       document.documentElement.style.setProperty('--or', hex);
-      [...dotsEl.children].forEach((b, i) => { b.classList.toggle('on', i === z); b.setAttribute('aria-current', i === z ? 'step' : 'false'); });
-      $('metaL').textContent = ZONES[z].sub;
-      $('metaR').textContent = String(Math.min(z, 4)).padStart(2, '0') + '—04';
-      const slug = SLUGS[z] ? '#' + SLUGS[z] : location.pathname + location.search;
-      if (started && location.hash !== '#' + SLUGS[z]) history.replaceState(null, '', slug);
-      if (started) track('step_view', { step: ZONES[z].key });
+      [...dotsEl.children].forEach((b, i) => { b.classList.toggle('on', i === si); b.setAttribute('aria-current', i === si ? 'step' : 'false'); });
+      $('metaL').textContent = si === 1 ? 'Meet ONROL · 2:45' : ZONES[z].sub;
+      $('metaR').textContent = String(STOP_STEP[si]).padStart(2, '0') + '—04';
+      const slug = SLUGS[si] ? '#' + SLUGS[si] : location.pathname + location.search;
+      if (started && location.hash !== '#' + SLUGS[si]) history.replaceState(null, '', slug);
+      if (started) track('step_view', { step: STOP_NAMES[si].toLowerCase() });
     }
     accent.copy(zoneColor(z, isLight));
     fogTarget.set(T.bg).lerp(accent, isLight ? .06 : .05);
@@ -864,7 +874,10 @@ async function start() {
     $('head').classList.toggle('gone', !!focus || currentU > STOPS[0] + .03);
     $('endnav').classList.toggle('on', currentU > .94 && !focus);
 
-    composer.render();
+    // mid/low devices: when nothing is moving, render at ~30fps to save battery
+    frameNo++;
+    const idle = Math.abs(velU) < 1e-4 && !joy.active && !auto && !focus && fovKick < .01;
+    if (!(tier !== 'high' && idle && frameNo % 2)) composer.render();
 
     // frame-rate watchdog: step quality down once if the device is struggling
     if (!fpsChecked && started) {

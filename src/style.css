@@ -1,5 +1,5 @@
 :root {
-  --bg:#070403;
+  --bg:#0b0c10;
   --fg:#fbfaf8;
   --head:#f3ece6;
   --or:#ff7d1a;
@@ -329,7 +329,7 @@ html.plain .shade { display:none; }
 .introCard .bar { position:absolute; left:0; right:0; bottom:0; height:3px; background:rgba(255,255,255,.15); }
 .introCard .bar em { display:block; height:100%; width:0; background:var(--or); }
 html.plain .introCard { display:none; }
-@media (max-aspect-ratio: 1/1) { .introCard { display:none; } }
+
 /* phone: the trio's main card is the video */
 @media (max-aspect-ratio: 1/1) {
   .homeTrio { pointer-events:auto; }
@@ -343,3 +343,34 @@ html.plain .introCard { display:none; }
   .homeTrio .main.vid .snd.on { border-color:rgba(255,255,255,.4); }
   .homeTrio.gone { pointer-events:none; }
 }
+
+/* ================= modern refresh ================= */
+.ticks, .bars, #flash { display:none !important; }                 /* no HUD ticks, letterbox or flash */
+.hr { background:rgba(255,255,255,.06); }
+:root[data-theme="light"] .hr { background:rgba(0,0,0,.06); }
+.vignette { background:radial-gradient(ellipse at 50% 45%, transparent 55%, color-mix(in srgb, var(--bg) 70%, transparent) 100%); }
+.btn { border-radius:999px; padding:9px 16px; font:600 12px var(--font-ui); letter-spacing:.02em; text-transform:none;
+  border-color:rgba(255,255,255,.14); background:rgba(255,255,255,.04); backdrop-filter:blur(8px); }
+:root[data-theme="light"] .btn { border-color:rgba(0,0,0,.12); background:rgba(255,255,255,.6); }
+.stepper .btn, #homeBtn { border-radius:50%; }
+.foot a, .mbar a, #plain .cta, #aboutModal footer a { border-radius:999px !important; font-family:var(--font-ui) !important; letter-spacing:.01em !important; text-transform:none !important; }
+.foot, .meta { font-family:var(--font-ui); letter-spacing:.04em; text-transform:none; }
+.foot { border-top-color:rgba(255,255,255,.06); }
+.tl span, .tr span { font-family:var(--font-ui); letter-spacing:.04em; text-transform:none; }
+.tl b, .tr b { letter-spacing:.02em; }
+.head { letter-spacing:-.035em; }
+.endnav, #menu, .homeTrio article, #aboutModal .aboutCard { border-radius:20px; border-color:rgba(255,255,255,.1); }
+.endnav h3, #menu h3, #plain .links h3 { font-family:var(--font-ui); letter-spacing:.06em; }
+.homeTrio article::before, .homeTrio article::after, #aboutModal .aboutCard::before, #aboutModal .aboutCard::after { display:none; }
+.introCard { border-radius:18px; border:1px solid rgba(255,255,255,.18); box-shadow:0 30px 80px -30px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,.03); }
+.introCard .cap span, .homeTrio span { font-family:var(--font-ui); letter-spacing:.04em; text-transform:none; }
+.introCard .snd, .homeTrio .main.vid .snd { border-radius:999px; font-family:var(--font-ui); letter-spacing:.02em; text-transform:none; border-color:rgba(255,255,255,.3); }
+.joy { border-color:rgba(255,255,255,.12); background:rgba(255,255,255,.04); backdrop-filter:blur(10px); }
+.joy::before, .joy::after { background:rgba(255,255,255,.08); }
+.joy .knob { box-shadow:0 6px 20px -4px color-mix(in srgb, var(--or) 60%, transparent); }
+.joy .lbl { font-family:var(--font-ui); letter-spacing:.06em; }
+#hint { font-family:var(--font-ui); letter-spacing:.06em; text-transform:none; }
+.dots button { width:7px; height:7px; border-color:rgba(255,255,255,.35); }
+.dots button.on { width:22px; border-radius:999px; transform:none; }
+.dots button:hover, .dots button.on:hover { transform:none; border-color:var(--or); }
+#loader { font-family:var(--font-ui); letter-spacing:.2em; }

@@ -8,7 +8,7 @@ const FONT_MONO = '"JetBrains Mono", monospace';
 
 function palette(accent, light, frosted) {
   // frosted: the 3D glass behind the card does the blurring, so the painted panel is only a light tint
-  const panel = light ? (frosted ? 'rgba(250,246,241,.72)' : 'rgba(250,246,241,.97)') : (frosted ? 'rgba(6,4,3,.66)' : 'rgba(6,4,3,.94)');
+  const panel = light ? (frosted ? 'rgba(250,246,241,.72)' : 'rgba(250,246,241,.97)') : (frosted ? 'rgba(16,18,26,.72)' : 'rgba(16,18,26,.95)');
   return light
     ? { dark:false, panel, grid:'rgba(0,0,0,.06)', word:'#120a05', tag:'rgba(40,25,15,.9)', dim:'rgba(40,25,15,.62)', accent }
     : { dark:true, panel,      grid:'rgba(255,255,255,.035)', word:'#fbf7f2', tag:'rgba(245,238,230,.86)', dim:'rgba(245,238,230,.6)', accent };
@@ -20,15 +20,21 @@ const alpha = (hex, a) => {
 // deterministic pseudo-random so motifs don't change between redraws
 function rng(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
 
+function rounded(g, x, y, w, h, r) {
+  g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);
+  g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
+}
 function frame(g, P, kicker, index) {
   g.clearRect(0, 0, SCREEN_W, SCREEN_H);
-  g.fillStyle = P.panel; g.fillRect(14, 14, 996, 572);
-  g.fillStyle = P.grid; for (let y = 14; y < 586; y += 6) g.fillRect(14, y, 996, 1);
-  g.strokeStyle = alpha(P.accent, .75); g.lineWidth = 2; g.strokeRect(14, 14, 996, 572);
-  g.fillStyle = P.accent;
-  [[14,14],[1010,14],[14,586],[1010,586]].forEach(([x,y]) => g.fillRect(x-5, y-5, 10, 10));
-  g.font = `700 20px ${FONT_MONO}`; g.textBaseline = 'alphabetic';
-  g.textAlign = 'left'; g.fillStyle = P.accent; g.fillText(kicker, 52, 70);
+  // modern glass card: rounded, soft gradient, hairline border, small accent dot
+  rounded(g, 14, 14, 996, 572, 36);
+  const bg = g.createLinearGradient(0, 14, 0, 586);
+  bg.addColorStop(0, P.panel); bg.addColorStop(1, P.dark ? 'rgba(10,11,16,.9)' : 'rgba(255,255,255,.96)');
+  g.fillStyle = bg; g.fill();
+  g.strokeStyle = P.dark ? 'rgba(255,255,255,.14)' : 'rgba(0,0,0,.1)'; g.lineWidth = 2; g.stroke();
+  g.fillStyle = P.accent; g.beginPath(); g.arc(60, 63, 7, 0, 7); g.fill();
+  g.font = `600 20px ${FONT_UI}`; g.textBaseline = 'alphabetic';
+  g.textAlign = 'left'; g.fillStyle = P.tag; g.fillText(kicker, 80, 70);
   if (index) { g.textAlign = 'right'; g.fillStyle = P.dim; g.fillText(index, 972, 70); }
 }
 function word(g, P, text, x, y, maxW, align = 'left', size = 168, color) {
@@ -189,6 +195,7 @@ function videoCard(g, P, t, art) {
 // ---------- the six screens ----------
 export const SCREENS = {
   intro:  { kicker:'AI EXECUTION SCHOOL', index:'00 / 04', draw(g, P, t, art) { if (art && art.video && art.video.readyState >= 2) return videoCard(g, P, t, art); frame(g, P, this.kicker, this.index); rings(g, P, t, 512, 300); word(g, P, 'ONROL', 512, 330, 760, 'center', 190); g.textAlign='center'; g.font=`600 30px ${FONT_UI}`; g.fillStyle=P.tag; g.fillText('Build your first AI product in 21 days', 512, 430); } },
+  watch:  { kicker:'MEET ONROL', index:'2:45', draw(g, P, t) { frame(g, P, this.kicker, this.index); rings(g, P, t, 512, 290); word(g, P, 'About ONROL', 512, 320, 760, 'center', 120); g.textAlign='center'; g.font=`600 30px ${FONT_UI}`; g.fillStyle=P.tag; g.fillText('\u25B6  Watch the 2:45 intro', 512, 420); } },
   learn:  { kicker:'STEP 01 · LEARN', index:'01 / 04', draw(g, P, t) { frame(g, P, this.kicker, this.index); neural(g, P, t); word(g, P, 'LEARN', 52, 330, 500); tagline(g, P, 'Learn the AI tools', 52, 420); g.font=`500 20px ${FONT_MONO}`; g.fillStyle=P.dim; g.fillText('Live · mentor-led · 1 hr a day', 52, 520); } },
   build:  { kicker:'STEP 02 · BUILD', index:'02 / 04', draw(g, P, t) { frame(g, P, this.kicker, this.index); blueprint(g, P, t); word(g, P, 'BUILD', 972, 330, 440, 'right'); tagline(g, P, 'Build real projects', 972, 420, 'right'); g.font=`500 20px ${FONT_MONO}`; g.fillStyle=P.dim; g.textAlign='right'; g.fillText('7+ projects · 5 AI systems', 972, 520); } },
   launch: { kicker:'STEP 03 · LAUNCH', index:'03 / 04', draw(g, P, t) { frame(g, P, this.kicker, this.index); globe(g, P, t, 760, 320, 170); word(g, P, 'LAUNCH', 52, 330, 480); tagline(g, P, 'Launch to the web', 52, 420); g.font=`500 20px ${FONT_MONO}`; g.fillStyle=P.dim; g.fillText('Live links · shareable portfolio', 52, 520); } },
@@ -265,12 +272,12 @@ export function createPoster(usp, accentHex, light) {
     const usp = poster.usp;
     const P = palette(poster.accent, poster.light, false);
     g.clearRect(0, 0, POSTER_W, POSTER_H);
-    g.fillStyle = P.panel; g.fillRect(10, 10, POSTER_W - 20, POSTER_H - 20);
-    g.fillStyle = P.grid; for (let y = 10; y < POSTER_H - 10; y += 6) g.fillRect(10, y, POSTER_W - 20, 1);
-    g.strokeStyle = alpha(P.accent, .8); g.lineWidth = 2; g.strokeRect(10, 10, POSTER_W - 20, POSTER_H - 20);
-    g.fillStyle = P.accent; [[10,10],[POSTER_W-10,10],[10,POSTER_H-10],[POSTER_W-10,POSTER_H-10]].forEach(([x,y]) => g.fillRect(x-5, y-5, 10, 10));
+    rounded(g, 10, 10, POSTER_W - 20, POSTER_H - 20, 34);
+    g.fillStyle = P.panel; g.fill();
+    g.strokeStyle = P.dark ? 'rgba(255,255,255,.14)' : 'rgba(0,0,0,.1)'; g.lineWidth = 2; g.stroke();
+
     g.textAlign = 'left'; g.textBaseline = 'alphabetic';
-    g.font = `700 20px ${FONT_MONO}`; g.fillStyle = P.accent; g.fillText('WHY ONROL', 44, 70);
+    g.font = `600 20px ${FONT_UI}`; g.fillStyle = P.accent; g.fillText('Why ONROL', 44, 70);
     g.textAlign = 'right'; g.fillStyle = P.dim; g.fillText(usp.n + ' / 04', POSTER_W - 44, 70);
     // one bold motif per USP
     const cx = POSTER_W / 2, cy = 255;
