@@ -933,9 +933,9 @@ async function start() {
     camera.rotateZ(roll);
     // descending the shaft only: one slow, eased turn spread over the whole descent, damped so it never jerks
     if (spinTop < 0) spinTop = nearestU(V(SHAFT_X, H - R2, TURN_Z));
-    const spinF = focus || reducedMotion ? spinNow / (Math.PI * 2) : THREE.MathUtils.clamp((currentU - spinTop) / Math.max(1e-4, STOPS[6] - spinTop), 0, 1);
-    spinNow += (Math.PI * 2 * THREE.MathUtils.smootherstep(spinF, 0, 1) - spinNow) * (1 - Math.exp(-dt * 2.2));
-    if (Math.abs(spinNow) > 1e-4) camera.rotateZ(spinNow);
+    const spinF = focus || reducedMotion ? spinNow / (Math.PI * 2) : THREE.MathUtils.clamp((currentU - spinTop) / Math.max(1e-4, STOPS[5] - spinTop), 0, 1);
+    spinNow = Math.PI * 2 * THREE.MathUtils.smootherstep(spinF, 0, 1);   // position-driven (currentU is already eased), exactly upright at EARN and beyond
+    if (spinNow > 1e-4 && spinNow < Math.PI * 2 - 1e-4) camera.rotateZ(spinNow);
 
     // screens: fly-through fade + penetration flash + animate the ones nearby (~30fps)
     screens.forEach((s) => {
