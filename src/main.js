@@ -487,13 +487,13 @@ async function start() {
   let STOPS = [], baseFov = 58;
   function computeStops() {
     const hf = Math.atan(Math.tan(THREE.MathUtils.degToRad(baseFov) / 2) * camera.aspect);
-    const d = THREE.MathUtils.clamp(3.9 / Math.tan(hf), 6.5, 12);
+    const d = THREE.MathUtils.clamp(5.15 / Math.tan(hf), 4.6, 12);
     // home stands further back so the USP posters on both walls are in view
     // home stands further back so the USP posters are in view; on phones far enough to fit [poster][ONROL][poster]
     // desktop: stand just far enough back that the outer posters (z 16.6, |x| ≈ 6.5) fit the view width
-    const homeD = camera.aspect > 1 ? Math.max(d + 3, 3.4 + 6.6 / (Math.tan(hf) * .8)) : d + 3;
+    const homeD = camera.aspect > 1 ? Math.max(d + 3, 3.4 + 6.9 / (Math.tan(hf) * .86)) : d + 3;
     // the video stop must sit past the ONROL card (z 20), so cap its distance at 10.5
-    STOPS = [...SCREEN_U.map((u, i) => clampU(u - (i === 0 ? homeD : i === 1 ? Math.min(d, 10.5) : d * .9) / PATH_LEN)), 1];
+    STOPS = [...SCREEN_U.map((u, i) => clampU(u - (i === 0 ? homeD : i === 1 ? Math.min(d * .85, 10.5) : d) / PATH_LEN)), 1];
   }
 
   // ---------- state ----------
