@@ -63,12 +63,12 @@ async function start() {
 
   // ---------- levels: each has its own color ----------
   const ZONES = [
-    { key: 'intro',  name: 'Intro',  sub: 'The path / 4 steps',   dark: '#ff8a3d', light: '#b03e00' },
-    { key: 'learn',  name: 'Learn',  sub: 'Learn the AI tools',   dark: '#3dd6c6', light: '#00736b' },
-    { key: 'build',  name: 'Build',  sub: 'Build real projects',  dark: '#9b8cff', light: '#3d27c4' },
-    { key: 'launch', name: 'Launch', sub: 'Launch to the web',    dark: '#ff6b8d', light: '#b30a3a' },
-    { key: 'earn',   name: 'Earn',   sub: 'Earn from the skill',  dark: '#ffcf5c', light: '#805300' },
-    { key: 'apply',  name: 'Apply',  sub: 'No payment to apply',  dark: '#ff8a3d', light: '#b03e00' },
+    { key: 'intro',  name: 'Intro',  sub: 'The path / 4 steps',   dark: '#cfd3d9', light: '#1a1c1f' },
+    { key: 'learn',  name: 'Learn',  sub: 'Learn the AI tools',   dark: '#cfd3d9', light: '#1a1c1f' },
+    { key: 'build',  name: 'Build',  sub: 'Build real projects',  dark: '#cfd3d9', light: '#1a1c1f' },
+    { key: 'launch', name: 'Launch', sub: 'Launch to the web',    dark: '#cfd3d9', light: '#1a1c1f' },
+    { key: 'earn',   name: 'Earn',   sub: 'Earn from the skill',  dark: '#cfd3d9', light: '#1a1c1f' },
+    { key: 'apply',  name: 'Apply',  sub: 'No payment to apply',  dark: '#cfd3d9', light: '#1a1c1f' },
   ];
   const zoneColor = (z, light) => new THREE.Color(light ? ZONES[z].light : ZONES[z].dark);
   const ZONE_COL = [ZONES.map((z, i) => zoneColor(i, false)), ZONES.map((z, i) => zoneColor(i, true))];
@@ -413,7 +413,7 @@ async function start() {
   satellite(earnCard, 'tile1', 2.05, 0, -.75, .9, 0);
   satellite(earnCard, 'tile2', 2.05, 2.35, -.75, .55, -.32);
   // APPLY — the end of the shaft
-  const endScreen = makeScreen(segC, V(0, SHAFT_BOTTOM + .5, 0), Y, X, 'apply', 5, { solid: true, scale: .95 });
+  const endScreen = makeScreen(segC, V(0, SHAFT_BOTTOM + .5, 0), Y, X, 'apply', 5, { solid: true, scale: .8 });
   endScreen.userData.href = APPLY_URL; clickable.push(endScreen);
 
   const animators = [];
@@ -453,7 +453,7 @@ async function start() {
   path.add(new THREE.CubicBezierCurve3(V(0, H, TURN_Z + R1), V(0, H, TURN_Z + R1 * .45), V(R1 * .45, H, TURN_Z), V(R1, H, TURN_Z)));
   path.add(new THREE.LineCurve3(V(R1, H, TURN_Z), V(SHAFT_X - R2, H, TURN_Z)));
   path.add(new THREE.CubicBezierCurve3(V(SHAFT_X - R2, H, TURN_Z), V(SHAFT_X - R2 * .45, H, TURN_Z), V(SHAFT_X, H - R2 * .45, TURN_Z), V(SHAFT_X, H - R2, TURN_Z)));
-  path.add(new THREE.LineCurve3(V(SHAFT_X, H - R2, TURN_Z), V(SHAFT_X, SHAFT_BOTTOM + 7, TURN_Z)));
+  path.add(new THREE.LineCurve3(V(SHAFT_X, H - R2, TURN_Z), V(SHAFT_X, SHAFT_BOTTOM + 10, TURN_Z)));
   path.updateArcLengths();
 
   // ---------- 3D rail track the camera rides along: two rails + sleepers, coloured by level ----------
@@ -844,7 +844,7 @@ async function start() {
     velU = THREE.MathUtils.clamp(velU, -.2, .2);
     currentU = clampU(currentU + velU * dt);
     // at the end (wide screens) turn slightly right so the Apply screen sits left of the link panel
-    const endTurn = camera.aspect > 1.1 && !focus ? -.45 * THREE.MathUtils.smoothstep(currentU, .93, 1) : 0;
+    const endTurn = camera.aspect > 1.1 && !focus ? -.22 * THREE.MathUtils.smoothstep(currentU, .93, 1) : 0;
     yaw += ((joy.active ? -joy.x * .7 : 0) + endTurn - yaw) * (1 - Math.exp(-dt * 5));
 
     if (focus) {
@@ -909,7 +909,7 @@ async function start() {
     if (si !== lastZone) {
       lastZone = si;
       const hex = isLight ? ZONES[z].light : ZONES[z].dark;
-      document.documentElement.style.setProperty('--or', hex);
+      document.documentElement.style.setProperty('--or', isLight ? '#d81e0f' : '#ff2a1a');   // single signal-red accent
       [...dotsEl.children].forEach((b, i) => { b.classList.toggle('on', i === si); b.setAttribute('aria-current', i === si ? 'step' : 'false'); });
       $('metaL').textContent = si === 1 ? 'Meet ONROL · 2:45' : ZONES[z].sub;
       $('metaR').textContent = String(STOP_STEP[si]).padStart(2, '0') + '—04';
