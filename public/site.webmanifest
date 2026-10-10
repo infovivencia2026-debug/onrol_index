@@ -1,0 +1,3 @@
+{ "name": "ONROL — The Path", "short_name": "ONROL", "start_url": "./", "display": "standalone",
+  "background_color": "#070403", "theme_color": "#070403",
+  "icons": [{ "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml" }] }

@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ONROL — The Path</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#070403;
+    --fg:#fbfaf8;
+    --or:#ff7d1a;
+    --dim:#b59883;
+    --line:rgba(255,125,26,.22);
+    --font-ui:"Plus Jakarta Sans", system-ui, sans-serif;
+    --font-mono:"JetBrains Mono", monospace;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html,body { background:var(--bg); color:var(--fg); font-family:var(--font-ui); overflow:hidden; user-select:none; }
+  #gl { position:fixed; inset:0; width:100%; height:100%; display:block; cursor:grab; touch-action:none; }
+  #gl:active { cursor:grabbing; }
+  .ui { position:fixed; pointer-events:none; letter-spacing:.06em; text-transform:uppercase; }
+  .ticks { top:22px; left:42px; right:42px; height:30px; display:flex; justify-content:space-between; }
+  .ticks i { width:1px; height:12px; background:var(--fg); opacity:.45; }
+  .tl { top:62px; left:42px; } .tr { top:62px; right:42px; text-align:right; }
+  .tl b, .tr b { display:block; font-weight:700; font-size:16px; color:#fff; letter-spacing:.08em; }
+  .tl span, .tr span { font-size:12px; color:var(--dim); font-family:var(--font-mono); }
+  .hr { left:0; right:0; height:1px; background:var(--line); }
+  .label { top:18%; left:50%; transform:translateX(-50%); border-left:1px solid var(--line); padding-left:22px; white-space:nowrap; }
+  .label b { display:block; font-size:22px; font-weight:700; letter-spacing:.04em; }
+  .label span { font-size:11px; color:var(--or); font-family:var(--font-mono); }
+  .meta { bottom:178px; left:42px; right:42px; display:flex; justify-content:space-between;
+    font-size:12px; color:var(--dim); letter-spacing:.14em; font-family:var(--font-mono); font-weight:600; }
+  .head { bottom:58px; left:42px; right:42px; font-weight:800; line-height:1.02;
+    font-size:clamp(30px, 5vw, 68px); letter-spacing:-.02em; transition:opacity .35s; color:#fff; }
+  .foot { bottom:20px; left:42px; right:42px; display:flex; justify-content:space-between; align-items:center;
+    font-size:12px; color:var(--dim); letter-spacing:.14em; border-top:1px solid var(--line); padding-top:12px; font-family:var(--font-mono); }
+  .foot a { pointer-events:auto; color:#070403; background:#fff; font-weight:700; text-decoration:none; padding:6px 14px; border-radius:5px; transition:.2s; }
+  .foot a:hover { background:var(--or); }
+  .vignette { inset:0; background:radial-gradient(ellipse at 50% 50%, transparent 45%, rgba(0,0,0,.85) 100%); }
+  .bars::before, .bars::after { content:''; position:fixed; left:0; right:0; height:5.5vh; background:#000; }
+  .bars::before { top:0; } .bars::after { bottom:0; }
+  #flash { inset:0; opacity:0; background:
+    repeating-linear-gradient(0deg, rgba(255,150,70,.12) 0 2px, transparent 2px 5px),
+    radial-gradient(circle at 50% 50%, rgba(255,125,26,.35) 0%, rgba(255,90,10,.12) 40%, transparent 70%); mix-blend-mode:screen; }
+  #flash.go { animation:pierce .55s ease-out; }
+  @keyframes pierce { 0% { opacity:0; transform:scale(.7); } 20% { opacity:.55; } 100% { opacity:0; transform:scale(1.4); } }
+  @media (max-width:640px) {
+    .ticks,.tl,.tr,.meta,.head,.foot { left:16px; right:16px; } .tr { display:none; }
+    .meta { bottom:150px; } .label { top:16%; }
+  }
+  @media (prefers-reduced-motion: reduce) { #flash.go { animation:none; } }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div class="ui vignette"></div>
+<div class="ui bars"></div>
+<div class="ui" id="flash"></div>
+
+<div class="ui ticks"><i></i><i></i><i></i><i></i><i></i></div>
+<div class="ui tl"><b>ONROL</b><span>AI Execution School</span></div>
+<div class="ui tr"><b>Live · Mentor-led</b><span>Hyderabad</span></div>
+<div class="ui hr" style="top:122px"></div>
+
+<div class="ui label"><b id="stepName">ONROL</b><span id="stepSub">Scroll · drag · ↑↓ to enter</span></div>
+
+<div class="ui meta"><span>The path / 4 steps</span><span id="metaR">00—04</span></div>
+<div class="ui head" id="head">Build your first<br>AI product<br>in 21 days.</div>
+<div class="ui foot"><span>1 hr a day · Live</span><a href="https://onrol.in/" target="_blank" rel="noopener">Apply now ↗</a></div>
+
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { Reflector } from 'three/addons/objects/Reflector.js';
+
+// Canvas textures need the web fonts loaded first, or they fall back to system fonts
+await Promise.all([
+  document.fonts.load('800 170px "Plus Jakarta Sans"'),
+  document.fonts.load('600 40px "Plus Jakarta Sans"'),
+  document.fonts.load('700 32px "JetBrains Mono"'),
+]).catch(() => {});
+
+const HALLS = [
+  { id:'01 — Learn',  sub:'Learn the AI tools',
+    left:['LIVE','MENTORS','1 HR / DAY','SMALL COHORT','RECORDINGS','NO PREREQS'] },
+  { id:'02 — Build',  sub:'Build real projects',
+    left:['7+ PROJECTS','5 AI SYSTEMS','70% HANDS-ON','WEEKLY WORK','50+ LIVE HRS','REAL BUILDS'] },
+  { id:'03 — Launch', sub:'Launch to the web',
+    left:['DEPLOYED','LIVE LINKS','SHAREABLE','PORTFOLIO','WEEKLY SHIP','DAY 21'] },
+  { id:'04 — Earn',   sub:'Earn from the skill',
+    left:['ACCELERATOR','GENERALIST','ARCHITECT','CYBER SEC','SOC ANALYST','MASTERCLASS'] },
+];
+
+const OR = new THREE.Color('#ff7d1a');
+const RACK_X = 2.6, RACK_W = 1.4, RACK_H = 3.4, RACK_D = 1.9, W = 3.6;
+const SHAFT_X = 40, TURN_Z = -60, SHAFT_BOTTOM = -44;
+
+const canvas = document.getElementById('gl');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#070403');
+scene.fog = new THREE.FogExp2('#090503', 0.04);
+const camera = new THREE.PerspectiveCamera(60, innerWidth / innerHeight, 0.1, 260);
+
+const V = (x,y,z) => new THREE.Vector3(x,y,z);
+const lineMat = (o) => new THREE.LineBasicMaterial({ color:OR, transparent:true, opacity:o, blending:THREE.AdditiveBlending, depthWrite:false });
+const addLine = (parent, pts, o) => parent.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lineMat(o)));
+
+// ---- Structure: straight corridor (Z) → right turn (X) → drop down a shaft (Y) ----
+const segA = new THREE.Group(); scene.add(segA);
+const segB = new THREE.Group(); segB.position.set(0, 0, TURN_Z); scene.add(segB);
+const segC = new THREE.Group(); segC.position.set(SHAFT_X, 0, TURN_Z); scene.add(segC);
+
+function corridorZ(g, zStart, zEnd) {
+  [-W,-1.8,-0.9,0,0.9,1.8,W].forEach(x => addLine(g, [V(x,0,zStart), V(x,0,zEnd)], x === 0 ? .25 : .5));
+  for (let z = zStart; z > zEnd; z -= 2) addLine(g, [V(-W,0,z), V(W,0,z)], .08);
+  [-W, W].forEach(x => addLine(g, [V(x,RACK_H+0.6,zStart), V(x,RACK_H+0.6,zEnd)], .35));
+}
+function corridorX(g, xStart, xEnd) {
+  [-W,-1.8,-0.9,0,0.9,1.8,W].forEach(z => addLine(g, [V(xStart,0,z), V(xEnd,0,z)], z === 0 ? .25 : .5));
+  for (let x = xStart; x < xEnd; x += 2) addLine(g, [V(x,0,-W), V(x,0,W)], .08);
+  [-W, W].forEach(z => addLine(g, [V(xStart,RACK_H+0.6,z), V(xEnd,RACK_H+0.6,z)], .35));
+}
+function shaftY(g, yTop, yBottom) {
+  [-W, W].forEach(x => [-W, W].forEach(z => addLine(g, [V(x,yTop,z), V(x,yBottom,z)], .45)));
+  for (let y = yTop; y > yBottom; y -= 3) addLine(g, [V(-W,y,-W), V(W,y,-W), V(W,y,W), V(-W,y,W), V(-W,y,-W)], .12);
+}
+function dust(g, box) {
+  const n = 1400, dp = new Float32Array(n*3);
+  for (let i = 0; i < n; i++) { dp[i*3] = box[0] + Math.random()*(box[1]-box[0]); dp[i*3+1] = box[2] + Math.random()*(box[3]-box[2]); dp[i*3+2] = box[4] + Math.random()*(box[5]-box[4]); }
+  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(dp, 3));
+  g.add(new THREE.Points(geo, new THREE.PointsMaterial({ color:'#ffb070', size:.03, transparent:true, opacity:.6, blending:THREE.AdditiveBlending })));
+}
+
+corridorZ(segA, 18, TURN_Z - W);
+corridorX(segB, W, SHAFT_X - W);
+shaftY(segC, RACK_H + 0.6, SHAFT_BOTTOM);
+// floor of the turn-to-shaft opening
+addLine(segC, [V(-W,0,-W), V(W,0,-W), V(W,0,W), V(-W,0,W), V(-W,0,-W)], .5);
+dust(scene, [-4, 4, 0, 4.5, TURN_Z - 4, 18]);
+dust(scene, [0, SHAFT_X, 0, 4.5, TURN_Z - 4, TURN_Z + 4]);
+dust(scene, [SHAFT_X - 4, SHAFT_X + 4, SHAFT_BOTTOM, 4, TURN_Z - 4, TURN_Z + 4]);
+
+// ---- Cinematic lighting: glossy reflective floor, ceiling light bars, warm practicals ----
+scene.add(new THREE.HemisphereLight('#ff9a5a', '#120604', 0.25));
+function mirrorFloor(parent, w, l, pos, rotZ = 0) {
+  const r = new Reflector(new THREE.PlaneGeometry(w, l), { textureWidth: innerWidth * .5, textureHeight: innerHeight * .5, color: 0x2a1c14 });
+  r.rotation.x = -Math.PI / 2; r.rotation.z = rotZ; r.position.copy(pos); parent.add(r);
+  // dark satin layer over the mirror so reflections read as polished concrete, not glass
+  const satin = new THREE.Mesh(new THREE.PlaneGeometry(w, l), new THREE.MeshBasicMaterial({ color:'#070302', transparent:true, opacity:.55, depthWrite:false }));
+  satin.rotation.copy(r.rotation); satin.position.copy(pos).add(V(0,.002,0)); parent.add(satin);
+}
+mirrorFloor(segA, W*2, 18 - (TURN_Z - W), V(0, -0.01, (18 + TURN_Z - W) / 2));
+mirrorFloor(segB, SHAFT_X - W*2, W*2, V(SHAFT_X/2, -0.01, 0));
+const barMat = new THREE.MeshBasicMaterial({ color: new THREE.Color('#ffb070').multiplyScalar(1.6) });
+function lightBar(parent, pos, len, alongX) {
+  const b = new THREE.Mesh(new THREE.BoxGeometry(alongX ? len : 0.06, 0.03, alongX ? 0.06 : len), barMat);
+  b.position.copy(pos); parent.add(b);
+}
+for (let z = 14; z > TURN_Z - 2; z -= 6) { lightBar(segA, V(-1.2, RACK_H + 0.55, z), 2.4, false); lightBar(segA, V(1.2, RACK_H + 0.55, z), 2.4, false); }
+for (let x = 4; x < SHAFT_X - 2; x += 6) { lightBar(segB, V(x, RACK_H + 0.55, -1.2), 2.4, true); lightBar(segB, V(x, RACK_H + 0.55, 1.2), 2.4, true); }
+for (let y = -2; y > SHAFT_BOTTOM; y -= 6) {          // glowing rings down the shaft
+  const pts = [V(-W,y,-W), V(W,y,-W), V(W,y,W), V(-W,y,W), V(-W,y,-W)];
+  segC.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color: new THREE.Color('#ffb070').multiplyScalar(1.4) })));
+}
+[[0,3,6],[0,3,-20],[0,3,-46],[14,3,TURN_Z],[30,3,TURN_Z],[SHAFT_X,-14,TURN_Z],[SHAFT_X,-32,TURN_Z]].forEach(([x,y,z]) => {
+  const l = new THREE.PointLight('#ff8a3a', 14, 14, 1.6); l.position.set(x,y,z); scene.add(l);
+});
+
+// ---- Racks ----
+function rackTex(label) {
+  const c = document.createElement('canvas'); c.width = 128; c.height = 320;
+  const g = c.getContext('2d');
+  g.fillStyle = 'rgba(255,100,20,0.08)'; g.fillRect(0,0,128,320);
+  for (let y = 18; y < 280; y += 7) {
+    g.fillStyle = `rgba(255,${120+Math.random()*60|0},50,${0.2+Math.random()*0.4})`;
+    g.fillRect(8, y, 112 * (0.5 + Math.random()*0.5), 1.5);
+    if (Math.random() < 0.35) { g.fillStyle = '#ffb27d'; g.fillRect(114, y-1, 3, 3); }
+  }
+  g.font = '700 14px "JetBrains Mono", monospace';
+  g.lineWidth = 3; g.strokeStyle = '#000'; g.strokeText(label, 8, 306);
+  g.fillStyle = 'rgba(255,214,180,.9)'; g.fillText(label, 8, 306);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+
+const clickable = [];
+const rackBody = new THREE.MeshStandardMaterial({ color:'#120d0b', metalness:.85, roughness:.35 });
+const ledMat = new THREE.MeshBasicMaterial({ color: new THREE.Color('#ff8a2a').multiplyScalar(2.2) });
+function makeRack(label) {
+  const grp = new THREE.Group();
+  const geo = new THREE.BoxGeometry(RACK_D, RACK_H, RACK_W);
+  grp.add(new THREE.Mesh(geo, rackBody));
+  grp.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), lineMat(.4)));
+  [-1, 1].forEach((s) => {   // vertical LED strips on the front edges
+    const led = new THREE.Mesh(new THREE.BoxGeometry(0.02, RACK_H * .92, 0.03), ledMat);
+    led.position.set(RACK_D/2 + 0.02, 0, s * (RACK_W/2 - 0.04)); grp.add(led);
+  });
+  const face = new THREE.Mesh(new THREE.PlaneGeometry(RACK_W*0.92, RACK_H*0.95),
+    new THREE.MeshBasicMaterial({ map:rackTex(label), transparent:true, blending:THREE.AdditiveBlending, depthWrite:false }));
+  face.position.x = RACK_D/2 + 0.01; face.rotation.y = Math.PI/2; grp.add(face);
+  grp.children.forEach(m => m.position.y += RACK_H/2);
+  face.userData = { id: label }; clickable.push(face);
+  return grp;
+}
+// a row of racks on both sides of an aisle. `along` = aisle direction, `across` = toward the right wall
+function rackRow(parent, labels, num, start, along, across, up = V(0,1,0)) {
+  labels.forEach((lbl, j) => {
+    [-1, 1].forEach(side => {
+      const r = makeRack(side < 0 ? lbl : `ONR-${num}${j+1}`);
+      const spacing = up.y === 1 ? RACK_W + 0.25 : RACK_H + 0.4;     // in the shaft racks stack end-to-end
+      r.position.copy(start).addScaledVector(along, j * spacing).addScaledVector(across, side * (RACK_X + RACK_D/2));
+      // orient: local +x (front) faces the aisle, local +y = `up`
+      const front = across.clone().multiplyScalar(-side);
+      const m = new THREE.Matrix4().makeBasis(front, up, front.clone().cross(up));
+      r.quaternion.setFromRotationMatrix(m);
+      if (up.y !== 1) r.position.addScaledVector(up, -RACK_H/2);
+      parent.add(r);
+    });
+  });
+}
+
+// ---- Screens (thin outlined, dim) ----
+const screens = [];
+function screenTex(kicker, big, line, strong = false) {
+  const c = document.createElement('canvas'); c.width = 1024; c.height = 600;
+  const g = c.getContext('2d');
+  g.fillStyle = 'rgba(255,120,40,0.04)'; for (let y = 0; y < 600; y += 6) g.fillRect(0, y, 1024, 1);
+  g.strokeStyle = 'rgba(255,140,60,0.6)'; g.lineWidth = 2; g.strokeRect(16, 16, 992, 568);
+  [[16,16],[1008,16],[16,584],[1008,584]].forEach(([x,y]) => { g.fillStyle = 'rgba(255,200,150,.7)'; g.fillRect(x-4,y-4,8,8); });
+  g.textAlign = 'center';
+  g.fillStyle = 'rgba(255,150,80,.7)'; g.font = '700 28px "JetBrains Mono", monospace'; g.fillText(kicker, 512, 160);
+  g.strokeStyle = strong ? 'rgba(255,170,90,1)' : 'rgba(255,150,70,.9)'; g.lineWidth = strong ? 3 : 2;
+  g.font = '800 170px "Plus Jakarta Sans", sans-serif'; g.strokeText(big, 512, 350);
+  if (strong) { g.fillStyle = 'rgba(255,125,26,.18)'; g.fillText(big, 512, 350); }
+  g.fillStyle = 'rgba(255,170,110,.6)'; g.font = '600 34px "Plus Jakarta Sans", sans-serif'; g.fillText(line, 512, 440);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
+}
+// normal = direction the screen faces (toward the approaching camera); up = screen's top
+function makeScreen(parent, pos, normal, up, kicker, big, line, opts = {}) {
+  const w = (opts.scale || 1) * (W*2 - 0.2);
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(w, w * 600/1024),
+    new THREE.MeshBasicMaterial({ map:screenTex(kicker, big, line, opts.strong), transparent:true,
+      side:THREE.DoubleSide, blending:THREE.AdditiveBlending, depthWrite:false }));
+  m.position.copy(pos);
+  m.up.copy(up);
+  parent.add(m);
+  m.updateWorldMatrix(true, false);
+  m.lookAt(m.getWorldPosition(V(0,0,0)).add(normal));
+  if (!opts.solid) screens.push({ mesh:m, side:1 });
+  return m;
+}
+
+const X = V(1,0,0), Y = V(0,1,0), Z = V(0,0,1);
+// 00 Intro
+makeScreen(segA, V(0, 2.1, 10), Z, Y, 'AI EXECUTION SCHOOL', 'ONROL', 'Build your first AI product in 21 days');
+// 01 Learn + 02 Build: straight corridor
+makeScreen(segA, V(0, 2.1, -4), Z, Y, 'STEP 01 / 04', 'LEARN', HALLS[0].sub);
+rackRow(segA, HALLS[0].left, '01', V(0,0,-7), V(0,0,-1), X);
+makeScreen(segA, V(0, 2.1, -32), Z, Y, 'STEP 02 / 04', 'BUILD', HALLS[1].sub);
+rackRow(segA, HALLS[1].left, '02', V(0,0,-35), V(0,0,-1), X);
+// right turn: wall of racks straight ahead
+for (let k = -2; k <= 2; k++) {
+  const r = makeRack('ONROL'); r.rotation.y = -Math.PI/2;
+  r.position.set(k * (RACK_W + 0.2), 0, TURN_Z - W - RACK_D/2); scene.add(r);
+}
+// 03 Launch: corridor heading +X
+makeScreen(segB, V(14, 2.1, 0), V(-1,0,0), Y, 'STEP 03 / 04', 'LAUNCH', HALLS[2].sub);
+rackRow(segB, HALLS[2].left, '03', V(17,0,0), X, Z);
+// 04 Earn: dropping down the shaft. Looking down, the screen's top points the way we came from (+X)
+makeScreen(segC, V(0, -8, 0), Y, X, 'STEP 04 / 04', 'EARN', HALLS[3].sub);
+rackRow(segC, HALLS[3].left, '04', V(0,-11,0), V(0,-1,0), Z, X);
+
+// Bottom of the shaft: APPLY screen (warm, not blinding) — click opens onrol.in
+const endScreen = makeScreen(segC, V(0, SHAFT_BOTTOM + 0.5, 0), Y, X, 'NO PAYMENT TO APPLY', 'APPLY NOW', 'onrol.in  ↗', { strong:true, solid:true, scale:1.1 });
+endScreen.userData = { href:'https://onrol.in/' }; clickable.push(endScreen);
+const halo = new THREE.Mesh(new THREE.CircleGeometry(10, 48), new THREE.MeshBasicMaterial({ color:'#ff5a10', transparent:true,
+  opacity:.08, blending:THREE.AdditiveBlending, depthWrite:false }));
+halo.position.set(0, SHAFT_BOTTOM + 0.3, 0); halo.rotation.x = -Math.PI/2; segC.add(halo);
+
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+composer.addPass(new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.85, 0.55, 0.4));
+const film = new ShaderPass({
+  uniforms: { tDiffuse:{ value:null }, time:{ value:0 }, ca:{ value:0.0018 } },
+  vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.); }',
+  fragmentShader: `
+    uniform sampler2D tDiffuse; uniform float time; uniform float ca; varying vec2 vUv;
+    float rand(vec2 c){ return fract(sin(dot(c, vec2(12.9898,78.233))) * 43758.5453); }
+    void main(){
+      vec2 d = vUv - .5; float r2 = dot(d,d);
+      vec2 off = d * ca * (1. + r2 * 6.);                     // lens fringing toward the edges
+      vec3 col = vec3(texture2D(tDiffuse, vUv + off).r, texture2D(tDiffuse, vUv).g, texture2D(tDiffuse, vUv - off).b);
+      col = mix(col, col * vec3(1.06, .97, .88), .6);          // warm grade
+      col = (col - .5) * 1.08 + .5;                             // contrast
+      col *= 1. - r2 * 1.35;                                    // vignette
+      col += (rand(vUv * 900. + time) - .5) * .045;             // film grain
+      gl_FragColor = vec4(max(col, 0.), 1.);
+    }`
+});
+composer.addPass(film);
+composer.addPass(new OutputPass());
+
+// ---- One-way path: straight → right → down the shaft (no U-turn) ----
+const H = 1.7;
+const path = new THREE.CurvePath();
+path.add(new THREE.LineCurve3(V(0,H,16), V(0,H,TURN_Z + 2.5)));
+path.add(new THREE.QuadraticBezierCurve3(V(0,H,TURN_Z + 2.5), V(0,H,TURN_Z), V(2.5,H,TURN_Z)));
+path.add(new THREE.LineCurve3(V(2.5,H,TURN_Z), V(SHAFT_X - 2.5,H,TURN_Z)));
+path.add(new THREE.QuadraticBezierCurve3(V(SHAFT_X - 2.5,H,TURN_Z), V(SHAFT_X,H,TURN_Z), V(SHAFT_X,H - 2.5,TURN_Z)));
+path.add(new THREE.LineCurve3(V(SHAFT_X,H - 2.5,TURN_Z), V(SHAFT_X,SHAFT_BOTTOM + 7,TURN_Z)));
+
+// where along the path each step's screen sits
+function nearestU(p) {
+  let best = 0, bd = Infinity;
+  for (let i = 0; i <= 600; i++) { const d = path.getPointAt(i/600).distanceToSquared(p); if (d < bd) { bd = d; best = i/600; } }
+  return best;
+}
+const hallU = [V(0,2.1,-4), V(14,2.1,TURN_Z), V(SHAFT_X,-8,TURN_Z)];
+const stepU = [nearestU(V(0,H,-4)), nearestU(V(0,H,-32)), nearestU(V(14,H,TURN_Z)), nearestU(V(SHAFT_X,-8,TURN_Z))];
+
+let targetU = 0, currentU = 0, focus = null, fovKick = 0;
+let isDragging = false, dragDist = 0, lastY = 0;
+const mouse = { x:0, y:0 };
+const clampU = (v) => THREE.MathUtils.clamp(v, 0, 1);
+
+addEventListener('wheel', (e) => { focus = null; targetU = clampU(targetU + e.deltaY * 0.0003); }, { passive:true });
+addEventListener('mousedown', (e) => { if (e.target.closest('a')) return; isDragging = true; dragDist = 0; lastY = e.clientY; });
+addEventListener('mousemove', (e) => {
+  mouse.x = (e.clientX / innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / innerHeight) * 2 + 1;
+  if (!isDragging) return;
+  const dy = lastY - e.clientY; lastY = e.clientY; dragDist += Math.abs(dy);
+  if (dragDist > 4) { focus = null; targetU = clampU(targetU + dy * 0.0016); }
+});
+addEventListener('mouseup', () => { isDragging = false; });
+addEventListener('mouseleave', () => { isDragging = false; });
+addEventListener('touchstart', (e) => { if (e.touches.length) lastY = e.touches[0].clientY; }, { passive:true });
+addEventListener('touchmove', (e) => {
+  if (!e.touches.length) return;
+  focus = null;
+  const dy = lastY - e.touches[0].clientY; lastY = e.touches[0].clientY;
+  targetU = clampU(targetU + dy * 0.0018);
+}, { passive:true });
+
+const hallOf = () => { let h = -1; stepU.forEach((u, i) => { if (currentU >= u - 0.015) h = i; }); return h; };
+const goStep = (i) => { focus = null; targetU = i < 0 ? 0 : clampU(stepU[i] - 0.02); };
+addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') focus = null;
+  else if (e.key === 'ArrowUp')    { e.preventDefault(); focus = null; targetU = clampU(targetU + 0.02); }
+  else if (e.key === 'ArrowDown')  { e.preventDefault(); focus = null; targetU = clampU(targetU - 0.02); }
+  else if (e.key === 'ArrowRight') { e.preventDefault(); goStep(Math.min(HALLS.length - 1, hallOf() + 1)); }
+  else if (e.key === 'ArrowLeft')  { e.preventDefault(); goStep(hallOf() - 1); }
+});
+
+canvas.addEventListener('click', (e) => {
+  if (dragDist > 4) return;   // that was a drag, not a click
+  const ray = new THREE.Raycaster();
+  ray.setFromCamera(new THREE.Vector2((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1), camera);
+  const hit = ray.intersectObjects(clickable)[0];
+  if (hit && hit.object.userData.href) { open(hit.object.userData.href, '_blank', 'noopener'); return; }
+  focus = hit ? hit.object : null;
+});
+
+function resize() {
+  renderer.setSize(innerWidth, innerHeight, false); composer.setSize(innerWidth, innerHeight);
+  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize); resize();
+
+const $ = (id) => document.getElementById(id);
+const flash = $('flash');
+function pierce() { flash.classList.remove('go'); void flash.offsetWidth; flash.classList.add('go'); fovKick = 1; }
+
+const clock = new THREE.Clock(), tmp = V(0,0,0), q = new THREE.Quaternion();
+const camPos = path.getPointAt(0), camLook = V(0, H, 10);
+const camUp = V(0,1,0), upTarget = V(0,0,0), dir = V(0,0,0);
+let lastHall = -2, roll = 0, prevU = 0;
+
+renderer.setAnimationLoop(() => {
+  const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
+  currentU += (targetU - currentU) * (1 - Math.exp(-dt * 6));
+  const k = 1 - Math.exp(-dt * 6);
+
+  if (focus) {
+    focus.getWorldPosition(tmp);
+    const n = V(0,0,1).applyQuaternion(focus.getWorldQuaternion(q));
+    camPos.lerp(tmp.clone().addScaledVector(n, 2.4), k * .5);
+    camLook.lerp(tmp, k * .5);
+  } else {
+    const pos = path.getPointAt(currentU);
+    const aheadU = clampU(currentU + 0.028);
+    const ahead = path.getPointAt(aheadU);
+    if (aheadU >= 0.999) ahead.add(path.getTangentAt(1).multiplyScalar(4));
+    // small mouse parallax, perpendicular to the direction of travel
+    const tan = path.getTangentAt(currentU);
+    const side = V(0,0,0).crossVectors(tan, camUp).normalize();
+    pos.addScaledVector(side, mouse.x * 0.14).addScaledVector(camUp, mouse.y * 0.14);
+    camPos.lerp(pos, k);
+    camLook.lerp(ahead, k);
+  }
+  // Smoothly blend camera "up" from world-up to +X as the view tilts down the shaft (no snapping)
+  dir.subVectors(camLook, camPos).normalize();
+  const down = THREE.MathUtils.clamp(-dir.y, 0, 1);
+  upTarget.set(down, 1 - down, 0).normalize();
+  camUp.lerp(upTarget, k).normalize();
+  camera.up.copy(camUp);
+  camera.position.copy(camPos);
+  camera.lookAt(camLook);
+  // bank into turns: roll by how fast the path direction is changing sideways
+  const t0 = path.getTangentAt(clampU(currentU)), t1 = path.getTangentAt(clampU(currentU + 0.01));
+  const bank = THREE.MathUtils.clamp(V(0,0,0).crossVectors(t0, t1).dot(camUp) * 6, -0.18, 0.18);
+  roll += ((focus ? 0 : bank) - roll) * k * .5;
+  camera.rotateZ(roll);
+
+  // Screens: dim, brighten a little on approach, dissolve as you fly through, flash on penetration
+  screens.forEach((s) => {
+    const local = s.mesh.worldToLocal(camPos.clone());
+    const d = local.z;
+    s.mesh.material.opacity = d > 0 ? (0.25 + 0.4 * Math.min(1, d / 6)) * Math.min(1, d / 0.8) : 0;
+    const sd = Math.sign(d) || 1;
+    if (sd !== s.side && Math.abs(local.x) < W && Math.abs(local.y) < W && !focus) pierce();
+    s.side = sd;
+  });
+  halo.material.opacity = .07 + Math.sin(t * 2) * .02;
+
+  fovKick *= Math.exp(-dt * 3);
+  const speed = Math.abs(currentU - prevU) / Math.max(dt, 1e-3); prevU = currentU;
+  camera.fov = 58 + Math.min(speed * 40, 10) + fovKick * 12; camera.updateProjectionMatrix();
+  film.uniforms.time.value = t % 100; film.uniforms.ca.value = 0.0018 + fovKick * 0.006;
+
+  const hi = hallOf();
+  if (hi !== lastHall) {
+    lastHall = hi;
+    $('stepName').textContent = hi < 0 ? 'ONROL' : HALLS[hi].id;
+    $('stepSub').textContent = hi < 0 ? 'Scroll · drag · ↑↓ to enter' : HALLS[hi].sub;
+    $('metaR').textContent = String(hi + 1).padStart(2,'0') + '—04';
+  }
+  if (focus) $('stepSub').textContent = focus.userData.id || '';
+  else if (hi >= 0 && $('stepSub').textContent !== HALLS[hi].sub) $('stepSub').textContent = HALLS[hi].sub;
+  $('head').style.opacity = focus ? 0 : Math.max(0, 1 - currentU * 8);
+
+  composer.render();
+});
+</script>
+</body>
+</html>

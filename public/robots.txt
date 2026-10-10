@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://infovivencia2026-debug.github.io/onrol_index/sitemap.xml

@@ -1,323 +1,150 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ONROL — The Path</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;500;700&display=swap" rel="stylesheet">
-<style>
-  :root { --bg:#070403; --fg:#f3e6da; --or:#ff8a2a; --dim:rgba(255,160,90,.55); --line:rgba(255,140,60,.18); }
-  * { box-sizing:border-box; margin:0; padding:0; }
-  html,body { background:var(--bg); color:var(--fg); font-family:"Roboto Condensed",system-ui,sans-serif; }
-  #gl { position:fixed; inset:0; width:100%; height:100%; display:block; }
-  #scroll { height:1400vh; }
-  .ui { position:fixed; pointer-events:none; letter-spacing:.08em; text-transform:uppercase; }
-  .ticks { top:22px; left:46px; right:46px; height:30px; display:flex; justify-content:space-between; }
-  .ticks i { width:1px; height:12px; background:var(--fg); opacity:.6; }
-  .tl { top:62px; left:46px; } .tr { top:62px; right:46px; text-align:right; }
-  .tl b, .tr b { display:block; font-weight:500; font-size:17px; }
-  .tl span, .tr span { font-size:13px; color:var(--dim); }
-  .hr { left:0; right:0; height:1px; background:var(--line); }
-  .label { top:18%; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:28px;
-    border-left:1px solid var(--line); padding-left:28px; white-space:nowrap; }
-  .label b { display:block; font-size:24px; font-weight:500; letter-spacing:.06em; }
-  .label span { font-size:12px; color:var(--or); }
-  .label button { pointer-events:auto; width:40px; height:40px; border:0; border-radius:3px;
-    background:#f3e6da; color:#1a0c04; font-size:20px; cursor:pointer; }
-  .meta { bottom:178px; left:46px; right:46px; display:flex; justify-content:space-between;
-    font-size:13px; color:var(--dim); letter-spacing:.14em; }
-  .head { bottom:58px; left:46px; right:46px; font-weight:700; line-height:.98;
-    font-size:clamp(28px, 5vw, 64px); letter-spacing:.01em; transition:opacity .4s; }
-  .foot { bottom:20px; left:46px; right:46px; display:flex; justify-content:space-between;
-    font-size:13px; color:var(--dim); letter-spacing:.18em; border-top:1px solid var(--line); padding-top:12px; }
-  .foot a { pointer-events:auto; color:var(--fg); text-decoration:none; }
-  .foot a:hover { color:var(--or); }
-  .nav { top:50%; right:22px; transform:translateY(-50%); display:flex; flex-direction:column; gap:10px; pointer-events:auto; }
-  .nav button { background:none; border:1px solid var(--line); color:var(--dim); font:500 11px "Roboto Condensed";
-    letter-spacing:.14em; padding:6px 8px; cursor:pointer; }
-  .nav button.on { color:var(--or); border-color:var(--or); box-shadow:0 0 10px rgba(255,138,42,.5); }
-  .vignette { inset:0; background:radial-gradient(ellipse at 50% 50%, transparent 45%, rgba(0,0,0,.75) 100%); }
-  /* screen-penetration flash */
-  #flash { inset:0; opacity:0; background:
-    repeating-linear-gradient(0deg, rgba(255,170,90,.18) 0 2px, transparent 2px 5px),
-    radial-gradient(circle at 50% 50%, rgba(255,138,42,.35) 0%, rgba(255,100,20,.12) 40%, transparent 70%); mix-blend-mode:screen; }
-  #flash.go { animation:pierce .55s ease-out; }
-  @keyframes pierce { 0% { opacity:0; transform:scale(.6); } 18% { opacity:.6; } 100% { opacity:0; transform:scale(1.6); } }
-  @media (max-width:640px) {
-    .ticks,.tl,.tr,.meta,.head,.foot { left:16px; right:16px; } .tr { left:auto; }
-    .label { top:16%; gap:14px; padding-left:14px; } .meta { bottom:150px; } .nav { right:8px; }
-  }
-  @media (prefers-reduced-motion: reduce) { #flash.go { animation:none; } }
-</style>
-<script type="importmap">
-{ "imports": {
-  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-} }
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ONROL — The Path · Build your first AI product in 21 days</title>
+<meta name="description" content="ONROL AI Execution School, Hyderabad. Learn the AI tools, build real projects, launch to the web and earn from the skill. Live, mentor-led, 1 hour a day.">
+<meta name="theme-color" content="#070403">
+<link rel="canonical" href="%VITE_SITE_URL%/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ONROL">
+<meta property="og:title" content="ONROL — The Path">
+<meta property="og:description" content="Build your first AI product in 21 days. Live, mentor-led, 1 hour a day.">
+<meta property="og:url" content="%VITE_SITE_URL%/">
+<meta property="og:image" content="%VITE_SITE_URL%/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="ONROL — The Path">
+<meta name="twitter:description" content="Build your first AI product in 21 days. Live, mentor-led.">
+<meta name="twitter:image" content="%VITE_SITE_URL%/og.png">
+<link rel="icon" href="./favicon.svg" type="image/svg+xml">
+<link rel="manifest" href="./site.webmanifest">
+<script type="application/ld+json">
+{ "@context":"https://schema.org", "@type":"EducationalOrganization", "name":"ONROL, AI Execution School",
+  "url":"https://onrol.in/", "address":{ "@type":"PostalAddress", "addressLocality":"Hyderabad", "addressCountry":"IN" },
+  "slogan":"Build your first AI product in 21 days." }
+</script>
+<script>
+  // apply the saved theme before first paint (no flash)
+  try { if (localStorage.getItem('onrol-theme') === 'light') document.documentElement.dataset.theme = 'light'; } catch (e) {}
+  if (new URLSearchParams(location.search).has('og')) document.documentElement.classList.add('og');
 </script>
 </head>
 <body>
-<canvas id="gl"></canvas>
-<div id="scroll"></div>
+<canvas id="gl" aria-label="3D walk through the four ONROL steps: Learn, Build, Launch, Earn"></canvas>
+<div id="loader" role="status"><span>ONROL</span><i></i></div>
+<div id="fallback"><h2>Build your first AI product in 21 days.</h2>
+  <p>Learn the AI tools · Build real projects · Launch to the web · Earn from the skill</p>
+  <p><a href="https://onrol.in/programs/ai-generalist">Apply now ↗</a></p></div>
+<noscript><style>#loader{display:none}#fallback{display:flex}</style></noscript>
+<nav class="sr" aria-label="Steps"><a href="#learn">Learn</a> <a href="#build">Build</a> <a href="#launch">Launch</a> <a href="#earn">Earn</a></nav>
+<main id="plain" aria-label="Plain view">
+  <div class="wrap">
+    <h1>Build your first AI product in 21 days.</h1>
+    <p class="lead">ONROL · AI Execution School · Live, mentor-led · 1 hr a day</p>
+    <a class="cta" href="https://onrol.in/programs/ai-generalist" target="_blank" rel="noopener">Apply now ↗</a>
+    <ol>
+      <li id="p-learn"><span>01</span><b>Learn</b><p>Learn the AI tools</p></li>
+      <li id="p-build"><span>02</span><b>Build</b><p>Build real projects</p></li>
+      <li id="p-launch"><span>03</span><b>Launch</b><p>Launch to the web</p></li>
+      <li id="p-earn"><span>04</span><b>Earn</b><p>Earn from the skill</p></li>
+    </ol>
+    <div class="links">
+    <div><h3>Programs</h3>
+      <a href="https://onrol.in/programs/aica">AI Career Accelerator</a>
+      <a href="https://onrol.in/programs/ai-generalist">AI Generalist</a>
+      <a href="https://onrol.in/programs/ai-architect">AI Architect</a>
+      <a href="https://onrol.in/soc-analyst">SOC Analyst</a>
+      <a href="https://onrol.in/cybersecurity">Cyber Security</a>
+      <a href="https://onrol.in/programs">All Programs</a>
+      <a href="https://onrol.in/masterclass">Free Masterclass</a></div>
+    <div><h3>Resources</h3>
+      <a href="https://onrol.in/blog">Blog</a>
+      <a href="https://onrol.in/glossary">Glossary</a>
+      <a href="https://onrol.in/questions">FAQs</a>
+      <a href="https://onrol.in/tools/ai-skills-quiz">AI Skills Quiz</a>
+      <a href="https://onrol.in/why-now">Why AI matters now</a></div>
+    <div><h3>Company</h3>
+      <a href="https://onrol.in/about">About ONROL</a>
+      <a href="https://onrol.in/contact">Contact</a>
+      <a href="https://onrol.in/privacy-policy">Privacy Policy</a>
+      <a href="https://onrol.in/terms-and-conditions">Terms</a></div>
+  </div>
+  <small>© 2026 ONROL, AI Execution School, Hyderabad. All rights reserved.</small>
+  </div>
+</main>
+<div class="ui" id="hint" aria-hidden="true"><span id="hintText">Scroll to enter</span><i id="hintArrow">↓</i></div>
+<div id="scrim"></div>
+<aside id="menu" aria-label="Menu" aria-hidden="true">
+  <div class="acts">
+    <button class="btn" id="mAuto">▶ Autopilot</button>
+    <button class="btn" id="mPlain">Plain view</button>
+    <button class="btn" id="mTheme">Light</button>
+  </div>
+  <div id="menuLinks"></div>
+</aside>
 <div class="ui vignette"></div>
+<div class="ui bars"></div>
 <div class="ui" id="flash"></div>
 
 <div class="ui ticks"><i></i><i></i><i></i><i></i><i></i></div>
 <div class="ui tl"><b>ONROL</b><span>AI Execution School</span></div>
-<div class="ui tr"><b>Live · Mentor-led</b><span>Hyderabad</span></div>
+<div class="ui tr"><b>Live · Mentor-led</b><span>Hyderabad</span>
+  <div class="row">
+    <button class="btn" id="plainBtn" aria-pressed="false">Plain view</button>
+    <button class="btn" id="themeBtn" aria-label="Switch to light mode">Light</button>
+  </div>
+  <button class="btn menuBtn" id="menuBtn" aria-expanded="false" aria-controls="menu" aria-label="Menu">☰</button></div>
+<div class="joy" id="joy" role="application" aria-label="Joystick: drag up to move forward, down to go back, sideways to look around">
+  <span class="lbl t">Fwd</span><span class="lbl b">Back</span><div class="knob"></div>
+</div>
+<div class="ui stepper" aria-label="Move along the path">
+  <button class="btn" id="upBtn" aria-label="Previous step">▲</button>
+  <button class="btn" id="downBtn" aria-label="Next step">▼</button>
+</div>
 <div class="ui hr" style="top:122px"></div>
 
-<div class="ui label"><div><b id="dcName">ONROL</b><span id="dcSub">Scroll to enter</span></div>
-  <button id="nextBtn" aria-label="Next step">→</button></div>
 
-<div class="ui meta"><span>The path / 4 steps</span><span id="metaR">00—04</span></div>
-<div class="ui head" id="head">Build your first<br>AI product<br>in 21 days.</div>
-<div class="ui foot"><span>1 hr a day · Live</span><a href="https://onrol.in/" target="_blank" rel="noopener">Apply now ↗</a></div>
-<div class="ui nav" id="nav"></div>
+<div class="ui bottom">
+  <h1 class="head" id="head">Build your first AI product in 21 days.</h1>
+  <div class="meta"><span id="metaL">The path / 4 steps</span><div class="dots" id="dots" aria-label="Steps"></div><span id="metaR">00—04</span></div>
+  <div class="mbar">
+    <button class="btn" id="mUp" aria-label="Previous step">▲</button>
+    <a href="https://onrol.in/programs/ai-generalist" target="_blank" rel="noopener">Apply now ↗</a>
+    <button class="btn" id="mDown" aria-label="Next step">▼</button>
+  </div>
+  <div class="foot"><a href="https://onrol.in/programs/ai-generalist" target="_blank" rel="noopener">Apply now ↗</a>
+    <div class="right"><span class="note">1 hr a day · Live</span><button class="btn" id="autoBtn" aria-pressed="false">▶ Autopilot</button></div></div>
+</div>
 
-<script type="module">
-import * as THREE from 'three';
-import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
-import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+<footer class="ui endnav" id="endnav" aria-label="Site links">
+  <div class="brand">ONROL</div>
+  <div class="cols">
+    <div><h3>Programs</h3>
+      <a href="https://onrol.in/programs/aica">AI Career Accelerator</a>
+      <a href="https://onrol.in/programs/ai-generalist">AI Generalist</a>
+      <a href="https://onrol.in/programs/ai-architect">AI Architect</a>
+      <a href="https://onrol.in/soc-analyst">SOC Analyst</a>
+      <a href="https://onrol.in/cybersecurity">Cyber Security</a>
+      <a href="https://onrol.in/programs">All Programs</a>
+      <a href="https://onrol.in/masterclass">Free Masterclass</a></div>
+    <div><h3>Resources</h3>
+      <a href="https://onrol.in/blog">Blog</a>
+      <a href="https://onrol.in/glossary">Glossary</a>
+      <a href="https://onrol.in/questions">FAQs</a>
+      <a href="https://onrol.in/tools/ai-skills-quiz">AI Skills Quiz</a>
+      <a href="https://onrol.in/why-now">Why AI matters now</a></div>
+    <div><h3>Company</h3>
+      <a href="https://onrol.in/about">About ONROL</a>
+      <a href="https://onrol.in/contact">Contact</a>
+      <a href="https://onrol.in/privacy-policy">Privacy Policy</a>
+      <a href="https://onrol.in/terms-and-conditions">Terms</a></div>
+  </div>
+  <small>© 2026 ONROL, AI Execution School, Hyderabad. All rights reserved.</small>
+</footer>
 
-// ---- ONROL's path: 4 steps. 1–3 go straight, then the corridor turns right into step 4 ----
-const HALLS = [
-  { id:'01 — Learn',  sub:'Learn the AI tools',
-    left:['LIVE','MENTORS','1 HR / DAY','SMALL COHORT','RECORDINGS','NO PREREQS'] },
-  { id:'02 — Build',  sub:'Build real projects',
-    left:['7+ PROJECTS','5 AI SYSTEMS','70% HANDS-ON','WEEKLY WORK','50+ LIVE HRS','REAL BUILDS'] },
-  { id:'03 — Launch', sub:'Launch to the web',
-    left:['DEPLOYED','LIVE LINKS','SHAREABLE','PORTFOLIO','WEEKLY SHIP','DAY 21'] },
-  { id:'04 — Earn',   sub:'Earn from the skill',
-    left:['ACCELERATOR','GENERALIST','ARCHITECT','CYBER SEC','SOC ANALYST','MASTERCLASS'] },
-];
-const OR = new THREE.Color('#ff8a2a');
-const RACK_X = 2.6, RACK_W = 1.4, RACK_H = 3.4, RACK_D = 1.9, HALL_LEN = 26, W = 3.6;
-const STRAIGHT = 3;
-const CORNER_Z = -STRAIGHT * HALL_LEN - 2;
-const START_Z = 14;
-
-const canvas = document.getElementById('gl');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias:true });
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-const scene = new THREE.Scene();
-scene.background = new THREE.Color('#070403');
-scene.fog = new THREE.FogExp2('#0d0603', 0.045);
-const camera = new THREE.PerspectiveCamera(64, 1, 0.1, 200);
-
-const V = (x,y,z) => new THREE.Vector3(x,y,z);
-const lineMat = (o) => new THREE.LineBasicMaterial({ color:OR, transparent:true, opacity:o, blending:THREE.AdditiveBlending, depthWrite:false });
-const addLine = (parent, pts, o) => parent.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), lineMat(o)));
-const FONT = '"Roboto Condensed", sans-serif';
-
-const segA = new THREE.Group(); scene.add(segA);
-const segB = new THREE.Group(); segB.position.set(0, 0, CORNER_Z); segB.rotation.y = -Math.PI/2; scene.add(segB);
-
-function corridor(g, zStart, zEnd) {
-  [-W,-1.8,-0.9,0,0.9,1.8,W].forEach((x) => addLine(g, [V(x,0,zStart), V(x,0,zEnd)], x === 0 ? .25 : .5));
-  for (let z = zStart; z > zEnd; z -= 2) addLine(g, [V(-W,0,z), V(W,0,z)], .08);
-  [-W, W].forEach((x) => addLine(g, [V(x,RACK_H+0.6,zStart), V(x,RACK_H+0.6,zEnd)], .35));
-  const n = Math.floor((zStart - zEnd) * 8), dp = new Float32Array(n*3);
-  for (let i = 0; i < n; i++) { dp[i*3] = (Math.random()-.5)*8; dp[i*3+1] = Math.random()*4.5; dp[i*3+2] = zStart - Math.random()*(zStart-zEnd); }
-  const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(dp, 3));
-  g.add(new THREE.Points(geo, new THREE.PointsMaterial({ color:'#ffb070', size:.03, transparent:true, opacity:.7, blending:THREE.AdditiveBlending })));
-}
-corridor(segA, START_Z, CORNER_Z - W);
-corridor(segB, W, -HALL_LEN - 12);
-
-// ---- Racks ----
-function rackTex(label) {
-  const c = document.createElement('canvas'); c.width = 128; c.height = 320;
-  const g = c.getContext('2d');
-  g.fillStyle = 'rgba(255,120,30,0.10)'; g.fillRect(0,0,128,320);
-  for (let y = 18; y < 280; y += 7) {
-    g.fillStyle = `rgba(255,${130+Math.random()*60|0},60,${0.2+Math.random()*0.45})`;
-    g.fillRect(8, y, 112 * (0.5 + Math.random()*0.5), 1.5);
-    if (Math.random() < 0.35) { g.fillStyle = '#ffd3a0'; g.fillRect(114, y-1, 3, 3); }
-  }
-  g.fillStyle = 'rgba(255,176,112,.8)'; g.font = `500 13px ${FONT}`; g.fillText(label, 8, 306);
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
-}
-const clickable = [];
-function makeRack(label) {
-  const grp = new THREE.Group();
-  const geo = new THREE.BoxGeometry(RACK_D, RACK_H, RACK_W);
-  grp.add(new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color:'#ff7a1a', transparent:true, opacity:.06,
-    blending:THREE.AdditiveBlending, depthWrite:false })));
-  grp.add(new THREE.LineSegments(new THREE.EdgesGeometry(geo), lineMat(.9)));
-  const face = new THREE.Mesh(new THREE.PlaneGeometry(RACK_W*0.92, RACK_H*0.95),
-    new THREE.MeshBasicMaterial({ map:rackTex(label), transparent:true, blending:THREE.AdditiveBlending, depthWrite:false }));
-  face.position.x = RACK_D/2 + 0.01; face.rotation.y = Math.PI/2; grp.add(face);
-  grp.children.forEach((m) => m.position.y += RACK_H/2);
-  face.userData = { id: label }; clickable.push(face);
-  return grp;
-}
-
-// ---- Screens the camera flies through ----
-const screens = [];
-function screenTex(kicker, big, line) {
-  // thin wireframe-style screen: outlined text, faint scanlines, no solid fill
-  const c = document.createElement('canvas'); c.width = 1024; c.height = 600;
-  const g = c.getContext('2d');
-  g.fillStyle = 'rgba(255,120,40,0.035)'; for (let y = 0; y < 600; y += 6) g.fillRect(0, y, 1024, 1);
-  g.strokeStyle = 'rgba(255,140,60,0.55)'; g.lineWidth = 1.5; g.strokeRect(14,14,996,572);
-  [[14,14],[1010,14],[14,586],[1010,586]].forEach(([x,y]) => { g.fillStyle = 'rgba(255,190,130,0.6)'; g.fillRect(x-3,y-3,6,6); });
-  g.textAlign = 'center';
-  g.fillStyle = 'rgba(255,150,80,0.6)'; g.font = `500 26px ${FONT}`; g.fillText(kicker, 512, 170);
-  g.strokeStyle = 'rgba(255,150,70,0.85)'; g.lineWidth = 2; g.font = `700 170px ${FONT}`; g.strokeText(big, 512, 360);
-  g.fillStyle = 'rgba(255,150,80,0.5)'; g.font = `400 30px ${FONT}`; g.fillText(line, 512, 440);
-  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
-}
-function makeScreen(parent, z, kicker, big, line) {
-  const m = new THREE.Mesh(new THREE.PlaneGeometry(W*2 - 0.2, (W*2 - 0.2) * 600/1024),
-    new THREE.MeshBasicMaterial({ map:screenTex(kicker, big, line), transparent:true, side:THREE.DoubleSide,
-      blending:THREE.AdditiveBlending, depthWrite:false }));
-  m.position.set(0, 2.1, z); parent.add(m);
-  screens.push({ mesh:m, side:1 });
-  return m;
-}
-
-function buildHall(g, h, z0, i) {
-  const gz = z0 - 1;
-  addLine(g, [V(-W,0,gz),V(-W,RACK_H+0.6,gz),V(W,RACK_H+0.6,gz),V(W,0,gz)], .7);
-  for (let r = 3; r <= 9; r += 2) {
-    const pts = []; for (let a = 0; a <= 64; a++) { const t = a/64*Math.PI*2; pts.push(V(Math.cos(t)*r, 2 + Math.sin(t)*r, gz)); }
-    addLine(g, pts, .12);
-  }
-  const [num, word] = h.id.split(' — ');
-  makeScreen(g, gz, `STEP ${num} / 04`, word.toUpperCase(), h.sub);
-  h.left.forEach((label, j) => {
-    [-1, 1].forEach((side) => {
-      const r = makeRack(side < 0 ? label : `ONR-${num}${String(j+1).padStart(2,'0')}`);
-      r.position.set(side * (RACK_X + RACK_D/2), 0, z0 - 4 - j * (RACK_W + 0.25));
-      r.rotation.y = side < 0 ? 0 : Math.PI;
-      g.add(r);
-    });
-  });
-}
-HALLS.forEach((h, i) => { if (i < STRAIGHT) buildHall(segA, h, -i * HALL_LEN, i); else buildHall(segB, h, -(i - STRAIGHT) * HALL_LEN - 2, i); });
-
-// Intro screen: the view starts in front of it and dives in
-makeScreen(segA, START_Z - 4, 'AI EXECUTION SCHOOL', 'ONROL', 'Build your first AI product in 21 days');
-
-// Corner wall straight ahead before the right turn
-const cornerWall = new THREE.Group(); cornerWall.position.set(0, 0, CORNER_Z - W - RACK_D/2); scene.add(cornerWall);
-for (let k = -2; k <= 2; k++) { const r = makeRack('ONROL'); r.rotation.y = -Math.PI/2; r.position.x = k * (RACK_W + 0.2); cornerWall.add(r); }
-
-// End: Apply-now screen (click opens onrol.in)
-const endZ = -HALL_LEN - 10;
-const endScreen = makeScreen(segB, endZ, 'NO PAYMENT TO APPLY', 'APPLY', 'onrol.in  ↗');
-screens.pop();   // never flown through
-endScreen.userData = { href:'https://onrol.in/' }; clickable.push(endScreen);
-const halo = new THREE.Mesh(new THREE.CircleGeometry(14, 48), new THREE.MeshBasicMaterial({ color:'#ff6a10', transparent:true,
-  opacity:.06, blending:THREE.AdditiveBlending, depthWrite:false }));
-halo.position.set(0, 1.5, endZ - 0.5); segB.add(halo);
-
-const composer = new EffectComposer(renderer);
-composer.addPass(new RenderPass(scene, camera));
-composer.addPass(new UnrealBloomPass(new THREE.Vector2(1,1), 0.8, 0.5, 0.35));
-composer.addPass(new OutputPass());
-
-// ---- Walking path ----
-const Y = 1.7, R = 2.5;
-const path = new THREE.CurvePath();
-path.add(new THREE.LineCurve3(V(0,Y,START_Z), V(0,Y,CORNER_Z + R)));
-path.add(new THREE.QuadraticBezierCurve3(V(0,Y,CORNER_Z + R), V(0,Y,CORNER_Z), V(R,Y,CORNER_Z)));
-path.add(new THREE.LineCurve3(V(R,Y,CORNER_Z), V(HALL_LEN + 4,Y,CORNER_Z)));
-const PATH_LEN = path.getLength();
-const hallStart = HALLS.map((h, i) => i < STRAIGHT ? START_Z + i * HALL_LEN : PATH_LEN - HALL_LEN - 2);
-
-const scrollMax = () => document.documentElement.scrollHeight - innerHeight;
-let u = 0, focus = null, fovKick = 0;
-const camPos = path.getPointAt(0), camLook = V(0, 1.7, START_Z - 6);
-const hallOf = () => { const d = u * PATH_LEN; let h = -1; hallStart.forEach((s, i) => { if (d >= s - 1) h = i; }); return h; };
-const goHall = (i) => { focus = null; scrollTo({ top: scrollMax() * Math.max(0, hallStart[i] - 4) / PATH_LEN + 1, behavior:'smooth' }); };
-
-const nav = document.getElementById('nav');
-HALLS.forEach((h, i) => { const b = document.createElement('button'); b.textContent = h.id.split(' — ')[1]; b.onclick = () => goHall(i); nav.appendChild(b); });
-document.getElementById('nextBtn').onclick = () => goHall(Math.min(HALLS.length - 1, hallOf() + 1));
-
-addEventListener('keydown', (e) => {
-  const step = scrollMax() / PATH_LEN * 3;
-  if (e.key === 'Escape') focus = null;
-  else if (e.key === 'ArrowUp')    { e.preventDefault(); scrollBy({ top:  step, behavior:'smooth' }); }
-  else if (e.key === 'ArrowDown')  { e.preventDefault(); scrollBy({ top: -step, behavior:'smooth' }); }
-  else if (e.key === 'ArrowRight') { e.preventDefault(); goHall(Math.min(HALLS.length - 1, hallOf() + 1)); }
-  else if (e.key === 'ArrowLeft')  { e.preventDefault(); goHall(Math.max(0, hallOf() - 1)); }
-});
-addEventListener('scroll', () => { focus = null; });
-canvas.addEventListener('click', (e) => {
-  const ray = new THREE.Raycaster();
-  ray.setFromCamera(new THREE.Vector2(e.clientX/innerWidth*2-1, -(e.clientY/innerHeight)*2+1), camera);
-  const hit = ray.intersectObjects(clickable)[0];
-  if (hit && hit.object.userData.href) { open(hit.object.userData.href, '_blank', 'noopener'); return; }
-  focus = hit ? hit.object : null;
-});
-
-function resize() {
-  renderer.setSize(innerWidth, innerHeight, false); composer.setSize(innerWidth, innerHeight);
-  camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix();
-}
-addEventListener('resize', resize); resize();
-
-const $ = (id) => document.getElementById(id);
-const flash = $('flash');
-function pierce() {
-  flash.classList.remove('go'); void flash.offsetWidth; flash.classList.add('go');
-  fovKick = 1;
-}
-
-const clock = new THREE.Clock(), tmp = V(0,0,0), q = new THREE.Quaternion();
-let lastHall = -2;
-renderer.setAnimationLoop(() => {
-  const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
-  const p = scrollMax() > 0 ? Math.min(1, scrollY / scrollMax()) : 0;
-  u += (p - u) * (1 - Math.exp(-dt * 4));
-  const k = 1 - Math.exp(-dt * 6);
-  if (focus) {
-    focus.getWorldPosition(tmp);
-    const n = V(0,0,1).applyQuaternion(focus.getWorldQuaternion(q));
-    camPos.lerp(tmp.clone().addScaledVector(n, 2.4).setY(1.8), k * .5);
-    camLook.lerp(tmp, k * .5);
-  } else {
-    const pos = path.getPointAt(u);
-    const ahead = path.getPointAt(Math.min(1, u + 6 / PATH_LEN));
-    if (u > 1 - 6 / PATH_LEN) ahead.add(path.getTangentAt(1).multiplyScalar(6));
-    camPos.lerp(pos.add(V(Math.sin(t*.4)*.08, 0, 0)), k);
-    camLook.lerp(ahead.setY(1.8), k);
-  }
-  camera.position.copy(camPos); camera.lookAt(camLook);
-
-  // Screens: brighten as you approach, dissolve as you pass through, flash on penetration
-  screens.forEach((s) => {
-    const local = s.mesh.worldToLocal(camPos.clone());
-    const d = local.z;
-    s.mesh.material.opacity = d > 0 ? (0.25 + 0.4 * Math.min(1, d / 6)) * Math.min(1, d / 0.8) : 0;
-    const side = Math.sign(d) || 1;
-    if (side !== s.side && Math.abs(local.x) < W && !focus) pierce();
-    s.side = side;
-  });
-  fovKick *= Math.exp(-dt * 3);
-  camera.fov = 64 + fovKick * 12; camera.updateProjectionMatrix();
-  halo.material.opacity = .05 + Math.sin(t*2)*.015;
-
-  const hi = hallOf();
-  if (hi !== lastHall) {
-    lastHall = hi;
-    $('dcName').textContent = hi < 0 ? 'ONROL' : HALLS[hi].id;
-    $('dcSub').textContent = hi < 0 ? 'Scroll to enter' : HALLS[hi].sub;
-    $('metaR').textContent = String(hi + 1).padStart(2,'0') + '—04';
-    [...nav.children].forEach((b, i) => b.classList.toggle('on', i === hi));
-  }
-  $('head').style.opacity = focus ? 0 : Math.max(0, 1 - p * 10);
-  if (focus) $('dcSub').textContent = focus.userData.id;
-  else if (hi >= 0 && $('dcSub').textContent !== HALLS[hi].sub) $('dcSub').textContent = HALLS[hi].sub;
-  composer.render();
-});
-</script>
+<script type="module" src="./src/main.js"></script>
 </body>
 </html>
