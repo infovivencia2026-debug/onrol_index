@@ -186,7 +186,7 @@ async function start() {
       const pts = []; for (let y = yTop; y > yBot; y -= .25) { const a = y * .55 + k * Math.PI; pts.push(V(Math.cos(a) * W * .98, y, Math.sin(a) * W * .98)); }
       poly(g, pts, zone, .5);
     }
-    for (let y = yTop; y > yBot; y -= 6) poly(g, [V(-W, y, -W), V(W, y, -W), V(W, y, W), V(-W, y, W)], zone, .3, true);
+    for (let y = -14; y > yBot; y -= 6) poly(g, [V(-W, y, -W), V(W, y, -W), V(W, y, W), V(-W, y, W)], zone, .3, true);   // rings only below the EARN card
   }
   function floorRadial(g, y, zone) {                          // apply: target rings at the bottom
     for (let r = 1; r < W * 1.4; r += .7) {
@@ -304,7 +304,7 @@ async function start() {
     tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
     const w = (opts.scale || 1) * (W * 2 - .2);
     const m = new THREE.Mesh(new THREE.PlaneGeometry(w, w * SCREEN_H / SCREEN_W),
-      new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide, depthWrite: false }));
+      new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide, depthWrite: true }));   // opaque card hides lines behind it
     m.position.copy(pos); m.up.copy(up); parent.add(m);
     m.updateWorldMatrix(true, false);
     m.lookAt(m.getWorldPosition(V(0, 0, 0)).add(normal));
@@ -420,8 +420,10 @@ async function start() {
   const zoneOfPoint = (p) => p.x > SHAFT_X - 3 ? 4 : p.x > 2 ? 3 : p.z > 2 ? 0 : p.z > -18 ? 1 : 2;
   for (let i = 0; i < TRACK_N; i++) {
     const p = path.getPointAt(i / (TRACK_N - 1));
-    const onFloor = p.y > H - .3;                                  // corridors: on the floor; shaft: hangs down the centre
-    trackPos.set([p.x, onFloor ? .025 : p.y - 1.2, p.z], i * 3);
+    // run along the floor 1.6 to the left of centre so it never cuts through the cards/UI; in the shaft it rides the wall
+    const t = path.getTangentAt(i / (TRACK_N - 1)), onFloor = p.y > H - .3;
+    const side = onFloor ? new THREE.Vector3(t.z, 0, -t.x).normalize() : new THREE.Vector3(0, 0, 1);
+    trackPos.set([p.x + side.x * 1.6, onFloor ? .025 : p.y - .5, p.z + side.z * (onFloor ? 1.6 : -3.5)], i * 3);
     trackBase.push(zoneColor(zoneOfPoint(p), false));
   }
   const trackGeo = new THREE.BufferGeometry();
@@ -449,6 +451,7 @@ async function start() {
     trackDot.position.set(trackPos[idx * 3], trackPos[idx * 3 + 1], trackPos[idx * 3 + 2]);
     trackDot.material.color.copy(trackBase[idx]).lerp(WHITE, .5);
     trackDot.scale.setScalar(1 + Math.sin(t * 4) * .2);
+    trackDot.visible = trackPos[idx * 3 + 1] < .1;            // only on the floor, never in front of the camera in the shaft
   }
   const PATH_LEN = path.getLength();
   const clampU = (v) => THREE.MathUtils.clamp(v, 0, 1);

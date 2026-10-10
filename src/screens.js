@@ -95,7 +95,7 @@ function blueprint(g, P, t) {
   // a wireframe "component" box being assembled
   const s = Math.min(1, (t % 6) / 2.5);
   g.strokeStyle = alpha(P.accent, .8); g.lineWidth = 2;
-  g.strokeRect(84, 140, 160 * s, 96); g.strokeRect(276, 140, 190 * Math.max(0, s * 1.4 - .4), 96);
+
   // typing code
   const chars = Math.floor((t % 8) * 22);
   g.font = `500 21px ${FONT_MONO}`; g.textAlign = 'left';
