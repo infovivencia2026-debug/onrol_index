@@ -80,7 +80,7 @@ async function start() {
   const V = (x, y, z) => new THREE.Vector3(x, y, z);
 
   const canvas = $('gl');
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: tier === 'high' && devicePixelRatio < 1.5, powerPreference: 'high-performance', stencil: false });
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: tier !== 'low', powerPreference: 'high-performance', stencil: false });
   const maxDpr = { high: 1.5, mid: 1.25, low: 1 }[tier];
   let dpr = Math.min(devicePixelRatio, maxDpr);
   renderer.setPixelRatio(dpr);
@@ -475,6 +475,28 @@ async function start() {
     flushLines();
   })();
   function updateTrack() {}
+  // ---------- cheap 'modern' tricks: gradient sky dome + painted spotlight pools under each card ----------
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(180, 32, 16), new THREE.ShaderMaterial({
+    side: THREE.BackSide, depthWrite: false, fog: false,
+    uniforms: { top: { value: new THREE.Color('#1a1d24') }, bot: { value: new THREE.Color('#050607') } },
+    vertexShader: 'varying float vY; void main(){ vY = normalize(position).y; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.); }',
+    fragmentShader: 'uniform vec3 top; uniform vec3 bot; varying float vY; void main(){ gl_FragColor = vec4(mix(bot, top, smoothstep(-.3, .6, vY)), 1.); }',
+  }));
+  sky.renderOrder = -10; scene.add(sky);
+  const poolTex = (() => {
+    const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d');
+    const r = g.createRadialGradient(128, 128, 0, 128, 128, 128);
+    r.addColorStop(0, 'rgba(255,255,255,.55)'); r.addColorStop(.35, 'rgba(255,255,255,.18)'); r.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = r; g.fillRect(0, 0, 256, 256); return new THREE.CanvasTexture(c);
+  })();
+  const pools = [];
+  [[0, 17, 9], [0, 7, 7], [0, -6.5, 8], [0, -22, 8]].forEach(([x, z, sz]) => {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(sz, sz * .6), new THREE.MeshBasicMaterial({ map: poolTex, transparent: true, opacity: .22, blending: THREE.AdditiveBlending, depthWrite: false }));
+    m.rotation.x = -Math.PI / 2; m.position.set(x, .03, z); segA.add(m); pools.push(m);
+  });
+  const lp = new THREE.Mesh(new THREE.PlaneGeometry(5, 8), new THREE.MeshBasicMaterial({ map: poolTex, transparent: true, opacity: .22, blending: THREE.AdditiveBlending, depthWrite: false }));
+  lp.rotation.x = -Math.PI / 2; lp.position.set(10, .03, 0); segB.add(lp); pools.push(lp);
+  pools.forEach((m) => { m.material.userData.subtle = true; });   // keep the pools at full strength
   // calm the scene: every line / point / glow drawn at ~40% strength, card halos off
   let subtleDone = false;
   function makeSubtle() {
@@ -502,13 +524,13 @@ async function start() {
   let STOPS = [], baseFov = 58;
   function computeStops() {
     const hf = Math.atan(Math.tan(THREE.MathUtils.degToRad(baseFov) / 2) * camera.aspect);
-    const d = THREE.MathUtils.clamp(5.15 / Math.tan(hf), 4.6, 12);
+    const d = THREE.MathUtils.clamp(5.9 / Math.tan(hf), 5.2, 12);
     // home stands further back so the USP posters on both walls are in view
     // home stands further back so the USP posters are in view; on phones far enough to fit [poster][ONROL][poster]
     // desktop: stand just far enough back that the outer posters (z 16.6, |x| ≈ 6.5) fit the view width
-    const homeD = camera.aspect > 1 ? Math.max(d + 3, 3.4 + 6.9 / (Math.tan(hf) * .86)) : d + 3;
+    const homeD = camera.aspect > 1 ? Math.max(d + 3, 3.4 + 6.9 / (Math.tan(hf) * .74)) : d + 3;
     // the video stop must sit past the ONROL card (z 20), so cap its distance at 10.5
-    STOPS = [...SCREEN_U.map((u, i) => clampU(u - (i === 0 ? homeD : i === 1 ? Math.min(d * .85, 10.5) : d) / PATH_LEN)), 1];
+    STOPS = [...SCREEN_U.map((u, i) => clampU(u - (i === 0 ? homeD : i === 1 ? Math.min(d * .9, 10.5) : d) / PATH_LEN)), 1];
   }
 
   // ---------- state ----------
@@ -725,11 +747,13 @@ async function start() {
     themed.glossy.forEach((m) => m.material.color.set(T.glossy));
     themed.glass.forEach((m) => m.color.set('#1a120d'));
     halos.forEach((m) => { m.visible = false; });
+    sky.material.uniforms.top.value.set(light ? '#f4efe9' : '#1a1d24'); sky.material.uniforms.bot.value.set(light ? '#e4dcd2' : '#050607');
+    pools.forEach((m) => { m.material.blending = light ? THREE.NormalBlending : THREE.AdditiveBlending; m.material.color.set(light ? '#000' : '#fff'); m.material.opacity = light ? .06 : .22; m.material.needsUpdate = true; });
     // light mode: solid cards (frosted glass picks up grey smudges on a light room)
     allScreens.forEach((m) => { if (m.userData.glass) m.userData.glass.userData.off = light; if (m.userData.art.frosted !== undefined && m.userData.glass) m.userData.art.frosted = !light; });
     themed.glossy.forEach((m) => { m.material.roughness = light ? .7 : .35; m.material.metalness = light ? 0 : .6; m.material.emissive.set(light ? '#d9ccbe' : '#000000'); m.material.emissiveIntensity = light ? .55 : 0; });
     rackBody.color.set(T.body); rackBody.metalness = T.metal;
-    scene.fog.density = light ? .022 : .04;            // light mode: see further down the corridor
+    scene.fog.density = light ? .03 : .058;            // light mode: see further down the corridor
     hemi.groundColor.set(T.hemiGround); hemi.intensity = T.hemiI;
     barMat.color.set(light ? '#d98a4e' : '#ffb070').multiplyScalar(T.barMul * (camera.aspect < 1 ? .6 : 1));
     caBase = T.ca; bloom.strength = T.bloom; bloom.enabled = !light && tier === 'high';   // glow washes out dark text on light cards

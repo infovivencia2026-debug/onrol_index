@@ -61,6 +61,7 @@ function frame(g, P, kicker, index) {
   if (index) { g.textAlign = 'right'; g.fillStyle = P.dim; g.fillText(index, 972, 70); }
 }
 function word(g, P, text, x, y, maxW, align = 'left', size = 168, color) {
+  size = Math.round(size * .74); maxW *= .85;   // calmer headline scale inside cards
   g.textAlign = align; g.textBaseline = 'alphabetic';
   do { g.font = `800 ${size}px ${FONT_UI}`; size -= 4; } while (g.measureText(text).width > maxW && size > 50);
   g.fillStyle = color || P.word; g.fillText(text, x, y);
@@ -450,7 +451,7 @@ export function createPoster(usp, accentHex, light) {
     g.fillStyle = P.accent; g.fillRect(36 + ((t * .15) % 1) * (W2 - 80), 444, 8, 8);
     // big stat
     g.textAlign = 'left';
-    let size = 150; do { g.font = `800 ${size}px ${FONT_UI}`; size -= 4; } while (g.measureText(usp.big).width > W2 - 80 && size > 40);
+    let size = 112; do { g.font = `800 ${size}px ${FONT_UI}`; size -= 4; } while (g.measureText(usp.big).width > W2 - 120 && size > 40);
     g.fillStyle = ink; g.fillText(usp.big, 34, 590);
     if (usp.unit) { g.font = `700 22px ${FONT_MONO}`; g.fillStyle = P.accent; g.fillText(usp.unit.toUpperCase(), 38, 626); }
     g.font = `600 19px ${FONT_MONO}`; g.fillStyle = faint + '.75)';
@@ -532,7 +533,7 @@ EARN_TILES.forEach(([head, a, b], i) => {
     panelBase(g, P, w, h, 24);
     if (on) { rounded(g, 8, 8, w - 16, h - 16, 24); g.fillStyle = alpha(P.accent, .14); g.fill(); g.strokeStyle = P.accent; g.lineWidth = 3; g.stroke(); }
     g.textAlign = 'left'; g.font = `700 22px ${FONT_MONO}`; g.fillStyle = P.accent; g.fillText('0' + (i + 1), 40, 70);
-    g.font = `800 42px ${FONT_UI}`; g.fillStyle = P.word; g.fillText(head, 40, 150);
+    g.font = `800 34px ${FONT_UI}`; g.fillStyle = P.word; g.fillText(head, 40, 150);
     g.fillStyle = P.accent; g.fillRect(40, 178, 60, 4);
     g.font = `500 26px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText('— ' + a, 40, 250); g.fillText('— ' + b, 40, 298);
     for (let k = 0; k < 5; k++) { const bh = 20 + k * 16 * (on ? 1 : .55); g.fillStyle = alpha(P.accent, on ? .85 : .3); g.fillRect(40 + k * 30, 460 - bh, 20, bh); }
