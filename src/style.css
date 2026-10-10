@@ -482,3 +482,25 @@ html.plain .cap { display:none; }
 
 .introCard .cap { display:none; }
 .cap { z-index:4; }
+
+.kick0 { text-align:center; font:400 11px var(--font-mono); letter-spacing:.2em; text-transform:uppercase; color:var(--or); margin-bottom:-4px; transition:opacity .35s; }
+.head.gone ~ .who, .kick0:has(+ .head.gone) { opacity:0; }
+/* "who it's for" marquee */
+.who { overflow:hidden; margin:6px auto 0; max-width:720px; -webkit-mask-image:linear-gradient(90deg,transparent,#000 15%,#000 85%,transparent); mask-image:linear-gradient(90deg,transparent,#000 15%,#000 85%,transparent); transition:opacity .35s; }
+.who > div { display:flex; width:max-content; animation:marq 38s linear infinite; }
+.who span { font:400 11px var(--font-mono); letter-spacing:.12em; text-transform:uppercase; color:var(--dim); padding:0 16px; white-space:nowrap; }
+.who span::before { content:'+ '; color:var(--or); }
+@keyframes marq { to { transform:translateX(-50%); } }
+@media (prefers-reduced-motion: reduce) { .who > div { animation:none; } }
+@media (max-width:760px) { .who { display:none; } }
+
+/* compact caption: one line in the bottom meta row, never over the cards */
+.cap { bottom:calc(5.5vh + 74px) !important; display:flex; align-items:flex-end; gap:22px; max-width:none; }
+.cap .k { position:absolute; top:-18px; left:0; margin:0; }
+.cap b { font-size:20px !important; white-space:nowrap; }
+.cap p { display:none !important; }
+.cap ul { margin:0; padding:0 0 0 22px; border-top:0; border-left:1px solid var(--line); gap:18px; }
+.cap li strong { font-size:16px !important; }
+.cap li span { font-size:9px !important; margin-top:3px; }
+#hint { display:none !important; }
+@media (max-width:760px) { .cap { bottom:calc(5.5vh + 120px) !important; flex-direction:column; align-items:flex-start; gap:10px; } .cap ul { border-left:0; padding:0; } }

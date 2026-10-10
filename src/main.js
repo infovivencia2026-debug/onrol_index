@@ -933,17 +933,17 @@ async function start() {
   // ---------- stop captions: kicker / title / one line / three numbers ----------
   const CAPS = [
     null,
-    ['01 · The founder', 'Meet Dr. Neeraja Reddy', 'Educator and founder. Built ONROL to close the gap she saw in every classroom.', [['16+', 'Years'], ['2', 'Schools founded'], ['2:45', 'Film']]],
-    ['02 · Learn', 'Learn the AI tools', 'Live sessions with a mentor in the room.', [['5', 'AI tools'], ['1 hr', 'A day'], ['Live', 'Never recorded']]],
-    ['03 · Build', 'Build real projects', 'Ship working AI products, not demos.', [['7+', 'Projects'], ['5', 'AI systems'], ['70%', 'Hands-on']]],
-    ['04 · Launch', 'Launch to the web', 'Every project goes live with its own link.', [['1', 'Live URL each'], ['Weekly', 'Shipping'], ['Yours', 'Portfolio']]],
-    ['05 · Earn', 'Earn from the skill', 'Pick the direction that fits you.', [['3', 'Directions'], ['90', 'Day roadmap'], ['ATS', 'Ready resume']]],
-    ['06 · Apply', 'Start here', 'Apply free. A mentor calls you back.', [['0', 'Payment to apply'], ['Free', 'Masterclass'], ['21', 'Days to ship']]],
+    ['Real mentors. Real builds.', 'Meet Dr. Neeraja Reddy', 'A live school with real mentors, not pre-recorded videos.', [['Live', 'Mentors in the room'], ['Weekly', 'Finished & deployed'], ['2:45', 'Film']]],
+    ['01 · Learn', 'Master the AI tools', 'Prompts, AI agents, idea to working build, fast.', [['5', 'AI tools'], ['1 hr', 'A day'], ['Zero', 'Prerequisites']]],
+    ['02 · Build', 'Real projects, not demos', 'Build features, fix what breaks, make things people use.', [['20+', 'Real projects'], ['70%', 'Hands-on'], ['5', 'Portfolio builds']]],
+    ['03 · Launch', 'Ship it to the web', 'A real link, and something solid for your portfolio.', [['1', 'Live URL each'], ['Weekly', 'Shipping'], ['Yours', 'Portfolio']]],
+    ['04 · Earn', 'Get paid for the skill', 'Freelance, your own product, or a job. Whichever fits.', [['3', 'Directions'], ['12', 'Starting points'], ['You', 'Package & charge']]],
+    ['Ready when you are', 'Stop watching. Start building.', 'Five programs. Start with the 21-day Accelerator.', [['21d', 'Accelerator'], ['3m', 'AI Generalist'], ['6+6m', 'AI Architect']]],
   ];
   function $$cap() {
     document.querySelectorAll('#capS strong').forEach((el) => {
-      const m = el.textContent.match(/^(\d+)(.*)$/); if (!m || reducedMotion) return;
-      const end = +m[1], suf = m[2], t0 = performance.now();
+      const m = el.textContent.match(/^(\d+)(\+|%)?$/); if (!m || reducedMotion) return;
+      const end = +m[1], suf = m[2] || '', t0 = performance.now();
       const step = (now) => { const k = Math.min(1, (now - t0) / 700); el.textContent = Math.round(end * (1 - (1 - k) ** 3)) + suf; if (k < 1) requestAnimationFrame(step); };
       requestAnimationFrame(step);
     });
@@ -1085,6 +1085,7 @@ async function start() {
     $('downBtn').disabled = $('mDown').disabled = $('homeBtn').disabled = atStart;
     $('upBtn').disabled = $('mUp').disabled = atEnd;
     $('head').classList.toggle('gone', !!focus || currentU > STOPS[0] + .03);
+    const homeGone = !!focus || currentU > STOPS[0] + .03; $('kick0').style.opacity = $('whoRow').style.opacity = homeGone ? 0 : 1;
     $('endnav').classList.toggle('on', currentU > .94 && !focus);
 
     // mid/low devices: when nothing is moving, render at ~30fps to save battery
