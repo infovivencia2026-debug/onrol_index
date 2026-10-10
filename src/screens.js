@@ -427,3 +427,91 @@ export function createPoster(usp, accentHex, light) {
   poster.draw(0);
   return poster;
 }
+
+// ---------- satellite panels: each level gets its own spatial composition ----------
+const PANEL_SIZE = { schedule: [440, 600], files: [420, 600], preview: [460, 640], pipeline: [380, 760], tile0: [440, 520], tile1: [440, 520], tile2: [440, 520], earnHead: [1024, 300] };
+function panelBase(g, P, w, h, r = 26) {
+  g.clearRect(0, 0, w, h);
+  rounded(g, 8, 8, w - 16, h - 16, r);
+  g.fillStyle = P.dark ? 'rgb(14,16,22)' : '#ffffff'; g.fill();
+  g.strokeStyle = alpha(P.accent, .45); g.lineWidth = 2; g.stroke();
+}
+const PANELS = {
+  schedule(g, P, t, w, h) {                                   // LEARN: the first six days
+    panelBase(g, P, w, h);
+    g.textAlign = 'left'; g.font = `700 20px ${FONT_UI}`; g.fillStyle = P.accent; g.fillText('THIS WEEK', 36, 62);
+    const days = ['AI-driven careers', 'Your direction', 'AI tools to know', 'Prompting', 'Research smarter', 'Learn faster'];
+    const cur = 2 + (Math.floor(t / 3) % 2);
+    days.forEach((d, i) => {
+      const y = 112 + i * 76, on = i === cur, done = i < cur;
+      if (on) { rounded(g, 24, y - 34, w - 48, 62, 14); g.fillStyle = alpha(P.accent, .16); g.fill(); }
+      g.font = `700 18px ${FONT_MONO}`; g.fillStyle = on || done ? P.accent : P.dim; g.fillText('DAY ' + String(i + 1).padStart(2, '0'), 40, y + 4);
+      g.font = `600 22px ${FONT_UI}`; g.fillStyle = on ? P.word : done ? P.tag : P.dim; g.fillText(d, 150, y + 4);
+    });
+  },
+  files(g, P, t, w, h) {                                      // BUILD: tests running
+    panelBase(g, P, w, h, 18);
+    g.textAlign = 'left'; g.font = `700 20px ${FONT_MONO}`; g.fillStyle = P.accent; g.fillText('tests/', 34, 60);
+    const tests = ['goal profile', 'prompt library', 'study planner', 'chat replies', 'error handling', 'deploy config'];
+    const n = Math.floor((t % 8) / .8);
+    tests.forEach((s, i) => {
+      const y = 116 + i * 74, ok = i < n;
+      g.font = `600 26px ${FONT_UI}`; g.fillStyle = ok ? P.accent : P.dim; g.fillText(ok ? '✓' : '○', 36, y);
+      g.font = `500 21px ${FONT_MONO}`; g.fillStyle = ok ? P.word : P.dim; g.fillText(s, 76, y);
+    });
+  },
+  preview(g, P, t, w, h) {                                    // BUILD: the assistant answering
+    panelBase(g, P, w, h, 44);
+    g.fillStyle = alpha(P.accent, .5); rounded(g, w / 2 - 50, 26, 100, 10, 5); g.fill();
+    g.textAlign = 'left'; g.font = `700 20px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText('My assistant', 40, 84);
+    const k = t % 8;
+    const bubble = (x, y, bw, lines, mine) => {
+      rounded(g, x, y, bw, 30 + lines.length * 32, 18); g.fillStyle = mine ? P.accent : (P.dark ? 'rgba(255,255,255,.08)' : '#eef0f3'); g.fill();
+      g.font = `600 20px ${FONT_UI}`; g.fillStyle = mine ? (P.dark ? '#0b0c10' : '#fff') : P.word;
+      lines.forEach((l, i) => g.fillText(l, x + 18, y + 40 + i * 32));
+    };
+    if (k > .8) bubble(w - 330, 120, 290, ['Plan my week for a', 'data analyst interview'], true);
+    if (k > 2.2) bubble(40, 250, 330, ['Mon · SQL practice', 'Tue · Excel case study', 'Wed · Portfolio walk-through'], false);
+    if (k > 3.6) bubble(w - 250, 430, 210, ['Add mock interviews'], true);
+  },
+  pipeline(g, P, t, w, h) {                                   // LAUNCH: vertical deploy pipeline
+    panelBase(g, P, w, h);
+    g.textAlign = 'left'; g.font = `700 20px ${FONT_UI}`; g.fillStyle = P.accent; g.fillText('DEPLOY', 40, 64);
+    const steps = ['Push', 'Build', 'Checks', 'Deploy', 'Live'], k = (t % 6) / 6 * (steps.length + .6);
+    g.strokeStyle = alpha(P.accent, .3); g.lineWidth = 4; g.beginPath(); g.moveTo(70, 130); g.lineTo(70, 130 + 4 * 140); g.stroke();
+    g.strokeStyle = P.accent; g.beginPath(); g.moveTo(70, 130); g.lineTo(70, 130 + Math.min(4, k) * 140); g.stroke();
+    steps.forEach((s, i) => {
+      const y = 130 + i * 140, on = k >= i;
+      g.fillStyle = on ? P.accent : (P.dark ? 'rgb(14,16,22)' : '#fff'); g.strokeStyle = P.accent; g.lineWidth = 3;
+      g.beginPath(); g.arc(70, y, 16, 0, 7); g.fill(); g.stroke();
+      g.font = `700 28px ${FONT_UI}`; g.fillStyle = on ? P.word : P.dim; g.fillText(s, 110, y + 10);
+    });
+  },
+  earnHead(g, P, t, w, h) {
+    panelBase(g, P, w, h, 30);
+    g.textAlign = 'left'; word(g, P, 'EARN', 50, 200, 330, 'left', 150);
+    g.font = `600 34px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText('from the skill', 420, 150); g.fillText('pick your direction ↓', 420, 200);
+  },
+};
+const EARN_TILES = [['Career growth', 'ATS-ready resume', 'A project to explain'], ['Freelancing', 'Live links for clients', 'Ship every week'], ['Own products', 'Your own AI tools', 'Build → launch loop']];
+EARN_TILES.forEach(([head, a, b], i) => {
+  PANELS['tile' + i] = (g, P, t, w, h) => {
+    const on = Math.floor(t / 2.5) % 3 === i;
+    panelBase(g, P, w, h, 24);
+    if (on) { rounded(g, 8, 8, w - 16, h - 16, 24); g.fillStyle = alpha(P.accent, .14); g.fill(); g.strokeStyle = P.accent; g.lineWidth = 3; g.stroke(); }
+    g.textAlign = 'left'; g.font = `700 22px ${FONT_MONO}`; g.fillStyle = P.accent; g.fillText('0' + (i + 1), 40, 70);
+    g.font = `800 42px ${FONT_UI}`; g.fillStyle = P.word; g.fillText(head, 40, 150);
+    g.fillStyle = P.accent; g.fillRect(40, 178, 60, 4);
+    g.font = `500 26px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText('— ' + a, 40, 250); g.fillText('— ' + b, 40, 298);
+    for (let k = 0; k < 5; k++) { const bh = 20 + k * 16 * (on ? 1 : .55); g.fillStyle = alpha(P.accent, on ? .85 : .3); g.fillRect(40 + k * 30, 460 - bh, 20, bh); }
+  };
+});
+export function createPanel(kind, accentHex, light) {
+  const [w, h] = PANEL_SIZE[kind];
+  const canvas = document.createElement('canvas'); canvas.width = w; canvas.height = h;
+  const g = canvas.getContext('2d');
+  const art = { canvas, accent: accentHex, light, w, h };
+  art.draw = (t) => PANELS[kind](g, palette(art.accent, art.light, false), t, w, h);
+  art.draw(0);
+  return art;
+}

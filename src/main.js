@@ -12,7 +12,7 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { OutputPass } from 'three/examples/jsm/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { Reflector } from 'three/examples/jsm/objects/Reflector.js';
-import { createArt, createPoster, USPS, SCREEN_W, SCREEN_H, POSTER_W, POSTER_H } from './screens.js';
+import { createArt, createPanel, createPoster, USPS, SCREEN_W, SCREEN_H, POSTER_W, POSTER_H } from './screens.js';
 
 const $ = (id) => document.getElementById(id);
 const APPLY_URL = 'https://onrol.in/programs/ai-generalist';
@@ -305,10 +305,12 @@ async function start() {
     const w = (opts.scale || 1) * (W * 2 - .2);
     const m = new THREE.Mesh(new THREE.PlaneGeometry(w, w * SCREEN_H / SCREEN_W),
       new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide, depthWrite: true }));   // opaque card hides lines behind it
-    m.position.copy(pos); m.up.copy(up); parent.add(m);
-    m.updateWorldMatrix(true, false);
-    m.lookAt(m.getWorldPosition(V(0, 0, 0)).add(normal));
-    m.userData = { art, tex, zone, lastDraw: -1, glass: null };
+    const rig = new THREE.Object3D(); rig.position.copy(pos); rig.up.copy(up); parent.add(rig);
+    rig.updateWorldMatrix(true, false);
+    rig.lookAt(rig.getWorldPosition(V(0, 0, 0)).add(normal));
+    rig.add(m);
+    m.position.set(opts.lx || 0, opts.ly || 0, opts.lz || 0); m.rotation.y = opts.yaw || 0;
+    m.userData = { art, tex, zone, lastDraw: -1, glass: null, rig, sats: [] };
     addHalo(m, w, w * SCREEN_H / SCREEN_W, zone);
     if (frosted) {
       // frosted glass just behind the card: the corridor behind it is seen blurred, so the text reads cleanly
@@ -325,6 +327,19 @@ async function start() {
     if (!opts.solid) screens.push({ mesh: m, side: 1 });
     return m;
   }
+  // a satellite panel next to a card, placed in the card's rig (layout per level)
+  function satellite(card, kind, width, lx, ly, lz, yaw = 0) {
+    const zone = card.userData.zone;
+    const art = createPanel(kind, isLight ? ZONES[zone].light : ZONES[zone].dark, isLight);
+    const tex = new THREE.CanvasTexture(art.canvas); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(width, width * art.h / art.w), new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide, depthWrite: true }));
+    m.position.set(lx, ly, lz); m.rotation.y = yaw;
+    card.userData.rig.add(m);
+    m.userData = { art, tex, zone, lastDraw: -1 };
+    card.userData.sats.push(m); allScreens.push(m);
+    return m;
+  }
+
   // soft backlight behind cards and posters (dark mode only)
   const haloTex = (() => {
     const c = document.createElement('canvas'); c.width = c.height = 256; const g = c.getContext('2d');
@@ -374,10 +389,22 @@ async function start() {
   const introScreen = makeScreen(segA, V(0, 2.1, 20), Z, Y, 'intro', 0);
   const videoScreen = makeScreen(segA, V(0, 2.1, 9), Z, Y, 'watch', 0);     // 2nd stop: the About video
 
-  makeScreen(segA, V(0, 2.1, -4), Z, Y, 'learn', 1);
-  makeScreen(segA, V(0, 2.1, -20), Z, Y, 'build', 2);
-  makeScreen(segB, V(12, 2.1, 0), V(-1, 0, 0), Y, 'launch', 3);
-  makeScreen(segC, V(0, -12, 0), Y, X, 'earn', 4);
+  // LEARN — split: class sheet turned in from the left, week schedule standing on the right
+  const learnCard = makeScreen(segA, V(0, 2.1, -4), Z, Y, 'learn', 1, { scale: .7, lx: -1.15, yaw: .22 });
+  satellite(learnCard, 'schedule', 1.95, 2.85, -.05, .7, -.42);
+  // BUILD — triptych: tests | editor | live preview, wrapping around you
+  const buildCard = makeScreen(segA, V(0, 2.1, -20), Z, Y, 'build', 2, { scale: .66 });
+  satellite(buildCard, 'files', 1.6, -3.3, -.05, .9, .58);
+  satellite(buildCard, 'preview', 1.6, 3.3, -.05, .9, -.58);
+  // LAUNCH — browser to the right, a tall deploy pipeline on the left
+  const launchCard = makeScreen(segB, V(12, 2.1, 0), V(-1, 0, 0), Y, 'launch', 3, { scale: .74, lx: .95, yaw: -.16 });
+  satellite(launchCard, 'pipeline', 1.35, -3.15, -.1, .7, .4);
+  // EARN — looking down the shaft: a header plate above three direction tiles in an arc
+  const earnCard = makeScreen(segC, V(0, -12, 0), Y, X, 'earn', 4, { scale: .001 });
+  satellite(earnCard, 'earnHead', 4.4, 0, 1.55, 0, 0);
+  satellite(earnCard, 'tile0', 2.05, -2.35, -.75, .55, .32);
+  satellite(earnCard, 'tile1', 2.05, 0, -.75, .9, 0);
+  satellite(earnCard, 'tile2', 2.05, 2.35, -.75, .55, -.32);
 
   const animators = [];   // no decorative props: the path stays clean between levels
 
@@ -856,6 +883,7 @@ async function start() {
     screens.forEach((s) => {
       const local = s.mesh.worldToLocal(tmp.copy(camPos));
       s.mesh.material.opacity = local.z > 0 ? Math.min(1, local.z / 1.2) : 0;
+      s.mesh.userData.sats?.forEach((sm) => { sm.material.opacity = s.mesh.material.opacity; sm.visible = s.mesh.material.opacity > .02; });
       const gl = s.mesh.userData.glass; if (gl) { gl.material.opacity = s.mesh.material.opacity; gl.visible = !gl.userData.off && s.mesh.material.opacity > .35; }
       const sd = Math.sign(local.z) || 1;
       if (sd !== s.side && Math.abs(local.x) < W && Math.abs(local.y) < W && !focus) pierce();
