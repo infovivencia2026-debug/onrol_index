@@ -458,7 +458,7 @@ async function start() {
   // ---------- input ----------
   let wheelAcc = 0, wheelLock = 0, wheelIdle = 0;
   addEventListener('wheel', (e) => {
-    if (plainOn || menuOpen || e.target.closest?.('#menu, .endnav')) return;
+    if (plainOn || menuOpen || aboutOpen || e.target.closest?.('#menu, .endnav')) return;
     const now = performance.now();
     if (now - wheelIdle > 250) wheelAcc = 0;
     wheelIdle = now;
@@ -483,6 +483,8 @@ async function start() {
     if (Math.abs(dy) > 35 && Math.abs(dy) > Math.abs(dx)) stepBy(Math.sign(dy));
   }, { passive: true });
   addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && aboutOpen) return closeAbout();
+    if (aboutOpen) return;
     if (e.key === 'Escape' && menuOpen) return setMenu(false);
     if (plainOn || menuOpen || e.target.closest?.('button, a')) return;
     seen();
@@ -566,10 +568,44 @@ async function start() {
     document.documentElement.classList.toggle('plain', on);
     $('plainBtn').setAttribute('aria-pressed', String(on));
     $('plainBtn').textContent = $('mPlain').textContent = on ? '3D view' : 'Plain view';
-    if (on) renderer.setAnimationLoop(null); else { clock.getDelta(); renderer.setAnimationLoop(frame); }
+    if (on) renderer.setAnimationLoop(null); else if (!aboutOpen) { clock.getDelta(); renderer.setAnimationLoop(frame); }
     if (save) { try { localStorage.setItem('onrol-view', on ? 'plain' : '3d'); } catch {} track('view', { mode: on ? 'plain' : '3d' }); }
   }
   $('plainBtn').onclick = () => setPlain(!plainOn);
+
+  // ---------- About video (modal) ----------
+  const aboutModal = $('aboutModal'), aboutVideo = $('aboutVideo');
+  let aboutOpen = false, aboutReturn = null;
+  function openAbout(from) {
+    if (aboutOpen) return;
+    aboutOpen = true; aboutReturn = document.activeElement; stopAuto(); setMenu(false);
+    aboutModal.hidden = false; requestAnimationFrame(() => aboutModal.classList.add('on'));
+    renderer.setAnimationLoop(null);                          // pause the 3D scene while watching
+    aboutVideo.play().catch(() => {});                        // user clicked, so sound is allowed
+    $('aboutClose').focus();
+    track('about_open', { from });
+  }
+  function closeAbout() {
+    if (!aboutOpen) return;
+    aboutOpen = false; aboutVideo.pause();
+    aboutModal.classList.remove('on');
+    setTimeout(() => { aboutModal.hidden = true; }, reducedMotion ? 0 : 350);
+    if (!plainOn) { clock.getDelta(); renderer.setAnimationLoop(frame); }
+    aboutReturn?.focus?.();
+    track('about_close', { watched: Math.round(aboutVideo.currentTime) });
+  }
+  $('aboutBtn').onclick = () => openAbout('header');
+  $('aboutBtn2').onclick = () => openAbout('footer');
+  $('mAbout').onclick = () => openAbout('menu');
+  $('aboutClose').onclick = closeAbout;
+  aboutModal.addEventListener('click', (e) => { if (e.target === aboutModal) closeAbout(); });
+  aboutModal.addEventListener('keydown', (e) => {                // keep keyboard focus inside the dialog
+    if (e.key !== 'Tab') return;
+    const f = [...aboutModal.querySelectorAll('button, a, video')]; const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
+  aboutVideo.addEventListener('ended', () => track('about_complete'));
 
   // ---------- theme ----------
   const DARK = { hemiSky: '#ffffff', hemiGround: '#120604', hemiI: .25, lightI: 14, ledMul: 2, faceO: 1, ca: .0005, bg: '#070403', body: '#120d0b', metal: .85, glossy: '#0b0705', refl: 0x2a1c14, satin: '#070302', satinO: .78, bloom: .8, vig: 1.35, grain: .012, exposure: 1, barMul: 1.4 };
@@ -628,8 +664,9 @@ async function start() {
   }
   targetU = currentU = STOPS[0];
   addEventListener('hashchange', fromHash); fromHash();
+  if (location.hash === '#about') setTimeout(() => openAbout('link'), 600);
   document.addEventListener('visibilitychange', () => {
-    if (plainOn) return;
+    if (plainOn || aboutOpen) return;
     if (document.hidden) renderer.setAnimationLoop(null); else { clock.getDelta(); renderer.setAnimationLoop(frame); }
   });
 

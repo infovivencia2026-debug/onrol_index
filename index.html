@@ -51,6 +51,12 @@
       <li><b>70%</b><span>Hands-on build time</span></li>
       <li><b>Ship weekly</b><span>Deployed work, live links</span></li>
     </ul>
+    <section class="about" id="p-about" aria-labelledby="aboutTitle">
+      <h2 id="aboutTitle">About ONROL</h2>
+      <video controls preload="none" playsinline poster="./media/about_poster.jpg">
+        <source src="./media/about_onrol.mp4" type="video/mp4">
+      </video>
+    </section>
     <ol>
       <li id="p-learn"><span>01</span><b>Learn</b><p>Learn the AI tools</p></li>
       <li id="p-build"><span>02</span><b>Build</b><p>Build real projects</p></li>
@@ -83,9 +89,20 @@
 </main>
 <div class="ui" id="hint" aria-hidden="true"><span id="hintText">Scroll to enter</span><i id="hintArrow">↓</i></div>
 <div id="scrim"></div>
+<div id="aboutModal" role="dialog" aria-modal="true" aria-labelledby="aboutModalTitle" hidden>
+  <div class="aboutCard">
+    <header><span id="aboutModalTitle">About ONROL</span><small>AI Execution School · Hyderabad</small>
+      <button class="btn" id="aboutClose" aria-label="Close video">✕</button></header>
+    <video id="aboutVideo" controls playsinline preload="none" poster="./media/about_poster.jpg">
+      <source src="./media/about_onrol.mp4" type="video/mp4">
+    </video>
+    <footer><span>2:45 · Watch with sound</span><a href="https://onrol.in/programs/ai-generalist" target="_blank" rel="noopener">Apply now ↗</a></footer>
+  </div>
+</div>
 <aside id="menu" aria-label="Menu" aria-hidden="true">
   <div class="acts">
     <button class="btn" id="mHome">⌂ Start</button>
+    <button class="btn" id="mAbout">▶ About ONROL</button>
     <button class="btn" id="mAuto">▶ Autopilot</button>
     <button class="btn" id="mPlain">Plain view</button>
     <button class="btn" id="mTheme">Light</button>
@@ -101,6 +118,7 @@
 <div class="ui tl"><a href="#" class="brandHome" id="logoHome" aria-label="ONROL — back to the start"><b>ONROL</b><span>AI Execution School</span></a></div>
 <div class="ui tr"><b>Live · Mentor-led</b><span>Hyderabad</span>
   <div class="row">
+    <button class="btn" id="aboutBtn" aria-haspopup="dialog">▶ About</button>
     <button class="btn" id="plainBtn" aria-pressed="false">Plain view</button>
     <button class="btn" id="themeBtn" aria-label="Switch to light mode">Light</button>
   </div>
@@ -130,7 +148,7 @@
     <button class="btn" id="mDown" aria-label="Next step">▼</button>
   </div>
   <div class="foot"><a href="https://onrol.in/programs/ai-generalist" target="_blank" rel="noopener">Apply now ↗</a>
-    <div class="right"><span class="note">1 hr a day · Live</span><button class="btn" id="autoBtn" aria-pressed="false">▶ Autopilot</button></div></div>
+    <div class="right"><button class="btn" id="aboutBtn2" aria-haspopup="dialog">▶ About ONROL · 2:45</button><span class="note">1 hr a day · Live</span><button class="btn" id="autoBtn" aria-pressed="false">▶ Autopilot</button></div></div>
 </div>
 
 <footer class="ui endnav" id="endnav" aria-label="Site links">
