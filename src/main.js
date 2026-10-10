@@ -87,7 +87,7 @@ async function start() {
   const camera = new THREE.PerspectiveCamera(58, innerWidth / innerHeight, 0.1, 260);
 
   // ---------- themed, per-level materials ----------
-  const themed = { lines: [], dust: [], faces: [], leds: [], lights: [], reflectors: [], satins: [], satinMeshes: [], glossy: [] };
+  const themed = { lines: [], dust: [], faces: [], leds: [], lights: [], reflectors: [], satins: [], satinMeshes: [], glossy: [], glass: [] };
   const matCache = new Map();
   function lineMat(z, o) {
     const k = z + ':' + o;
@@ -284,7 +284,8 @@ async function start() {
   const screens = [], allScreens = [];
   let isLight = document.documentElement.dataset.theme === 'light';
   function makeScreen(parent, pos, normal, up, key, zone, opts = {}) {
-    const art = createArt(key, isLight ? ZONES[zone].light : ZONES[zone].dark, isLight);
+    const frosted = tier !== 'low';
+    const art = createArt(key, isLight ? ZONES[zone].light : ZONES[zone].dark, isLight, frosted);
     const tex = new THREE.CanvasTexture(art.canvas); tex.colorSpace = THREE.SRGBColorSpace;
     tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
     const w = (opts.scale || 1) * (W * 2 - .2);
@@ -293,7 +294,18 @@ async function start() {
     m.position.copy(pos); m.up.copy(up); parent.add(m);
     m.updateWorldMatrix(true, false);
     m.lookAt(m.getWorldPosition(V(0, 0, 0)).add(normal));
-    m.userData = { art, tex, zone, lastDraw: -1 };
+    m.userData = { art, tex, zone, lastDraw: -1, glass: null };
+    if (frosted) {
+      // frosted glass just behind the card: the corridor behind it is seen blurred, so the text reads cleanly
+      const gm = new THREE.MeshPhysicalMaterial({
+        color: isLight ? '#f6efe8' : '#1a120d', roughness: .55, metalness: 0, transmission: 1, thickness: .6, ior: 1.25,
+        transparent: true, opacity: 1, depthWrite: true,   // hides the glowing lines behind; only the blurred room shows through
+      });
+      themed.glass.push(gm);
+      const glass = new THREE.Mesh(new THREE.PlaneGeometry(w, w * SCREEN_H / SCREEN_W), gm);
+      glass.position.z = -.03; glass.renderOrder = -1; m.add(glass);
+      m.userData.glass = glass;
+    }
     allScreens.push(m);
     if (!opts.solid) screens.push({ mesh: m, side: 1 });
     return m;
@@ -456,6 +468,13 @@ async function start() {
     const b = document.createElement('button'); b.setAttribute('aria-label', z.name); b.title = z.name;
     b.onclick = () => goStop(i); dotsEl.appendChild(b);
   });
+  function goHome() {
+    if (plainOn) { $('plain').scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' }); return; }
+    goStop(0); track('home');
+  }
+  $('homeBtn').onclick = goHome;
+  $('logoHome').onclick = (e) => { e.preventDefault(); goHome(); };
+  $('mHome').onclick = () => { setMenu(false); goHome(); };
   $('upBtn').onclick = $('mUp').onclick = () => stepBy(-1);
   $('downBtn').onclick = $('mDown').onclick = () => stepBy(1);
   $('hintText').textContent = coarse ? 'Swipe up to enter' : 'Scroll to enter';
@@ -510,6 +529,7 @@ async function start() {
     themed.reflectors.forEach((r) => r.material.uniforms.color.value.setHex(T.refl));
     themed.satins.forEach((m) => { m.color.set(T.satin); m.opacity = T.satinO; });
     themed.glossy.forEach((m) => m.material.color.set(T.glossy));
+    themed.glass.forEach((m) => m.color.set(light ? '#f6efe8' : '#1a120d'));
     rackBody.color.set(T.body); rackBody.metalness = T.metal;
     hemi.groundColor.set(T.hemiGround); hemi.intensity = T.hemiI;
     barMat.color.set(light ? '#d98a4e' : '#ffb070').multiplyScalar(T.barMul * (camera.aspect < 1 ? .6 : 1));
@@ -608,6 +628,7 @@ async function start() {
     screens.forEach((s) => {
       const local = s.mesh.worldToLocal(tmp.copy(camPos));
       s.mesh.material.opacity = local.z > 0 ? Math.min(1, local.z / 1.2) : 0;
+      const gl = s.mesh.userData.glass; if (gl) { gl.material.opacity = s.mesh.material.opacity; gl.visible = s.mesh.material.opacity > .35; }
       const sd = Math.sign(local.z) || 1;
       if (sd !== s.side && Math.abs(local.x) < W && Math.abs(local.y) < W && !focus) pierce();
       s.side = sd;
@@ -643,7 +664,7 @@ async function start() {
     film.uniforms.time.value = t % 100; film.uniforms.ca.value = tier === 'low' ? 0 : caBase + fovKick * .004;
 
     const atStart = targetU <= STOPS[0] + .001, atEnd = targetU >= .999;
-    $('upBtn').disabled = $('mUp').disabled = atStart;
+    $('upBtn').disabled = $('mUp').disabled = $('homeBtn').disabled = atStart;
     $('downBtn').disabled = $('mDown').disabled = atEnd;
     $('head').classList.toggle('gone', !!focus || currentU > STOPS[0] + .03);
     $('endnav').classList.toggle('on', currentU > .94 && !focus);

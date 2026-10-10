@@ -6,10 +6,12 @@ export const SCREEN_W = 1024, SCREEN_H = 600;
 const FONT_UI = '"Plus Jakarta Sans", system-ui, sans-serif';
 const FONT_MONO = '"JetBrains Mono", monospace';
 
-function palette(accent, light) {
+function palette(accent, light, frosted) {
+  // frosted: the 3D glass behind the card does the blurring, so the painted panel is only a light tint
+  const panel = light ? (frosted ? 'rgba(248,242,235,.5)' : 'rgba(248,242,235,.96)') : (frosted ? 'rgba(6,4,3,.42)' : 'rgba(6,4,3,.94)');
   return light
-    ? { panel:'rgba(248,242,235,.96)', grid:'rgba(0,0,0,.05)', word:'#1d130c', tag:'rgba(60,40,25,.75)', dim:'rgba(60,40,25,.45)', accent }
-    : { panel:'rgba(6,4,3,.94)',      grid:'rgba(255,255,255,.035)', word:'#ece3da', tag:'rgba(236,227,218,.62)', dim:'rgba(236,227,218,.35)', accent };
+    ? { dark:false, panel, grid:'rgba(0,0,0,.05)', word:'#1d130c', tag:'rgba(60,40,25,.75)', dim:'rgba(60,40,25,.45)', accent }
+    : { dark:true, panel,      grid:'rgba(255,255,255,.035)', word:'#ece3da', tag:'rgba(236,227,218,.62)', dim:'rgba(236,227,218,.35)', accent };
 }
 const alpha = (hex, a) => {
   const n = parseInt(hex.slice(1), 16);
@@ -146,7 +148,7 @@ function cta(g, P, t) {
   }
   g.fillStyle = P.accent; g.beginPath();
   g.roundRect ? g.roundRect(372, 400, 280, 66, 33) : g.rect(372, 400, 280, 66); g.fill();
-  g.fillStyle = P.panel === 'rgba(6,4,3,.94)' ? '#0b0604' : '#fff';
+  g.fillStyle = P.dark ? '#0b0604' : '#fff';
   g.font = `800 28px ${FONT_UI}`; g.textAlign = 'center'; g.fillText('Apply now  ↗', 512, 444);
 }
 
@@ -160,12 +162,12 @@ export const SCREENS = {
   apply:  { kicker:'NO PAYMENT TO APPLY', index:'', draw(g, P, t) { frame(g, P, this.kicker, this.index); cta(g, P, t); word(g, P, 'START HERE', 512, 300, 820, 'center', 150); g.textAlign='center'; g.font=`600 28px ${FONT_UI}`; g.fillStyle=P.tag; g.fillText('Your first AI product, 21 days from now', 512, 360); } },
 };
 
-export function createArt(key, accentHex, light) {
+export function createArt(key, accentHex, light, frosted = false) {
   const canvas = document.createElement('canvas');
   canvas.width = SCREEN_W; canvas.height = SCREEN_H;
   const g = canvas.getContext('2d');
-  const art = { canvas, accent: accentHex, light, key };
-  art.draw = (t) => SCREENS[key].draw(g, palette(art.accent, art.light), t);
+  const art = { canvas, accent: accentHex, light, key, frosted };
+  art.draw = (t) => SCREENS[key].draw(g, palette(art.accent, art.light, art.frosted), t);
   art.draw(0);
   return art;
 }
