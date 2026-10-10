@@ -1,3 +1,4 @@
+import '@fontsource/archivo-black/latin-400.css';
 // latin subset only: smaller font downloads
 import '@fontsource/plus-jakarta-sans/latin-600.css';
 import '@fontsource/plus-jakarta-sans/latin-700.css';
@@ -359,7 +360,7 @@ async function start() {
     const art = createPoster(usp, isLight ? ZONES[0].light : ZONES[0].dark, isLight);
     const tex = new THREE.CanvasTexture(art.canvas); tex.colorSpace = THREE.SRGBColorSpace;
     tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
-    const h = 2.75, w = h * POSTER_W / POSTER_H;
+    const h = 3.3, w = h * POSTER_W / POSTER_H;
     const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false }));
     m.position.set(side * (WI - .7), 2.05, z);
     const a = .78;                                            // turn the poster toward the approaching camera
@@ -386,7 +387,7 @@ async function start() {
   flushLines();
 
   const X = V(1, 0, 0), Y = V(0, 1, 0), Z = V(0, 0, 1);
-  const introScreen = makeScreen(segA, V(0, 2.1, 20), Z, Y, 'intro', 0);
+  const introScreen = makeScreen(segA, V(0, 2.2, 20), Z, Y, 'intro', 0, { scale: 1.18 });
   const videoScreen = makeScreen(segA, V(0, 2.1, 9), Z, Y, 'watch', 0);     // 2nd stop: the About video
 
   // data-centre racks lining the travel between levels (rows start just past each level's card)
@@ -401,17 +402,17 @@ async function start() {
   satellite(learnCard, 'schedule', 1.95, 2.85, -.05, .7, -.42);
   // BUILD — triptych: tests | editor | live preview, wrapping around you
   const buildCard = makeScreen(segA, V(0, 2.1, -20), Z, Y, 'build', 2, { scale: .66 });
-  satellite(buildCard, 'files', 1.6, -3.3, -.05, .9, .58);
-  satellite(buildCard, 'preview', 1.6, 3.3, -.05, .9, -.58);
+  satellite(buildCard, 'files', 1.6, -3.05, -.05, .9, .58);
+  satellite(buildCard, 'preview', 1.6, 3.05, -.05, .9, -.58);
   // LAUNCH — browser to the right, a tall deploy pipeline on the left
   const launchCard = makeScreen(segB, V(12, 2.1, 0), V(-1, 0, 0), Y, 'launch', 3, { scale: .74, lx: .95, yaw: -.16 });
   satellite(launchCard, 'pipeline', 1.35, -3.15, -.1, .7, .4);
   // EARN — looking down the shaft: a header plate above three direction tiles in an arc
   const earnCard = makeScreen(segC, V(0, -12, 0), Y, X, 'earn', 4, { scale: .001 });
-  satellite(earnCard, 'earnHead', 4.4, 0, 1.55, 0, 0);
-  satellite(earnCard, 'tile0', 2.05, -2.35, -.75, .55, .32);
-  satellite(earnCard, 'tile1', 2.05, 0, -.75, .9, 0);
-  satellite(earnCard, 'tile2', 2.05, 2.35, -.75, .55, -.32);
+  satellite(earnCard, 'earnHead', 4.4, 0, 1.75, 0, 0);
+  satellite(earnCard, 'tile0', 2.05, -2.35, -.45, .55, .32);
+  satellite(earnCard, 'tile1', 2.05, 0, -.45, .9, 0);
+  satellite(earnCard, 'tile2', 2.05, 2.35, -.45, .55, -.32);
   // APPLY — the end of the shaft
   const endScreen = makeScreen(segC, V(0, SHAFT_BOTTOM + .5, 0), Y, X, 'apply', 5, { solid: true, scale: .8 });
   endScreen.userData.href = APPLY_URL; clickable.push(endScreen);
@@ -490,9 +491,9 @@ async function start() {
     // home stands further back so the USP posters on both walls are in view
     // home stands further back so the USP posters are in view; on phones far enough to fit [poster][ONROL][poster]
     // desktop: stand just far enough back that the outer posters (z 16.6, |x| ≈ 6.5) fit the view width
-    const homeD = camera.aspect > 1 ? Math.max(d + 3, 3.4 + 6.6 / (Math.tan(hf) * .72)) : d + 3;
+    const homeD = camera.aspect > 1 ? Math.max(d + 3, 3.4 + 6.6 / (Math.tan(hf) * .8)) : d + 3;
     // the video stop must sit past the ONROL card (z 20), so cap its distance at 10.5
-    STOPS = [...SCREEN_U.map((u, i) => clampU(u - (i === 0 ? homeD : i === 1 ? Math.min(d, 10.5) : d) / PATH_LEN)), 1];
+    STOPS = [...SCREEN_U.map((u, i) => clampU(u - (i === 0 ? homeD : i === 1 ? Math.min(d, 10.5) : d * .9) / PATH_LEN)), 1];
   }
 
   // ---------- state ----------

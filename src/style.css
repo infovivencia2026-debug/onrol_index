@@ -387,3 +387,6 @@ html.plain .introCard { display:none; }
 .joy::after { display:none; }
 .joy { border-radius:999px; width:64px !important; height:120px !important; }
 @media (max-width:760px) { .joy { width:56px !important; height:104px !important; } }
+
+/* bolder display face for the headline */
+.head, #plain h1, #fallback h2 { font-family:"Archivo Black", var(--font-ui) !important; font-weight:400 !important; letter-spacing:-.02em !important; line-height:1 !important; }
