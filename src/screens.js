@@ -21,17 +21,31 @@ const alpha = (hex, a) => {
 // deterministic pseudo-random so motifs don't change between redraws
 function rng(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
 
-function hud(g, P, w, h, t) {
+function hud(g, P, w, h, t, bottom = true) {
   const f = P.dark ? 'rgba(232,234,237,' : 'rgba(17,17,17,';
-  g.strokeStyle = f + '.55)'; g.lineWidth = 1.5;
-  [[22, 22], [w - 22, 22], [22, h - 22], [w - 22, h - 22]].forEach(([x, y]) => { g.beginPath(); g.moveTo(x - 9, y); g.lineTo(x + 9, y); g.moveTo(x, y - 9); g.lineTo(x, y + 9); g.stroke(); });
-  // thin top rule with a travelling red marker
-  g.fillStyle = f + '.18)'; g.fillRect(40, 10, w - 80, 1.5);
-  g.fillStyle = P.accent; g.fillRect(40 + ((t * .12) % 1) * (w - 96), 8, 16, 5);
+  const code = 'ONR-' + String((w * 7 + h) % 97).padStart(2, '0');
+  if (bottom) {
+  // code label bottom-right
+  g.textAlign = 'right'; g.font = `500 ${Math.max(11, w * .014)}px ${FONT_MONO}`; g.fillStyle = f + '.55)';
+  g.fillText('CODE', w - 34, h - 58); g.font = `700 ${Math.max(16, w * .024)}px ${FONT_MONO}`; g.fillStyle = f + '.85)'; g.fillText(code, w - 34, h - 32);
+  // barcode bottom-left
+  let bx = 34; for (let i = 0; i < 26; i++) { const bw = (i * 37 % 5 === 0) ? 4 : (i % 3 ? 1.5 : 2.5); g.fillStyle = f + '.7)'; g.fillRect(bx, h - 52, bw, 26); bx += bw + 2.5; }
+  // pixel cluster
+  for (let i = 0; i < 9; i++) if ((i * 5 + Math.floor(t * 2)) % 4) { g.fillStyle = i === 4 ? P.accent : f + '.6)'; g.fillRect(bx + 18 + (i % 3) * 9, h - 52 + Math.floor(i / 3) * 9, 6, 6); }
+  }
+  // expand glyph (⤡) at a chamfered corner
+  g.strokeStyle = f + '.7)'; g.lineWidth = 2; const ex = w - 40, ey = 34;
+  g.beginPath(); g.moveTo(ex - 8, ey - 8); g.lineTo(ex + 8, ey + 8); g.moveTo(ex - 8, ey - 8); g.lineTo(ex - 8, ey - 1); g.moveTo(ex - 8, ey - 8); g.lineTo(ex - 1, ey - 8);
+  g.moveTo(ex + 8, ey + 8); g.lineTo(ex + 8, ey + 1); g.moveTo(ex + 8, ey + 8); g.lineTo(ex + 1, ey + 8); g.stroke();
+  // circuit trace along the left edge with a red node
+  g.strokeStyle = f + '.3)'; g.lineWidth = 1.5; g.beginPath(); g.moveTo(14, h * .3); g.lineTo(24, h * .34); g.lineTo(24, h * .58); g.lineTo(14, h * .62); g.stroke();
+  g.fillStyle = P.accent; g.fillRect(21, h * .34 + ((t * .2) % 1) * h * .24, 6, 6);
 }
 function rounded(g, x, y, w, h, r) {
-  g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);
-  g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
+  // reference vibe: hard chamfered (cut) corners instead of round ones
+  const c = Math.max(10, Math.min(w, h) * .09);
+  g.beginPath(); g.moveTo(x + c, y); g.lineTo(x + w - c * .4, y); g.lineTo(x + w, y + c * .4); g.lineTo(x + w, y + h - c);
+  g.lineTo(x + w - c, y + h); g.lineTo(x + c * .4, y + h); g.lineTo(x, y + h - c * .4); g.lineTo(x, y + c); g.closePath();
 }
 function frame(g, P, kicker, index) {
   g.clearRect(0, 0, SCREEN_W, SCREEN_H);
@@ -350,7 +364,7 @@ export function createArt(key, accentHex, light, frosted = false) {
   canvas.width = SCREEN_W; canvas.height = SCREEN_H;
   const g = canvas.getContext('2d');
   const art = { canvas, accent: accentHex, light, key, frosted };
-  art.draw = (t) => { const P = palette(art.accent, art.light, art.frosted); SCREENS[key].draw(g, P, t, art); if (!(art.video && art.video.readyState >= 2)) hud(g, P, SCREEN_W, SCREEN_H, t); };
+  art.draw = (t) => { const P = palette(art.accent, art.light, art.frosted); SCREENS[key].draw(g, P, t, art); if (!(art.video && art.video.readyState >= 2)) hud(g, P, SCREEN_W, SCREEN_H, t, !['build', 'launch'].includes(key)); };
   art.draw(0);
   return art;
 }
