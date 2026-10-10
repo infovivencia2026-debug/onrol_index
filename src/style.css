@@ -35,7 +35,7 @@ html,body { background:var(--bg); color:var(--fg); font-family:var(--font-ui); o
 .meta { display:flex; justify-content:space-between;
   font-size:12px; color:var(--dim); letter-spacing:.14em; font-family:var(--font-mono); font-weight:600; }
 .head { font-weight:800; line-height:1.02; max-width:15ch;
-  font-size:clamp(28px, 4.2vw, 58px); letter-spacing:-.02em; transition:opacity .35s, transform .35s; color:var(--head);
+  font-size:clamp(24px, 3vw, 42px); letter-spacing:-.02em; transition:opacity .35s, transform .35s; color:var(--head);
   text-shadow:var(--head-shadow); }
 .head.gone { opacity:0; transform:translateY(8px); }
 .foot { display:flex; justify-content:space-between; align-items:center;
@@ -230,7 +230,7 @@ html.og .joy, html.og .stepper, html.og #hint, html.og .tr .row, html.og .foot .
 
 /* phone arrangement: header → trio → hint → scene → headline + joystick → dots → thumb bar */
 @media (max-width:760px) {
-  .head { max-width:calc(100% - 108px); font-size:clamp(22px, 6.6vw, 30px); }
+  .head { max-width:calc(100% - 108px); font-size:clamp(20px, 5.6vw, 26px); }
   .joy { width:88px; height:88px; right:16px; bottom:calc(5.5vh + 92px); }
   .joy .lbl { display:none; }
   .joy .knob { width:36px; height:36px; margin:-18px 0 0 -18px; }

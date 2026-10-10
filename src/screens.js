@@ -60,7 +60,7 @@ function frame(g, P, kicker, index) {
   if (index) { g.textAlign = 'right'; g.fillStyle = P.dim; g.fillText(index, 972, 70); }
 }
 function word(g, P, text, x, y, maxW, align = 'left', size = 168, color) {
-  size = Math.round(size * .74); maxW *= .85;   // calmer headline scale inside cards
+  size = Math.round(size * .62); maxW *= .78;   // calmer headline scale inside cards
   g.textAlign = align; g.textBaseline = 'alphabetic';
   do { g.font = `800 ${size}px ${FONT_UI}`; size -= 4; } while (g.measureText(text).width > maxW && size > 50);
   g.fillStyle = color || P.word; g.fillText(text, x, y);
