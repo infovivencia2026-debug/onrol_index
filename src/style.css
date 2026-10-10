@@ -561,3 +561,9 @@ body { -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
 #autoBtn { font-size:12px !important; padding:8px 16px !important; }
 #autoBtn[aria-pressed="true"] { background:var(--or); color:#fff; border-color:var(--or); }
 html:has(.endnav.on) #autoBtn { opacity:0; pointer-events:none; }
+
+/* menu panel: vertically centred on desktop */
+@media (min-width:761px) {
+  #menu { top:50% !important; bottom:auto !important; max-height:86vh; transform:translateY(-50%) !important; transition:opacity .35s, transform .35s; opacity:1; }
+  #menu:not(.on) { transform:translate(calc(100% + 48px), -50%) !important; opacity:0; }
+}
