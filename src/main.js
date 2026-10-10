@@ -67,12 +67,12 @@ async function start() {
 
   // ---------- levels: each has its own color ----------
   const ZONES = [
-    { key: 'intro',  name: 'Intro',  sub: 'The path / 4 steps',   dark: '#ff2a1a', light: '#d81e0f' },
-    { key: 'learn',  name: 'Learn',  sub: 'Learn the AI tools',   dark: '#2ee6c9', light: '#00796b' },
-    { key: 'build',  name: 'Build',  sub: 'Build real projects',  dark: '#9b8cff', light: '#4b36d6' },
-    { key: 'launch', name: 'Launch', sub: 'Launch to the web',    dark: '#ff4f8b', light: '#c2185b' },
-    { key: 'earn',   name: 'Earn',   sub: 'Earn from the skill',  dark: '#ffb020', light: '#9a6200' },
-    { key: 'apply',  name: 'Apply',  sub: 'No payment to apply',  dark: '#ff2a1a', light: '#d81e0f' },
+    { key: 'intro',  name: 'Intro',  sub: 'The path / 4 steps',   dark: '#ff5a4e', light: '#c4291c' },
+    { key: 'learn',  name: 'Learn',  sub: 'Learn the AI tools',   dark: '#2ed3b7', light: '#00796b' },
+    { key: 'build',  name: 'Build',  sub: 'Build real projects',  dark: '#a394ff', light: '#5b44d6' },
+    { key: 'launch', name: 'Launch', sub: 'Launch to the web',    dark: '#ff6aa6', light: '#b8175a' },
+    { key: 'earn',   name: 'Earn',   sub: 'Earn from the skill',  dark: '#ffb020', light: '#8f5a00' },
+    { key: 'apply',  name: 'Apply',  sub: 'No payment to apply',  dark: '#ff5a4e', light: '#c4291c' },
   ];
   const zoneColor = (z, light) => new THREE.Color(light ? ZONES[z].light : ZONES[z].dark);
   const ZONE_COL = [ZONES.map((z, i) => zoneColor(i, false)), ZONES.map((z, i) => zoneColor(i, true))];
@@ -429,7 +429,7 @@ async function start() {
   // ---------- post-processing ----------
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), .8, .5, .97)   // high threshold: LEDs glow, text never does;
+  const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth / 2, innerHeight / 2), .8, .5, .97)   // high threshold: LEDs glow, text never does;
   bloom.enabled = tier === 'high';
   composer.addPass(bloom);
   const film = new ShaderPass({
@@ -511,7 +511,7 @@ async function start() {
   glossMats.forEach((m) => { m.userData.subtle = true; });
   const blobs = [], blobGeo = new THREE.SphereGeometry(1, tier === 'low' ? 24 : 48, tier === 'low' ? 16 : 32);
   const seeds = [[-3.95, 4.05, 22, .42, 1], [4.05, .55, 22.6, .55, 0], [-3.8, .35, 21.6, .3, 2], [3.9, 4.15, 21.3, .3, 2], [0, 4.7, 21, .2, 1], [-6.6, 4.5, 20.6, .36, 0], [6.8, .3, 21.2, .32, 1]];
-  seeds.slice(0, 3).forEach(([x, y, z, r, mi], i) => {
+  seeds.slice(0, camera.aspect < 1 ? 0 : 3).forEach(([x, y, z, r, mi], i) => {
     const m = new THREE.Mesh(blobGeo, glossMats[mi]); m.scale.setScalar(r); m.position.set(x, y, z);
     m.userData = { home: m.position.clone(), vel: V(0, 0, 0), ph: i * 1.7 };
     segA.add(m); blobs.push(m);
@@ -689,8 +689,9 @@ async function start() {
   function setMenu(on) {
     menuOpen = on;
     $('menu').classList.toggle('on', on); $('scrim').classList.toggle('on', on);
-    $('menu').setAttribute('aria-hidden', String(!on)); $('menuBtn').setAttribute('aria-expanded', String(on));
+    $('menu').setAttribute('aria-hidden', String(!on)); $('menu').inert = !on; $('menuBtn').setAttribute('aria-expanded', String(on));
     $('menuBtn').textContent = on ? '✕' : '☰';
+    (on ? $('menu').querySelector('button, a') : $('menuBtn'))?.focus();
   }
   $('menuBtn').onclick = () => setMenu(!menuOpen);
   $('scrim').onclick = () => setMenu(false);
@@ -708,7 +709,7 @@ async function start() {
     plainOn = on; stopAuto();
     document.documentElement.classList.toggle('plain', on);
     $('plainBtn').setAttribute('aria-pressed', String(on));
-    $('plainBtn').textContent = $('mPlain').textContent = on ? '3D view' : 'Plain view';
+    $('plainBtn').textContent = $('mPlain').textContent = on ? '3D view' : 'Simple page';
     if (on) renderer.setAnimationLoop(null); else if (!aboutOpen) { clock.getDelta(); renderer.setAnimationLoop(frame); }
     if (save) { try { localStorage.setItem('onrol-view', on ? 'plain' : '3d'); } catch {} track('view', { mode: on ? 'plain' : '3d' }); }
   }
@@ -783,7 +784,7 @@ async function start() {
     themed.reflectors.forEach((r) => r.material.uniforms.color.value.setHex(T.refl));
     themed.satins.forEach((m) => { m.color.set(T.satin); m.opacity = T.satinO; });
     themed.glossy.forEach((m) => m.material.color.set(T.glossy));
-    themed.glass.forEach((m) => m.color.set('#1a120d'));
+    themed.glass.forEach((m) => m.color.set('#12141a'));
     halos.forEach((m) => { m.visible = false; });
     sky.material.uniforms.top.value.set(light ? '#fbfbf9' : '#1a1d24'); sky.material.uniforms.bot.value.set(light ? '#e9e9e5' : '#050607');
     pools.forEach((m) => { m.material.blending = light ? THREE.NormalBlending : THREE.AdditiveBlending; m.material.color.set(light ? '#000' : '#fff'); m.material.opacity = light ? .06 : .22; m.material.needsUpdate = true; });
@@ -825,7 +826,7 @@ async function start() {
     if (earnCard) earnCard.userData.sats.forEach((m, i) => {
       const ud = m.userData; ud.desk ??= { x: m.position.x, y: m.position.y, z: m.position.z, ry: m.rotation.y };
       if (!portrait) { m.position.set(ud.desk.x, ud.desk.y, ud.desk.z); m.rotation.y = ud.desk.ry; m.scale.setScalar(1); return; }
-      m.rotation.y = 0; m.scale.setScalar(i === 0 ? .8 : .78); m.position.set(0, i === 0 ? 2.3 : 1.05 - (i - 1) * 1.75, 0);   // header + 3 tiles stacked
+      m.rotation.y = 0; m.scale.setScalar(i === 0 ? .72 : .6); m.position.set(0, i === 0 ? 2.9 : 1.75 - (i - 1) * 1.38, 0);   // header + 3 tiles stacked
     });
     if (introReady) pickIntroVideo();             // var-hoisted flag: safe before the video code runs
     camera.updateProjectionMatrix();
@@ -888,7 +889,7 @@ async function start() {
   const pv = V(0, 0, 0);
   function placeIntroCard(show) {
     const el = $('introCard');
-    el.classList.toggle('gone', !show);
+    el.classList.toggle('gone', !show); el.inert = !show;
     videoScreen.visible = !show;
     introScreen.visible = !(portraitHome && !focus && currentU < STOPS[0] + .02);   // phone home: the HTML trio replaces it
     if (!show) return;
@@ -930,12 +931,12 @@ async function start() {
   // ---------- stop captions: kicker / title / one line / three numbers ----------
   const CAPS = [
     null,
-    ['Real mentors. Real builds.', 'Meet Dr. Neeraja Reddy', 'A live school with real mentors, not pre-recorded videos.', [['Live', 'Mentors in the room'], ['Weekly', 'Finished & deployed'], ['2:45', 'Film']]],
-    ['01 · Learn', 'Master the AI tools', 'Prompts, AI agents, idea to working build, fast.', [['5', 'AI tools'], ['1 hr', 'A day'], ['Zero', 'Prerequisites']]],
-    ['02 · Build', 'Real projects, not demos', 'Build features, fix what breaks, make things people use.', [['20+', 'Real projects'], ['70%', 'Hands-on'], ['5', 'Portfolio builds']]],
-    ['03 · Launch', 'Ship it to the web', 'A real link, and something solid for your portfolio.', [['1', 'Live URL each'], ['Weekly', 'Shipping'], ['Yours', 'Portfolio']]],
-    ['04 · Earn', 'Get paid for the skill', 'Freelance, your own product, or a job. Whichever fits.', [['3', 'Directions'], ['12', 'Starting points'], ['You', 'Package & charge']]],
-    ['Ready when you are', 'Stop watching. Start building.', 'Five programs. Start with the 21-day Accelerator.', [['21d', 'Accelerator'], ['3m', 'AI Generalist'], ['6+6m', 'AI Architect']]],
+    ['Real mentors. Real builds.', 'Live classes with real mentors', 'A live school with real mentors, not pre-recorded videos.', [['Live', 'Mentors in the room'], ['Weekly', 'Finished & deployed'], ['2:45', 'Film']]],
+    ['01 · Learn', 'Master the AI tools', 'Learn to use ChatGPT-style tools to get real work done.', [['5', 'AI tools'], ['1 hr', 'A day'], ['Zero', 'Prerequisites']]],
+    ['02 · Build', 'Real projects, not demos', 'Build features, fix what breaks, make things people use.', [['70%', 'Hands-on'], ['Weekly', 'Something finished'], ['Live', 'Mentor in the room']]],
+    ['03 · Launch', 'Put it online', 'A real link, and something solid for your portfolio.', [['1', 'Shareable link each'], ['Weekly', 'Shipping'], ['Yours', 'Portfolio']]],
+    ['04 · Earn', 'Get paid for the skill', 'Freelance, your own product, or a job. Whichever fits.', [['Freelance', 'Clients'], ['Job', 'Career growth'], ['Own', 'Business']]],
+    ['Ready when you are', 'Stop watching. Start building.', 'Five programs. Start with the 21-day Accelerator.', [['21 days', 'Accelerator'], ['3 months', 'AI Generalist'], ['1 year', 'AI Architect']]],
   ];
   function $$cap() {
     document.querySelectorAll('#capS strong').forEach((el) => {
@@ -1046,7 +1047,7 @@ async function start() {
     }
     if (!reducedMotion) allScreens.forEach((m) => {
       const u = m.userData;
-      if (t - u.lastDraw < 1 / 20 || m.getWorldPosition(tmp).distanceTo(camPos) > 16) return;
+      if (!m.visible || (m.material.opacity ?? 1) < .02 || t - u.lastDraw < (calm > .5 ? 1 / 8 : tier === 'high' ? 1 / 20 : 1 / 12) || m.getWorldPosition(tmp).distanceTo(camPos) > 16) return;
       u.lastDraw = t; u.art.draw(t * SLOW); u.tex.needsUpdate = true;
     });
 
@@ -1085,7 +1086,9 @@ async function start() {
     $('head').classList.toggle('gone', !!focus || currentU > STOPS[0] + .03);
     const homeGone = !!focus || currentU > STOPS[0] + .03; $('kick0').style.opacity = $('whoRow').style.opacity = homeGone ? 0 : 1;
     $('endnav').classList.toggle('on', currentU > .94 && !focus);
-    $('finale').classList.toggle('on', currentU > .97 && !focus && !plainOn);
+    const finOn = currentU > .97 && !focus && !plainOn, navOn = currentU > .94 && !focus;
+    if (finOn !== frame.fin) { frame.fin = finOn; $('finale').classList.toggle('on', finOn); $('finale').inert = !finOn; }
+    if (navOn !== frame.nav) { frame.nav = navOn; $('endnav').inert = !navOn; }
     endScreen.visible = false;
 
     // mid/low devices: when nothing is moving, render at ~30fps to save battery

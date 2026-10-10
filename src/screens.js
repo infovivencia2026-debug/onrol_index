@@ -8,10 +8,10 @@ const FONT_MONO = '"IBM Plex Mono", ui-monospace, monospace';
 
 function palette(accent, light, frosted) {
   // frosted: the 3D glass behind the card does the blurring, so the painted panel is only a light tint
-  const panel = light ? (frosted ? 'rgba(250,246,241,.72)' : 'rgba(250,246,241,.97)') : (frosted ? 'rgba(16,18,26,.72)' : 'rgb(16,18,26)');
+  const panel = light ? (frosted ? 'rgba(250,250,248,.72)' : 'rgba(250,250,248,.97)') : (frosted ? 'rgba(16,18,26,.72)' : 'rgb(16,18,26)');
   return light
-    ? { dark:false, panel, grid:'rgba(0,0,0,.06)', word:'#120a05', tag:'rgba(40,25,15,.9)', dim:'rgba(40,25,15,.62)', accent }
-    : { dark:true, panel,      grid:'rgba(255,255,255,.035)', word:'#fbf7f2', tag:'rgba(245,238,230,.92)', dim:'rgba(245,238,230,.72)', accent };
+    ? { dark:false, panel, grid:'rgba(0,0,0,.06)', word:'#111214', tag:'rgba(17,18,20,.9)', dim:'rgba(17,18,20,.62)', accent }
+    : { dark:true, panel,      grid:'rgba(255,255,255,.035)', word:'#f2f3f5', tag:'rgba(242,243,245,.92)', dim:'rgba(242,243,245,.72)', accent };
 }
 const alpha = (hex, a) => {
   const n = parseInt(hex.slice(1), 16);
@@ -197,7 +197,7 @@ function videoCard(g, P, t, art) {
   grd.addColorStop(0, 'rgba(0,0,0,0)'); grd.addColorStop(1, 'rgba(0,0,0,.78)');
   g.fillStyle = grd; g.fillRect(x, y + h - 150, w, 150);
   g.textAlign = 'left'; g.textBaseline = 'alphabetic';
-  g.font = `600 39px ${FONT_UI}`; g.fillStyle = '#fbf7f2'; g.fillText('About ONROL', 52, y + h - 46);
+  g.font = `600 39px ${FONT_UI}`; g.fillStyle = '#f2f3f5'; g.fillText('About ONROL', 52, y + h - 46);
   g.font = `500 17px ${FONT_MONO}`; g.fillStyle = P.accent; g.fillText('AI EXECUTION SCHOOL · HYDERABAD', 52, y + h - 18);
   // progress bar
   const p = v.duration ? v.currentTime / v.duration : 0;
@@ -209,7 +209,7 @@ function videoCard(g, P, t, art) {
   const pulse = v.muted ? .55 + .45 * Math.sin(t * 3) : 1;
   g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(SCREEN_W - 52 - cw, 40, cw, 44);
   g.strokeStyle = alpha(P.accent, pulse); g.lineWidth = 2; g.strokeRect(SCREEN_W - 52 - cw, 40, cw, 44);
-  g.fillStyle = '#fbf7f2'; g.textAlign = 'left'; g.fillText(label, SCREEN_W - 52 - cw + 18, 69);
+  g.fillStyle = '#f2f3f5'; g.textAlign = 'left'; g.fillText(label, SCREEN_W - 52 - cw + 18, 69);
   // frame
   g.strokeStyle = alpha(P.accent, .9); g.lineWidth = 3; g.strokeRect(x, y, w, h);
   g.fillStyle = P.accent; [[14,14],[1010,14],[14,586],[1010,586]].forEach(([cx, cy]) => g.fillRect(cx - 5, cy - 5, 10, 10));
