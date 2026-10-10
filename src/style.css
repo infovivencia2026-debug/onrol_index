@@ -378,3 +378,7 @@ html.plain .introCard { display:none; }
 :root[data-theme="light"] .dots button { border-color:rgba(0,0,0,.45); }
 :root[data-theme="light"] .joy { border-color:rgba(0,0,0,.25); background:rgba(255,255,255,.7); }
 :root[data-theme="light"] .joy::before, :root[data-theme="light"] .joy::after { background:rgba(0,0,0,.15); }
+
+/* headline centred */
+.bottom .head { text-align:center; margin-inline:auto; max-width:18ch; }
+@media (max-width:760px) { .bottom .head { max-width:100%; } }

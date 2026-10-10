@@ -389,6 +389,13 @@ async function start() {
   const introScreen = makeScreen(segA, V(0, 2.1, 20), Z, Y, 'intro', 0);
   const videoScreen = makeScreen(segA, V(0, 2.1, 9), Z, Y, 'watch', 0);     // 2nd stop: the About video
 
+  // data-centre racks lining the travel between levels (rows start just past each level's card)
+  rackRow(segA, 1, V(0, 0, -6.5), V(0, 0, -1), X);
+  rackRow(segA, 2, V(0, 0, -22.5), V(0, 0, -1), X);
+  for (let k = -2; k <= 2; k++) { const r = makeRack(2, k + 2); r.rotation.y = -Math.PI / 2; r.position.set(k * (RACK_W + .2), 0, TURN_Z - W - RACK_D / 2); scene.add(r); }
+  rackRow(segB, 3, V(14, 0, 0), X, Z);
+  rackRow(segC, 4, V(0, -14, 0), V(0, -1, 0), Z, X);
+
   // LEARN — split: class sheet turned in from the left, week schedule standing on the right
   const learnCard = makeScreen(segA, V(0, 2.1, -4), Z, Y, 'learn', 1, { scale: .7, lx: -1.15, yaw: .22 });
   satellite(learnCard, 'schedule', 1.95, 2.85, -.05, .7, -.42);
@@ -442,44 +449,25 @@ async function start() {
   path.add(new THREE.LineCurve3(V(SHAFT_X, H - R2, TURN_Z), V(SHAFT_X, SHAFT_BOTTOM + 7, TURN_Z)));
   path.updateArcLengths();
 
-  // ---------- 3D track line: the route drawn on the floor, coloured by level ----------
-  const TRACK_N = 900, trackPos = new Float32Array(TRACK_N * 3), trackCol = new Float32Array(TRACK_N * 3), trackBase = [];
+  // ---------- 3D rail track the camera rides along: two rails + sleepers, coloured by level ----------
   const zoneOfPoint = (p) => p.x > SHAFT_X - 3 ? 4 : p.x > 2 ? 3 : p.z > 2 ? 0 : p.z > -18 ? 1 : 2;
-  for (let i = 0; i < TRACK_N; i++) {
-    const p = path.getPointAt(i / (TRACK_N - 1));
-    // run along the floor 1.6 to the left of centre so it never cuts through the cards/UI; in the shaft it rides the wall
-    const t = path.getTangentAt(i / (TRACK_N - 1)), onFloor = p.y > H - .3;
-    const side = onFloor ? new THREE.Vector3(t.z, 0, -t.x).normalize() : new THREE.Vector3(0, 0, 1);
-    trackPos.set([p.x + side.x * 1.6, onFloor ? .025 : p.y - .5, p.z + side.z * (onFloor ? 1.6 : -3.5)], i * 3);
-    trackBase.push(zoneColor(zoneOfPoint(p), false));
-  }
-  const trackGeo = new THREE.BufferGeometry();
-  trackGeo.setAttribute('position', new THREE.BufferAttribute(trackPos, 3));
-  trackGeo.setAttribute('color', new THREE.BufferAttribute(trackCol, 3));
-  const trackMat = new THREE.LineBasicMaterial({ vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
-  scene.add(new THREE.Line(trackGeo, trackMat));
-  const trackDot = new THREE.Mesh(new THREE.SphereGeometry(.07, 16, 12), new THREE.MeshBasicMaterial({ color: '#ffffff' }));
-  scene.add(trackDot);
-  let trackLastU = -1;
-  function updateTrack(u, t) {
-    const lightMode = document.documentElement.dataset.theme === 'light';
-    if (Math.abs(u - trackLastU) > .0005 || lightMode !== updateTrack.l) {
-      trackLastU = u; updateTrack.l = lightMode;
-      for (let i = 0; i < TRACK_N; i++) {
-        const k = i / (TRACK_N - 1), c = trackBase[i];
-        const lit = k <= u ? .95 : .28 * Math.max(.25, 1 - (k - u) * 4);   // travelled: bright · ahead: fades out
-        const m = lightMode ? lit * .9 : lit;
-        trackCol[i * 3] = c.r * m; trackCol[i * 3 + 1] = c.g * m; trackCol[i * 3 + 2] = c.b * m;
-      }
-      trackGeo.attributes.color.needsUpdate = true;
-      trackMat.blending = lightMode ? THREE.NormalBlending : THREE.AdditiveBlending; trackMat.needsUpdate = true;
+  (() => {
+    const N = 700, GAUGE = .55;
+    for (let i = 0; i < N; i++) {
+      const u0 = i / N, u1 = (i + 1) / N;
+      const p0 = path.getPointAt(u0), p1 = path.getPointAt(u1), tg = path.getTangentAt(u0);
+      const floor = p0.y > H - .3, z = zoneOfPoint(p0);
+      // across-vector: horizontal on the floor, along +Z on the shaft wall
+      const side = floor ? V(tg.z, 0, -tg.x).normalize() : V(1, 0, 0);
+      const lift = floor ? V(0, .03 - H, 0) : V(0, 0, -3.4);          // floor, or the shaft's back wall
+      const a0 = p0.clone().add(lift), a1 = p1.clone().add(lift);
+      [-1, 1].forEach((k) => seg(scene, a0.clone().addScaledVector(side, k * GAUGE), a1.clone().addScaledVector(side, k * GAUGE), z, .7));
+      if (i % 4 === 0) seg(scene, a0.clone().addScaledVector(side, -GAUGE - .18), a0.clone().addScaledVector(side, GAUGE + .18), z, .35);
     }
-    const idx = Math.round(u * (TRACK_N - 1));
-    trackDot.position.set(trackPos[idx * 3], trackPos[idx * 3 + 1], trackPos[idx * 3 + 2]);
-    trackDot.material.color.copy(trackBase[idx]).lerp(WHITE, .5);
-    trackDot.scale.setScalar(1 + Math.sin(t * 4) * .2);
-    trackDot.visible = trackPos[idx * 3 + 1] < .1;            // only on the floor, never in front of the camera in the shaft
-  }
+    flushLines();
+  })();
+  function updateTrack() {}
+
   const PATH_LEN = path.getLength();
   const clampU = (v) => THREE.MathUtils.clamp(v, 0, 1);
   function nearestU(p) {
