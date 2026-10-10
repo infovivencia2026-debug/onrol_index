@@ -961,6 +961,7 @@ async function start() {
     }, 250);
   }
 
+  const SLOW = .45;   // decorative animations run slower; travel/camera speed unchanged
   // ---------- frame loop ----------
   const tmp = V(0, 0, 0), q = new THREE.Quaternion(), camPos = V(0, 0, 0), camLook = V(0, 0, 0);
   const camUp = V(0, 1, 0), upTarget = V(0, 0, 0), dir = V(0, 0, 0), look = V(0, 0, 0), tA = V(0, 0, 0);
@@ -1049,7 +1050,7 @@ async function start() {
     if (!reducedMotion) allScreens.forEach((m) => {
       const u = m.userData;
       if (t - u.lastDraw < 1 / 20 || m.getWorldPosition(tmp).distanceTo(camPos) > 16) return;
-      u.lastDraw = t; u.art.draw(t); u.tex.needsUpdate = true;
+      u.lastDraw = t; u.art.draw(t * SLOW); u.tex.needsUpdate = true;
     });
 
     // level color: UI accent + fog tint follow the level you're in
@@ -1087,6 +1088,8 @@ async function start() {
     $('head').classList.toggle('gone', !!focus || currentU > STOPS[0] + .03);
     const homeGone = !!focus || currentU > STOPS[0] + .03; $('kick0').style.opacity = $('whoRow').style.opacity = homeGone ? 0 : 1;
     $('endnav').classList.toggle('on', currentU > .94 && !focus);
+    $('finale').classList.toggle('on', currentU > .97 && !focus && !plainOn);
+    endScreen.visible = false;
 
     // mid/low devices: when nothing is moving, render at ~30fps to save battery
     frameNo++;
@@ -1098,11 +1101,11 @@ async function start() {
         SHAFT_X, TURN_Z, SHAFT_BOTTOM, W, WI, CEIL, H, tier, reducedMotion,
         get isLight() { return isLight; }, get currentU() { return currentU; }, get STOPS() { return STOPS; }, get stopIndex() { return stopAt(currentU); } };
       for (const [file, mod] of Object.entries(STAGE_MODULES)) {
-        try { const api = mod.default?.(ctx); if (api) { stageMods.push(api); api.setTheme?.(isLight); } } catch (e) { console.warn('stage module failed', file, e); }
+        try { const api = mod.default?.(ctx); if (api) { api.travel = file.includes('travel'); stageMods.push(api); api.setTheme?.(isLight); } } catch (e) { console.warn('stage module failed', file, e); }
       }
     }
     if (!subtleDone) { subtleDone = true; makeSubtle(); }
-    updateBlobs(t, dt);
+    updateBlobs(t * SLOW, dt * SLOW);
     // cards lean toward the cursor while you're parked at them
     const CARD_AT = [introScreen, videoScreen, learnCard, buildCard, launchCard, earnCard, endScreen];
     CARD_AT.forEach((c, i) => {
@@ -1113,7 +1116,7 @@ async function start() {
       tiltQ.setFromEuler(tiltE);
       rig.quaternion.copy(rig.userData.q0).multiply(tiltQ);
     });
-    for (const m of stageMods) { try { m.update?.(t, dt); } catch (e) { console.warn(e); } }
+    for (const m of stageMods) { try { m.travel ? m.update?.(t, dt) : m.update?.(t * SLOW, dt * SLOW); } catch (e) { console.warn(e); } }
     if (!(idle && frameNo % 2)) { if (bloom.enabled) composer.render(); else renderer.render(scene, camera); }
 
     // adaptive resolution: keep motion smooth on any PC
