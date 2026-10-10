@@ -383,7 +383,7 @@ async function start() {
   // ---------- post-processing ----------
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), .8, .5, .82);
+  const bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), .8, .5, .97)   // high threshold: LEDs glow, text never does;
   bloom.enabled = tier !== 'low';
   composer.addPass(bloom);
   const film = new ShaderPass({
@@ -396,7 +396,7 @@ async function start() {
         vec2 d = vUv - .5; float r2 = dot(d,d);
         vec2 off = d * ca * (1. + r2 * 6.);
         vec3 col = vec3(texture2D(tDiffuse, vUv + off).r, texture2D(tDiffuse, vUv).g, texture2D(tDiffuse, vUv - off).b);
-        col = (col - .5) * 1.06 + .5;
+        col = (col - .5) * 1.1 + .5;
         col *= 1. - r2 * vig;
         col += (rand(vUv * 900. + time) - .5) * grain;
         gl_FragColor = vec4(max(col, 0.), 1.);
@@ -572,9 +572,9 @@ async function start() {
   $('plainBtn').onclick = () => setPlain(!plainOn);
 
   // ---------- theme ----------
-  const DARK = { hemiSky: '#ffffff', hemiGround: '#120604', hemiI: .25, lightI: 14, ledMul: 2, faceO: 1, ca: .0011, bg: '#070403', body: '#120d0b', metal: .85, glossy: '#0b0705', refl: 0x2a1c14, satin: '#070302', satinO: .78, bloom: .8, vig: 1.35, grain: .022, exposure: 1, barMul: 1.4 };
+  const DARK = { hemiSky: '#ffffff', hemiGround: '#120604', hemiI: .25, lightI: 14, ledMul: 2, faceO: 1, ca: .0005, bg: '#070403', body: '#120d0b', metal: .85, glossy: '#0b0705', refl: 0x2a1c14, satin: '#070302', satinO: .78, bloom: .8, vig: 1.35, grain: .012, exposure: 1, barMul: 1.4 };
   const LIGHT = { hemiSky: '#ffffff', hemiGround: '#d9c9b8', hemiI: 1.5, lightI: 1.5, ledMul: 1, faceO: .95, ca: .0003, bg: '#efe6dc', body: '#cfc3b6', metal: .25, glossy: '#e4d9cd', refl: 0xcfc2b5, satin: '#efe6dc', satinO: .86, bloom: .18, vig: .1, grain: .01, exposure: 1, barMul: 1 };
-  let T = DARK, caBase = .0011;
+  let T = DARK, caBase = .0005;
   function setTheme(light, save = true) {
     isLight = light; T = light ? LIGHT : DARK;
     const blend = light ? THREE.NormalBlending : THREE.AdditiveBlending;

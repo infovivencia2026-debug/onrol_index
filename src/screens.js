@@ -8,10 +8,10 @@ const FONT_MONO = '"JetBrains Mono", monospace';
 
 function palette(accent, light, frosted) {
   // frosted: the 3D glass behind the card does the blurring, so the painted panel is only a light tint
-  const panel = light ? (frosted ? 'rgba(250,246,241,.72)' : 'rgba(250,246,241,.97)') : (frosted ? 'rgba(6,4,3,.42)' : 'rgba(6,4,3,.94)');
+  const panel = light ? (frosted ? 'rgba(250,246,241,.72)' : 'rgba(250,246,241,.97)') : (frosted ? 'rgba(6,4,3,.66)' : 'rgba(6,4,3,.94)');
   return light
     ? { dark:false, panel, grid:'rgba(0,0,0,.06)', word:'#120a05', tag:'rgba(40,25,15,.9)', dim:'rgba(40,25,15,.62)', accent }
-    : { dark:true, panel,      grid:'rgba(255,255,255,.035)', word:'#ece3da', tag:'rgba(236,227,218,.62)', dim:'rgba(236,227,218,.35)', accent };
+    : { dark:true, panel,      grid:'rgba(255,255,255,.035)', word:'#fbf7f2', tag:'rgba(245,238,230,.86)', dim:'rgba(245,238,230,.6)', accent };
 }
 const alpha = (hex, a) => {
   const n = parseInt(hex.slice(1), 16);
