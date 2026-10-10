@@ -770,7 +770,7 @@ async function start() {
 
   // ---------- theme ----------
   const DARK = { hemiSky: '#dfe6ff', hemiGround: '#0b0c10', hemiI: .45, lightI: 8, ledMul: 2, faceO: 1, ca: 0, bg: '#0b0c10', body: '#16181f', metal: .7, glossy: '#0d0e13', refl: 0x1c1e26, satin: '#0b0c10', satinO: .82, bloom: .45, vig: .7, grain: 0, exposure: 1, barMul: 1.4 };
-  const LIGHT = { hemiSky: '#ffffff', hemiGround: '#d9c9b8', hemiI: 1.5, lightI: 1.5, ledMul: 1, faceO: .95, ca: .0003, bg: '#efe6dc', body: '#cfc3b6', metal: .25, glossy: '#e4d9cd', refl: 0xcfc2b5, satin: '#efe6dc', satinO: .86, bloom: .18, vig: .1, grain: .01, exposure: 1, barMul: 1 };
+  const LIGHT = { hemiSky: '#ffffff', hemiGround: '#e6e6e2', hemiI: 1.5, lightI: 1.5, ledMul: 1, faceO: .95, ca: .0003, bg: '#f3f3f0', body: '#e9e9e5', metal: .25, glossy: '#efefec', refl: 0xcfc2b5, satin: '#f3f3f0', satinO: .86, bloom: .18, vig: .1, grain: .01, exposure: 1, barMul: 1 };
   let T = DARK, caBase = .0005;
   function setTheme(light, save = true) {
     isLight = light; T = light ? LIGHT : DARK;
@@ -778,8 +778,8 @@ async function start() {
     document.documentElement.dataset.theme = light ? 'light' : 'dark';
     document.querySelector('meta[name="theme-color"]').content = T.bg;
     scene.background.set(T.bg); scene.fog.color.set(T.bg);   // snap — don't fade in from the other theme
-    themed.lines.forEach((m) => { m.color.copy(zoneColor(m.userData.zone, light)); m.blending = blend; m.opacity = light ? Math.min(1, m.userData.baseO * 2.2 + .08) : m.userData.baseO * .55; m.needsUpdate = true; });
-    themed.dust.forEach((m) => { m.color.copy(zoneColor(m.userData.zone, light)); m.blending = blend; m.opacity = light ? .4 : .3; m.size = .025; m.needsUpdate = true; });
+    themed.lines.forEach((m) => { m.color.copy(zoneColor(m.userData.zone, light)); m.blending = blend; m.opacity = light ? Math.min(.5, m.userData.baseO * .9 + .03) : m.userData.baseO * .55; m.needsUpdate = true; });
+    themed.dust.forEach((m) => { m.color.copy(zoneColor(m.userData.zone, light)); m.blending = blend; m.opacity = light ? .25 : .3; m.size = .025; m.needsUpdate = true; });
     themed.faces.forEach((m) => { m.blending = blend; m.opacity = T.faceO; m.color.setScalar(light ? .55 : 1); m.needsUpdate = true; });
     themed.leds.forEach((m) => m.color.copy(zoneColor(m.userData.zone, light)).multiplyScalar(T.ledMul * (m.userData.mul || 1)));
     themed.lights.forEach((l) => { l.intensity = T.lightI; });
@@ -788,7 +788,7 @@ async function start() {
     themed.glossy.forEach((m) => m.material.color.set(T.glossy));
     themed.glass.forEach((m) => m.color.set('#1a120d'));
     halos.forEach((m) => { m.visible = false; });
-    sky.material.uniforms.top.value.set(light ? '#f4efe9' : '#1a1d24'); sky.material.uniforms.bot.value.set(light ? '#e4dcd2' : '#050607');
+    sky.material.uniforms.top.value.set(light ? '#fbfbf9' : '#1a1d24'); sky.material.uniforms.bot.value.set(light ? '#e9e9e5' : '#050607');
     pools.forEach((m) => { m.material.blending = light ? THREE.NormalBlending : THREE.AdditiveBlending; m.material.color.set(light ? '#000' : '#fff'); m.material.opacity = light ? .06 : .22; m.material.needsUpdate = true; });
     // light mode: solid cards (frosted glass picks up grey smudges on a light room)
     allScreens.forEach((m) => { if (m.userData.glass) m.userData.glass.userData.off = light; if (m.userData.art.frosted !== undefined && m.userData.glass) m.userData.art.frosted = !light; });
@@ -1039,7 +1039,7 @@ async function start() {
     // parked at a card: the room fades into fog so only the card stays crisp
     const parked = !auto && !joy.active && Math.abs(velU) < .004 && Math.abs(targetU - currentU) < .002;
     calm += ((parked ? 1 : 0) - calm) * (1 - Math.exp(-dt * (parked ? 1.5 : 6)));
-    scene.fog.density = (isLight ? .03 : .058) + calm * (isLight ? .05 : .09);
+    scene.fog.density = (isLight ? .045 : .058) + calm * (isLight ? .07 : .09);
     scene.background.copy(scene.fog.color);
 
     fovKick *= Math.exp(-dt * 3);
@@ -1064,7 +1064,7 @@ async function start() {
         SHAFT_X, TURN_Z, SHAFT_BOTTOM, W, WI, CEIL, H, tier, reducedMotion,
         get isLight() { return isLight; }, get currentU() { return currentU; }, get STOPS() { return STOPS; }, get stopIndex() { return stopAt(currentU); } };
       for (const [file, mod] of Object.entries(STAGE_MODULES)) {
-        try { const api = mod.default?.(ctx); if (api) stageMods.push(api); } catch (e) { console.warn('stage module failed', file, e); }
+        try { const api = mod.default?.(ctx); if (api) { stageMods.push(api); api.setTheme?.(isLight); } } catch (e) { console.warn('stage module failed', file, e); }
       }
     }
     if (!subtleDone) { subtleDone = true; makeSubtle(); }

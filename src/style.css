@@ -14,10 +14,10 @@
   color-scheme:dark;
 }
 :root[data-theme="light"] {
-  --bg:#f1e9e0; --fg:#140c07; --head:#140c07; --or:#b03e00; --dim:#6e523d;
-  --line:rgba(120,60,20,.32); --panel:rgba(250,245,240,.9);
-  --btn-bg:#1d130c; --btn-fg:#f6efe8; --bar:#e2d6c9; --vig:rgba(120,80,50,.07);
-  --link:#3a2416; --head-shadow:none; color-scheme:light;
+  --bg:#f3f3f0; --fg:#111214; --head:#111214; --or:#b03e00; --dim:#6b6f76;
+  --line:rgba(17,18,20,.12); --panel:rgba(255,255,255,.92);
+  --btn-bg:#1d130c; --btn-fg:#f6efe8; --bar:#e9e9e5; --vig:rgba(0,0,0,.05);
+  --link:#2a2c30; --head-shadow:none; color-scheme:light;
 }
 * { box-sizing:border-box; margin:0; padding:0; }
 html,body { background:var(--bg); color:var(--fg); font-family:var(--font-ui); overflow:hidden; user-select:none; }
