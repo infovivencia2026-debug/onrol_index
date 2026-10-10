@@ -530,7 +530,7 @@ async function start() {
     // desktop: stand just far enough back that the outer posters (z 16.6, |x| ≈ 6.5) fit the view width
     const homeD = camera.aspect > 1 ? Math.max(d + 3, 3.4 + 6.9 / (Math.tan(hf) * .74)) : d + 3;
     // the video stop must sit past the ONROL card (z 20), so cap its distance at 10.5
-    STOPS = [...SCREEN_U.map((u, i) => clampU(u - (i === 0 ? homeD : i === 1 ? Math.min(d * .9, 10.5) : d) / PATH_LEN)), 1];
+    STOPS = [...SCREEN_U.map((u, i) => clampU(u - (i === 0 ? homeD : i === 1 ? Math.min(d * .9, 10.5) : (camera.aspect < 1 && i === 4 ? Math.min(d, 7) : camera.aspect < 1 && i === 5 ? 7.6 : d)) / PATH_LEN)), 1];   // LAUNCH must stop past the corner
   }
 
   // ---------- state ----------
@@ -776,6 +776,19 @@ async function start() {
     camera.aspect = innerWidth / innerHeight;
     baseFov = camera.aspect < 1 ? 68 : 58;
     layoutPosters();
+    // phones: one big centred card per stop; side panels hidden (the EARN tiles stack instead)
+    const portrait = camera.aspect < 1;
+    [learnCard, buildCard, launchCard].forEach((c) => {
+      if (!c) return;
+      const ud = c.userData; ud.desk ??= { x: c.position.x, ry: c.rotation.y, s: c.scale.x };
+      c.position.x = portrait ? 0 : ud.desk.x; c.rotation.y = portrait ? 0 : ud.desk.ry; c.scale.setScalar(portrait ? ud.desk.s * (c === launchCard ? .95 : 1.35) : ud.desk.s);
+      ud.sats.forEach((m) => { m.visible = !portrait; m.userData.phoneHidden = portrait; });
+    });
+    if (earnCard) earnCard.userData.sats.forEach((m, i) => {
+      const ud = m.userData; ud.desk ??= { x: m.position.x, y: m.position.y, z: m.position.z, ry: m.rotation.y };
+      if (!portrait) { m.position.set(ud.desk.x, ud.desk.y, ud.desk.z); m.rotation.y = ud.desk.ry; m.scale.setScalar(1); return; }
+      m.rotation.y = 0; m.scale.setScalar(i === 0 ? .8 : .78); m.position.set(0, i === 0 ? 2.3 : 1.05 - (i - 1) * 1.75, 0);   // header + 3 tiles stacked
+    });
     if (introReady) pickIntroVideo();             // var-hoisted flag: safe before the video code runs
     camera.updateProjectionMatrix();
     computeStops();
@@ -941,7 +954,7 @@ async function start() {
     screens.forEach((s) => {
       const local = s.mesh.worldToLocal(tmp.copy(camPos));
       s.mesh.material.opacity = local.z > 0 ? Math.min(1, local.z / 1.2) : 0;
-      s.mesh.userData.sats?.forEach((sm) => { sm.material.opacity = s.mesh.material.opacity; sm.visible = s.mesh.material.opacity > .02; });
+      s.mesh.userData.sats?.forEach((sm) => { sm.material.opacity = s.mesh.material.opacity; sm.visible = !sm.userData.phoneHidden && s.mesh.material.opacity > .02; });
       const gl = s.mesh.userData.glass; if (gl) { gl.material.opacity = s.mesh.material.opacity; gl.visible = !gl.userData.off && s.mesh.material.opacity > .35; }
       const sd = Math.sign(local.z) || 1;
       if (sd !== s.side && Math.abs(local.x) < W && Math.abs(local.y) < W && !focus) pierce();

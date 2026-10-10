@@ -418,3 +418,5 @@ html.plain .introCard { display:none; }
 #plain details p { margin-top:10px; color:var(--dim); line-height:1.6; }
 .endnav .more { display:flex; flex-wrap:wrap; gap:6px; margin:-8px 0 18px; }
 .endnav .more .btn { padding:6px 12px; font-size:11px; text-decoration:none; }
+
+@media (max-width:760px) { .joy { display:none !important; } .bottom .head { max-width:100%; } }
