@@ -389,7 +389,7 @@ html.plain .introCard { display:none; }
 @media (max-width:760px) { .joy { width:56px !important; height:104px !important; } }
 
 /* bolder display face for the headline */
-.head, #plain h1, #fallback h2 { font-family:var(--font-ui) !important; font-weight:800 !important; letter-spacing:-.022em !important; line-height:1 !important; }
+.head, #plain h1, #fallback h2 { font-family:var(--font-ui) !important; font-weight:500 !important; letter-spacing:-.03em !important; line-height:1 !important; }
 
 /* full onrol.in content in plain view */
 #plain .sec { margin-top:72px; padding-top:28px; border-top:1px solid var(--line); }
@@ -445,3 +445,10 @@ body { font-feature-settings:'ss01','cv11'; }
 @media (max-width:760px) { #menu { max-width:none; left:0; right:0; bottom:0; } .stepper { display:none; } }
 
 #menu:not(.on) { transform:translateY(calc(100% + 48px)) !important; visibility:hidden; }
+
+/* thinner type throughout */
+.tl b, .tr b { font-weight:500 !important; }
+.btn, .foot a, .mbar a, .endnav a, #menu a, .meta, .foot { font-weight:400 !important; }
+.endnav h3, #menu h3 { font-weight:400 !important; }
+#plain h1, #plain h2 { font-weight:500 !important; } #plain b, #plain summary { font-weight:500 !important; }
+:root[data-theme="light"] .head { letter-spacing:-.03em !important; }
