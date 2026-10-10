@@ -437,7 +437,7 @@ html.plain .introCard { display:none; }
 .foot a, .mbar a { font-size:12px !important; }
 
 /* fewer controls: one menu button top-right, slim ▲▼ on the right, Apply + dots at the bottom */
-.tr .row, #homeBtn, .joy, #aboutBtn2, #autoBtn, .foot .note, .tr b, .tr span { display:none !important; }
+.tr .row, #homeBtn, .joy, #aboutBtn2, .foot .note, .tr b, .tr span { display:none !important; }
 .menuBtn { display:inline-flex !important; pointer-events:auto; width:40px; height:40px; padding:0 !important; align-items:center; justify-content:center; font-size:16px !important; }
 .stepper { gap:6px; } .stepper .btn { width:38px !important; height:38px !important; opacity:.7; }
 .stepper .btn:hover { opacity:1; }
@@ -547,3 +547,17 @@ html.plain .finale { display:none; }
 .who > div { animation-duration:80s; }
 .finale { transition:opacity 1s, transform 1.4s cubic-bezier(.2,1.4,.35,1); }
 .cap { transition:opacity .9s, transform .9s; }
+
+/* readability pass (IBM Plex) */
+:root { --dim:#c3c7cd; }
+:root[data-theme="light"] { --dim:#4a4f57; }
+.head { font-weight:600 !important; }
+.tl b, .cap b { font-weight:600 !important; }
+.btn, .foot a, .mbar a, .endnav a, #menu a, .meta, .foot, .cap li strong { font-weight:500 !important; }
+.tl span, .meta, .proofs, .who span, .fu, .cap .k, .cap li span { font-size:12px !important; }
+.proofs b, .fu b { font-weight:600; }
+body { -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility; }
+
+#autoBtn { font-size:12px !important; padding:8px 16px !important; }
+#autoBtn[aria-pressed="true"] { background:var(--or); color:#fff; border-color:var(--or); }
+html:has(.endnav.on) #autoBtn { opacity:0; pointer-events:none; }
