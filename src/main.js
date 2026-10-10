@@ -475,6 +475,21 @@ async function start() {
     flushLines();
   })();
   function updateTrack() {}
+  // calm the scene: every line / point / glow drawn at ~40% strength, card halos off
+  let subtleDone = false;
+  function makeSubtle() {
+    scene.traverse((o) => {
+      const mats = Array.isArray(o.material) ? o.material : o.material ? [o.material] : [];
+      mats.forEach((m) => {
+        if (m.userData.subtle) return;
+        const isFx = m.isLineBasicMaterial || m.isPointsMaterial || (m.isMeshBasicMaterial && m.blending === THREE.AdditiveBlending && !m.map);
+        if (!isFx || !m.color) return;
+        m.userData.subtle = true; m.color.multiplyScalar(.4);
+        if (m.isPointsMaterial) m.size *= .7;
+      });
+    });
+    halos.forEach((h) => { h.visible = false; });
+  }
 
   const PATH_LEN = path.getLength();
   const clampU = (v) => THREE.MathUtils.clamp(v, 0, 1);
@@ -709,7 +724,7 @@ async function start() {
     themed.satins.forEach((m) => { m.color.set(T.satin); m.opacity = T.satinO; });
     themed.glossy.forEach((m) => m.material.color.set(T.glossy));
     themed.glass.forEach((m) => m.color.set('#1a120d'));
-    halos.forEach((m) => { m.visible = !light; });
+    halos.forEach((m) => { m.visible = false; });
     // light mode: solid cards (frosted glass picks up grey smudges on a light room)
     allScreens.forEach((m) => { if (m.userData.glass) m.userData.glass.userData.off = light; if (m.userData.art.frosted !== undefined && m.userData.glass) m.userData.art.frosted = !light; });
     themed.glossy.forEach((m) => { m.material.roughness = light ? .7 : .35; m.material.metalness = light ? 0 : .6; m.material.emissive.set(light ? '#d9ccbe' : '#000000'); m.material.emissiveIntensity = light ? .55 : 0; });
@@ -726,6 +741,8 @@ async function start() {
     $('themeBtn').setAttribute('aria-label', light ? 'Switch to dark mode' : 'Switch to light mode');
     lastZone = -1;                                   // re-apply the level accent for this theme
     stageMods.forEach((m) => { try { m.setTheme?.(light); } catch {} });
+    scene.traverse((o) => { const m = o.material; if (m && !Array.isArray(m)) m.userData.subtle = false; });
+    if (subtleDone) makeSubtle();
     if (save) { try { localStorage.setItem('onrol-theme', light ? 'light' : 'dark'); } catch {} track('theme', { mode: light ? 'light' : 'dark' }); }
   }
   $('themeBtn').onclick = () => setTheme(!isLight);
@@ -973,6 +990,7 @@ async function start() {
         try { const api = mod.default?.(ctx); if (api) stageMods.push(api); } catch (e) { console.warn('stage module failed', file, e); }
       }
     }
+    if (!subtleDone) { subtleDone = true; makeSubtle(); }
     for (const m of stageMods) { try { m.update?.(t, dt); } catch (e) { console.warn(e); } }
     if (!(idle && frameNo % 2)) { if (bloom.enabled) composer.render(); else renderer.render(scene, camera); }
 
