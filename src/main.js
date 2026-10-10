@@ -412,12 +412,15 @@ async function start() {
   satellite(earnCard, 'tile0', 2.05, -2.35, -.75, .55, .32);
   satellite(earnCard, 'tile1', 2.05, 0, -.75, .9, 0);
   satellite(earnCard, 'tile2', 2.05, 2.35, -.75, .55, -.32);
+  // APPLY — the end of the shaft
+  const endScreen = makeScreen(segC, V(0, SHAFT_BOTTOM + .5, 0), Y, X, 'apply', 5, { solid: true, scale: .95 });
+  endScreen.userData.href = APPLY_URL; clickable.push(endScreen);
 
   const animators = [];
   // ---------- stage modules: src/stages/*.js each own one stop (or the travel) ----------
   const STAGE_MODULES = import.meta.glob('./stages/*.js', { eager: true });
   const stageMods = [];
-  const cards = { home: introScreen, watch: videoScreen, learn: learnCard, build: buildCard, launch: launchCard, earn: earnCard, apply: null };
+  const cards = { home: introScreen, watch: videoScreen, learn: learnCard, build: buildCard, launch: launchCard, earn: earnCard, apply: endScreen };
 
   // ---------- post-processing ----------
   const composer = new EffectComposer(renderer);
@@ -937,7 +940,6 @@ async function start() {
     updateTrack(currentU, t);
     if (!stageMods.inited) {
       stageMods.inited = true;
-      cards.apply = endScreen;
       const ctx = { THREE, scene, camera, renderer, segA, segB, segC, V, ZONES, zoneColor, lineMat, seg, poly, flushLines, cards, path,
         SHAFT_X, TURN_Z, SHAFT_BOTTOM, W, WI, CEIL, H, tier, reducedMotion,
         get isLight() { return isLight; }, get currentU() { return currentU; }, get STOPS() { return STOPS; }, get stopIndex() { return stopAt(currentU); } };
