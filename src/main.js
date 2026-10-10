@@ -544,7 +544,7 @@ async function start() {
         if (m.userData.subtle) return;
         const isFx = m.isLineBasicMaterial || m.isPointsMaterial || (m.isMeshBasicMaterial && m.blending === THREE.AdditiveBlending && !m.map);
         if (!isFx || !m.color) return;
-        m.userData.subtle = true; m.color.multiplyScalar(.4);
+        m.userData.subtle = true; m.color.multiplyScalar(.22);
         if (m.isPointsMaterial) m.size *= .7;
       });
     });
