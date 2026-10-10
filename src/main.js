@@ -930,6 +930,37 @@ async function start() {
     });
   }
 
+  // ---------- stop captions: kicker / title / one line / three numbers ----------
+  const CAPS = [
+    null,
+    ['01 · The founder', 'Meet Dr. Neeraja Reddy', 'Educator and founder. Built ONROL to close the gap she saw in every classroom.', [['16+', 'Years'], ['2', 'Schools founded'], ['2:45', 'Film']]],
+    ['02 · Learn', 'Learn the AI tools', 'Live sessions with a mentor in the room.', [['5', 'AI tools'], ['1 hr', 'A day'], ['Live', 'Never recorded']]],
+    ['03 · Build', 'Build real projects', 'Ship working AI products, not demos.', [['7+', 'Projects'], ['5', 'AI systems'], ['70%', 'Hands-on']]],
+    ['04 · Launch', 'Launch to the web', 'Every project goes live with its own link.', [['1', 'Live URL each'], ['Weekly', 'Shipping'], ['Yours', 'Portfolio']]],
+    ['05 · Earn', 'Earn from the skill', 'Pick the direction that fits you.', [['3', 'Directions'], ['90', 'Day roadmap'], ['ATS', 'Ready resume']]],
+    ['06 · Apply', 'Start here', 'Apply free. A mentor calls you back.', [['0', 'Payment to apply'], ['Free', 'Masterclass'], ['21', 'Days to ship']]],
+  ];
+  function $$cap() {
+    document.querySelectorAll('#capS strong').forEach((el) => {
+      const m = el.textContent.match(/^(\d+)(.*)$/); if (!m || reducedMotion) return;
+      const end = +m[1], suf = m[2], t0 = performance.now();
+      const step = (now) => { const k = Math.min(1, (now - t0) / 700); el.textContent = Math.round(end * (1 - (1 - k) ** 3)) + suf; if (k < 1) requestAnimationFrame(step); };
+      requestAnimationFrame(step);
+    });
+  }
+  function setCaption(si) {
+    const c = CAPS[si], el = $('cap');
+    el.classList.add('off');
+    clearTimeout(setCaption.t);
+    if (!c) return;
+    setCaption.t = setTimeout(() => {
+      $('capK').textContent = c[0]; $('capT').textContent = c[1]; $('capP').textContent = c[2];
+      $('capS').innerHTML = c[3].map(([n, l]) => `<li><strong>${n}</strong><span>${l}</span></li>`).join('');
+      $$cap();
+      el.classList.remove('off');
+    }, 250);
+  }
+
   // ---------- frame loop ----------
   const tmp = V(0, 0, 0), q = new THREE.Quaternion(), camPos = V(0, 0, 0), camLook = V(0, 0, 0);
   const camUp = V(0, 1, 0), upTarget = V(0, 0, 0), dir = V(0, 0, 0), look = V(0, 0, 0), tA = V(0, 0, 0);
@@ -944,6 +975,7 @@ async function start() {
   }
   snapCamera();
   const fogDark = new THREE.Color(), fogTarget = new THREE.Color(), accent = new THREE.Color();
+  const tiltE = new THREE.Euler(), tiltQ = new THREE.Quaternion();
   let calm = 0, spinNow = 0, spinTop = -1, perfT = 0, perfN = 0, lastTracked = -1, frameNo = 0, lastZone = -1, roll = 0, prevU = 0, velU = 0, fovNow = baseFov, fpsT = 0, fpsN = 0, fpsChecked = OG;
 
   function frame() {
@@ -1027,6 +1059,7 @@ async function start() {
       const hex = isLight ? ZONES[z].light : ZONES[z].dark;
       document.documentElement.style.setProperty('--or', hex);   // single signal-red accent
       [...dotsEl.children].forEach((b, i) => { b.classList.toggle('on', i === si); b.setAttribute('aria-current', i === si ? 'step' : 'false'); });
+      setCaption(si);
       $('metaL').textContent = si === 1 ? 'Meet ONROL · 2:45' : ZONES[z].sub;
       $('metaR').textContent = String(STOP_STEP[si]).padStart(2, '0') + ' / 04';
       const slug = SLUGS[si] ? '#' + SLUGS[si] : location.pathname + location.search;
@@ -1069,6 +1102,16 @@ async function start() {
     }
     if (!subtleDone) { subtleDone = true; makeSubtle(); }
     updateBlobs(t, dt);
+    // cards lean toward the cursor while you're parked at them
+    const CARD_AT = [introScreen, videoScreen, learnCard, buildCard, launchCard, earnCard, endScreen];
+    CARD_AT.forEach((c, i) => {
+      const rig = c?.userData.rig; if (!rig) return;
+      rig.userData.q0 ??= rig.quaternion.clone();
+      const on = i === stopAt(currentU) && !coarse && !reducedMotion ? calm : 0;
+      tiltE.set(-mouse.y * .09 * on, mouse.x * .12 * on, 0);
+      tiltQ.setFromEuler(tiltE);
+      rig.quaternion.copy(rig.userData.q0).multiply(tiltQ);
+    });
     for (const m of stageMods) { try { m.update?.(t, dt); } catch (e) { console.warn(e); } }
     if (!(idle && frameNo % 2)) { if (bloom.enabled) composer.render(); else renderer.render(scene, camera); }
 

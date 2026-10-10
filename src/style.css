@@ -461,3 +461,24 @@ body { font-feature-settings:'ss01','cv11'; }
 .proofs b { color:var(--fg); font-weight:500; margin-right:4px; }
 .head.gone + .proofs { opacity:0; }
 @media (max-width:760px) { .proofs { font-size:10px; } .proofs li { padding:2px 8px; } }
+
+/* stop caption: clear hierarchy, few words, numbers do the talking */
+.cap { left:42px; bottom:calc(5.5vh + 92px); max-width:340px; transition:opacity .45s, transform .45s; text-transform:none; letter-spacing:0; }
+.cap.off { opacity:0; transform:translateY(10px); }
+.cap .k { display:block; font:400 11px var(--font-mono); letter-spacing:.16em; text-transform:uppercase; color:var(--or); margin-bottom:8px; }
+.cap b { display:block; font:500 26px/1.1 var(--font-ui); letter-spacing:-.02em; color:var(--fg); }
+.cap p { margin-top:8px; font:400 14px/1.45 var(--font-ui); color:var(--dim); }
+.cap ul { list-style:none; display:flex; gap:22px; margin-top:16px; padding-top:14px; border-top:1px solid var(--line); }
+.cap li strong { display:block; font:500 22px/1 var(--font-ui); color:var(--fg); letter-spacing:-.02em; }
+.cap li span { display:block; margin-top:5px; font:400 10px var(--font-mono); letter-spacing:.1em; text-transform:uppercase; color:var(--dim); }
+#metaL { visibility:hidden; }
+@media (max-width:760px) { .cap { left:16px; right:16px; max-width:none; bottom:calc(5.5vh + 128px); } .cap b { font-size:20px; } .cap p { display:none; } .cap li strong { font-size:17px; } }
+html.plain .cap { display:none; }
+
+.cap ul { pointer-events:auto; }
+.cap li { cursor:default; transition:transform .25s; }
+.cap li:hover { transform:translateY(-3px); }
+.cap li:hover strong { color:var(--or); }
+
+.introCard .cap { display:none; }
+.cap { z-index:4; }
