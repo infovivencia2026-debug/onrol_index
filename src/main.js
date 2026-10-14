@@ -314,6 +314,7 @@ async function start() {
     rig.lookAt(rig.getWorldPosition(V(0, 0, 0)).add(normal));
     rig.add(m);
     m.position.set(opts.lx || 0, opts.ly || 0, opts.lz || 0); m.rotation.y = opts.yaw || 0;
+    m.material.color.setScalar(.86);   // cards slightly dimmer: easier on the eyes
     m.userData = { art, tex, zone, lastDraw: -1, glass: null, rig, sats: [] };
     addHalo(m, w, w * SCREEN_H / SCREEN_W, zone);
     if (frosted) {
@@ -339,6 +340,7 @@ async function start() {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(width, width * art.h / art.w), new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide, depthWrite: true, fog: false }));
     m.position.set(lx, ly, lz); m.rotation.y = yaw;
     card.userData.rig.add(m);
+    m.material.color.setScalar(.86);
     m.userData = { art, tex, zone, lastDraw: -1 };
     card.userData.sats.push(m); allScreens.push(m);
     return m;
@@ -597,15 +599,18 @@ async function start() {
   const stopAt = (u) => { let z = 0; STOPS.forEach((s, i) => { if (u >= s - .012) z = i; }); return z; };
 
   // ---------- input ----------
-  let wheelAcc = 0, wheelLock = 0, wheelIdle = 0;
+  // one deliberate scroll = one stop. A gesture must end (wheel quiet for 180ms) before the next
+  // step can fire, so trackpad momentum and fast flicks never skip stops.
+  let wheelAcc = 0, wheelLast = 0, gestureUsed = false, wheelLock = 0;
   addEventListener('wheel', (e) => {
     if (plainOn || menuOpen || aboutOpen || e.target.closest?.('#menu, .endnav')) return;
     const now = performance.now();
-    if (now - wheelIdle > 250) wheelAcc = 0;
-    wheelIdle = now;
-    if (now < wheelLock) return;
-    wheelAcc += e.deltaY;
-    if (Math.abs(wheelAcc) > 30) { stepBy(Math.sign(wheelAcc)); wheelAcc = 0; wheelLock = now + 850; }
+    if (now - wheelLast > 180) { gestureUsed = false; wheelAcc = 0; }   // previous gesture finished
+    wheelLast = now;
+    if (gestureUsed || now < wheelLock) return;
+    const dy = e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY;
+    wheelAcc += dy;
+    if (Math.abs(wheelAcc) > 40) { stepBy(Math.sign(wheelAcc)); gestureUsed = true; wheelAcc = 0; wheelLock = now + 650; }
   }, { passive: true });
   canvas.addEventListener('mousedown', (e) => { isDragging = true; dragDist = 0; lastY = e.clientY; });
   addEventListener('mousemove', (e) => {

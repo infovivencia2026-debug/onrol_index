@@ -60,13 +60,13 @@ function frame(g, P, kicker, index) {
   if (index) { g.textAlign = 'right'; g.fillStyle = P.dim; g.fillText(index, 972, 70); }
 }
 function word(g, P, text, x, y, maxW, align = 'left', size = 168, color) {
-  size = Math.round(size * .5); maxW *= .7;   // calmer headline scale inside cards
+  size = Math.round(size * .4); maxW *= .62;   // calmer headline scale inside cards
   g.textAlign = align; g.textBaseline = 'alphabetic';
   do { g.font = `600 ${size}px ${FONT_UI}`; size -= 4; } while (g.measureText(text).width > maxW && size > 50);
   g.fillStyle = color || P.word; g.fillText(text, x, y);
 }
 function tagline(g, P, text, x, y, align = 'left') {
-  g.textAlign = align; g.font = `500 27px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText(text, x, y);
+  g.textAlign = align; g.font = `500 22px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText(text, x, y);
   g.fillStyle = P.accent;
   const w = 64; g.fillRect(align === 'left' ? x : align === 'right' ? x - w : x - w/2, y - 54, w, 3);
 }
@@ -162,7 +162,7 @@ function chart(g, P, t) {
   const shown = SERIES.slice(0, Math.min(n, SERIES.length));
   const X = (i) => x0 + (x1 - x0) * i / (SERIES.length - 1), Y = (v) => y0 - (y0 - y1) * v;
   // bars underneath
-  shown.forEach((v, i) => { g.fillStyle = alpha(P.accent, .14); g.fillRect(X(i) - 5, Y(v), 10, y0 - Y(v)); });
+  shown.forEach((v, i) => { g.fillStyle = alpha(P.accent, .07); g.fillRect(X(i) - 5, Y(v), 10, y0 - Y(v)); });
   g.strokeStyle = P.accent; g.lineWidth = 3.5; g.beginPath();
   shown.forEach((v, i) => (i ? g.lineTo(X(i), Y(v)) : g.moveTo(X(i), Y(v)))); g.stroke();
   const last = shown.length - 1;
@@ -180,7 +180,7 @@ function cta(g, P, t) {
   g.fillStyle = P.accent; g.beginPath();
   g.roundRect ? g.roundRect(372, 400, 280, 66, 33) : g.rect(372, 400, 280, 66); g.fill();
   g.fillStyle = P.dark ? '#0b0604' : '#fff';
-  g.font = `600 25px ${FONT_UI}`; g.textAlign = 'center'; g.fillText('Apply now  ↗', 512, 444);
+  g.font = `600 20px ${FONT_UI}`; g.textAlign = 'center'; g.fillText('Apply now  ↗', 512, 444);
 }
 
 // ---------- intro card as a video player ----------
@@ -197,7 +197,7 @@ function videoCard(g, P, t, art) {
   grd.addColorStop(0, 'rgba(0,0,0,0)'); grd.addColorStop(1, 'rgba(0,0,0,.78)');
   g.fillStyle = grd; g.fillRect(x, y + h - 150, w, 150);
   g.textAlign = 'left'; g.textBaseline = 'alphabetic';
-  g.font = `600 39px ${FONT_UI}`; g.fillStyle = '#f2f3f5'; g.fillText('About ONROL', 52, y + h - 46);
+  g.font = `600 32px ${FONT_UI}`; g.fillStyle = '#f2f3f5'; g.fillText('About ONROL', 52, y + h - 46);
   g.font = `500 17px ${FONT_MONO}`; g.fillStyle = P.accent; g.fillText('AI EXECUTION SCHOOL · HYDERABAD', 52, y + h - 18);
   // progress bar
   const p = v.duration ? v.currentTime / v.duration : 0;
@@ -235,17 +235,17 @@ function learnCard(g, P, t) {
   rounded(g, 14, 14, 996, 572, 30); g.fillStyle = P.dark ? '#0d1a19' : '#eefaf8'; g.fill();
   g.strokeStyle = alpha(P.accent, .55); g.lineWidth = 2; g.stroke();
   // accent band
-  g.save(); rounded(g, 14, 14, 996, 572, 30); g.clip(); g.fillStyle = alpha(P.accent, .16); g.fillRect(14, 14, 340, 572); g.restore();
+  g.save(); rounded(g, 14, 14, 996, 572, 30); g.clip(); g.fillStyle = alpha(P.accent, .08); g.fillRect(14, 14, 340, 572); g.restore();
   g.fillStyle = P.accent; g.beginPath(); g.arc(56, 62, 8 + Math.sin(t * 4) * 1.5, 0, 7); g.fill();
-  g.font = `600 17px ${FONT_UI}`; g.textAlign = 'left'; g.fillStyle = P.accent; g.fillText('LIVE · DAY 03', 76, 69);
+  g.font = `600 14px ${FONT_UI}`; g.textAlign = 'left'; g.fillStyle = P.accent; g.fillText('LIVE · DAY 03', 76, 69);
   word(g, P, 'LEARN', 48, 220, 280, 'left', 110);
-  g.font = `500 23px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText('the AI tools,', 50, 272); g.fillText('in a live room', 50, 306);
+  g.font = `500 19px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText('the AI tools,', 50, 272); g.fillText('in a live room', 50, 306);
   // mentor bubble
   rounded(g, 46, 420, 270, 116, 18); g.fillStyle = P.dark ? 'rgba(255,255,255,.06)' : '#fff'; g.fill();
   g.fillStyle = P.accent; g.beginPath(); g.arc(78, 452, 16, 0, 7); g.fill();
-  g.font = `600 15px ${FONT_UI}`; g.fillStyle = P.dark ? '#0d1a19' : '#fff'; g.textAlign = 'center'; g.fillText('M', 78, 458);
-  g.textAlign = 'left'; g.font = `600 16px ${FONT_UI}`; g.fillStyle = P.word; g.fillText('Mentor', 104, 458);
-  g.font = `500 15px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText('Try it in two tools', 62, 494); g.fillText('and compare.', 62, 518);
+  g.font = `600 13px ${FONT_UI}`; g.fillStyle = P.dark ? '#0d1a19' : '#fff'; g.textAlign = 'center'; g.fillText('M', 78, 458);
+  g.textAlign = 'left'; g.font = `600 13px ${FONT_UI}`; g.fillStyle = P.word; g.fillText('Mentor', 104, 458);
+  g.font = `500 13px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText('Try it in two tools', 62, 494); g.fillText('and compare.', 62, 518);
   // checklist
   const tools = [['ChatGPT', 'drafting & reasoning'], ['Gemini', 'across Google tools'], ['Claude', 'long documents'], ['Perplexity', 'research with sources'], ['NotebookLM', 'study your notes']];
   const done = Math.floor((t % 7) / 1.1);
@@ -254,7 +254,7 @@ function learnCard(g, P, t) {
     g.strokeStyle = P.dark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.08)'; g.lineWidth = 1; g.beginPath(); g.moveTo(400, y + 66); g.lineTo(966, y + 66); g.stroke();
     rounded(g, 400, y + 8, 40, 40, 10); g.fillStyle = ok ? P.accent : 'transparent'; g.fill(); g.strokeStyle = ok ? P.accent : alpha(P.accent, .5); g.lineWidth = 2; g.stroke();
     if (ok) { g.strokeStyle = P.dark ? '#0d1a19' : '#fff'; g.lineWidth = 4; g.beginPath(); g.moveTo(410, y + 28); g.lineTo(418, y + 37); g.lineTo(431, y + 19); g.stroke(); }
-    g.font = `600 27px ${FONT_UI}`; g.fillStyle = ok ? P.word : P.dim; g.fillText(n, 462, y + 40);
+    g.font = `600 22px ${FONT_UI}`; g.fillStyle = ok ? P.word : P.dim; g.fillText(n, 462, y + 40);
     g.font = `500 18px ${FONT_MONO}`; g.textAlign = 'right'; g.fillStyle = P.dim; g.fillText(d, 966, y + 38); g.textAlign = 'left';
   });
 }
@@ -268,7 +268,7 @@ function buildCard(g, P, t, light) {
   g.fillStyle = light ? '#eceef1' : '#12141b'; g.fillRect(16, 78, 210, 470);
   g.font = `500 17px ${FONT_MONO}`; ['app.py', 'prompts.md', 'planner.py', 'tests/'].forEach((f, i) => { g.fillStyle = i === 0 ? P.accent : P.dim; g.fillText(f, 40, 122 + i * 38); });
   word(g, P, 'BUILD', 40, 470, 170, 'left', 64, alpha(P.accent, .9));
-  g.font = `500 15px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText('real projects', 42, 504);
+  g.font = `500 13px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText('real projects', 42, 504);
   // code
   const chars = Math.floor((t % 9) * 34); let left = chars;
   const col = { c: P.dim, k: P.accent, f: P.word, s: light ? '#9a3d00' : '#ffb27a', '': P.word };
@@ -297,19 +297,19 @@ function launchCard(g, P, t, light) {
   g.fillStyle = P.word; g.fillText('https://your-name.dev', 206, 53);
   const live = (t % 6) > 1.4;
   pill(g, 820, 30, 160, 34, live ? P.accent : 'transparent', live ? null : alpha(P.accent, .5));
-  g.font = `600 15px ${FONT_UI}`; g.textAlign = 'center'; g.fillStyle = live ? (P.dark ? '#0b0c10' : '#fff') : P.accent;
+  g.font = `600 13px ${FONT_UI}`; g.textAlign = 'center'; g.fillStyle = live ? (P.dark ? '#0b0c10' : '#fff') : P.accent;
   g.fillText(live ? '● LIVE' : 'deploying…', 900, 53);
   // the page: gradient hero
   g.save(); rounded(g, 14, 14, 996, 572, 22); g.clip();
-  const gr = g.createLinearGradient(0, 78, 0, 586); gr.addColorStop(0, alpha(P.accent, .28)); gr.addColorStop(1, alpha(P.accent, 0));
+  const gr = g.createLinearGradient(0, 78, 0, 586); gr.addColorStop(0, alpha(P.accent, .12)); gr.addColorStop(1, alpha(P.accent, 0));
   g.fillStyle = gr; g.fillRect(14, 78, 996, 508); g.restore();
   word(g, P, 'LAUNCH', 512, 290, 760, 'center', 150);
-  g.textAlign = 'center'; g.font = `500 25px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText('Your project, live on the web with its own link', 512, 350);
+  g.textAlign = 'center'; g.font = `500 20px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText('Your project, live on the web with its own link', 512, 350);
   // deploy steps
   ['Build', 'Checks', 'Deploy', 'Live'].forEach((s, i) => {
     const on = (t % 6) > .35 * (i + 1), x = 232 + i * 186;
     pill(g, x, 420, 150, 46, on ? alpha(P.accent, .18) : 'transparent', alpha(P.accent, on ? .8 : .25));
-    g.font = `500 17px ${FONT_UI}`; g.fillStyle = on ? P.word : P.dim; g.fillText((on ? '✓ ' : '') + s, x + 75, 450);
+    g.font = `500 14px ${FONT_UI}`; g.fillStyle = on ? P.word : P.dim; g.fillText((on ? '✓ ' : '') + s, x + 75, 450);
     if (i < 3) { g.strokeStyle = alpha(P.accent, .4); g.lineWidth = 2; g.beginPath(); g.moveTo(x + 152, 443); g.lineTo(x + 184, 443); g.stroke(); }
   });
 }
@@ -320,17 +320,17 @@ function earnCard(g, P, t) {
   rounded(g, 14, 14, 996, 572, 8); g.fillStyle = P.dark ? '#15120a' : '#fbf6ea'; g.fill();
   g.strokeStyle = alpha(P.accent, .7); g.lineWidth = 3; g.stroke();
   g.textAlign = 'left'; word(g, P, 'EARN', 48, 140, 300, 'left', 96);
-  g.font = `500 23px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText('from the skill · pick your direction', 330, 128);
+  g.font = `500 19px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText('from the skill · pick your direction', 330, 128);
   const tiles = [['Career growth', 'ATS-ready resume', 'Project to explain'], ['Freelancing', 'Live links for clients', 'Ship every week'], ['Own products', 'Your own AI tools', 'Build → launch loop']];
   const hi = Math.floor(t / 2.5) % 3;
   tiles.forEach(([h, a, b], i) => {
     const x = 48 + i * 316, y = 196, on = i === hi;
-    rounded(g, x, y, 296, 340, 16); g.fillStyle = on ? alpha(P.accent, .16) : (P.dark ? 'rgba(255,255,255,.04)' : '#fff'); g.fill();
+    rounded(g, x, y, 296, 340, 16); g.fillStyle = on ? alpha(P.accent, .08) : (P.dark ? 'rgba(255,255,255,.04)' : '#fff'); g.fill();
     g.strokeStyle = alpha(P.accent, on ? .9 : .25); g.lineWidth = 2; g.stroke();
     g.font = `500 16px ${FONT_MONO}`; g.fillStyle = P.accent; g.fillText('0' + (i + 1), x + 26, y + 44);
-    g.font = `600 30px ${FONT_UI}`; g.fillStyle = P.word; g.fillText(h, x + 26, y + 104);
+    g.font = `600 25px ${FONT_UI}`; g.fillStyle = P.word; g.fillText(h, x + 26, y + 104);
     g.fillStyle = P.accent; g.fillRect(x + 26, y + 128, 50, 3);
-    g.font = `500 18px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText(a, x + 26, y + 180); g.fillText(b, x + 26, y + 218);
+    g.font = `500 15px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText(a, x + 26, y + 180); g.fillText(b, x + 26, y + 218);
     // small rising bars
     for (let k = 0; k < 5; k++) { const bh = 14 + k * 11 * (on ? 1 : .6); g.fillStyle = alpha(P.accent, on ? .8 : .3); g.fillRect(x + 26 + k * 24, y + 310 - bh, 16, bh); }
   });
@@ -345,18 +345,18 @@ function watchCard(g, P, t) {
   g.fillStyle = alpha(P.accent, .18); g.beginPath(); g.arc(512, 270, 96 * pr, 0, 7); g.fill();
   g.fillStyle = '#f7f8fa'; g.beginPath(); g.arc(512, 270, 64, 0, 7); g.fill();
   g.fillStyle = '#0b0c10'; g.beginPath(); g.moveTo(496, 240); g.lineTo(496, 300); g.lineTo(546, 270); g.closePath(); g.fill();
-  g.textAlign = 'center'; g.font = `600 46px ${FONT_UI}`; g.fillStyle = '#f7f8fa'; g.fillText('Meet ONROL', 512, 432);
+  g.textAlign = 'center'; g.font = `600 38px ${FONT_UI}`; g.fillStyle = '#f7f8fa'; g.fillText('Meet ONROL', 512, 432);
   g.font = `500 21px ${FONT_MONO}`; g.fillStyle = P.accent; g.fillText('THE FOUNDER · 2:45', 512, 476);
 }
 
 export const SCREENS = {
-  intro:  { kicker:'AI EXECUTION SCHOOL', index:'00 / 04', draw(g, P, t, art) { if (art && art.video && art.video.readyState >= 2) return videoCard(g, P, t, art); frame(g, P, this.kicker, this.index); rings(g, P, t, 512, 300); word(g, P, 'ONROL', 512, 330, 760, 'center', 190); g.textAlign='center'; g.font=`500 27px ${FONT_UI}`; g.fillStyle=P.tag; g.fillText('Build your first AI product in 21 days', 512, 430); } },
+  intro:  { kicker:'AI EXECUTION SCHOOL', index:'00 / 04', draw(g, P, t, art) { if (art && art.video && art.video.readyState >= 2) return videoCard(g, P, t, art); frame(g, P, this.kicker, this.index); rings(g, P, t, 512, 300); word(g, P, 'ONROL', 512, 330, 760, 'center', 190); g.textAlign='center'; g.font=`500 22px ${FONT_UI}`; g.fillStyle=P.tag; g.fillText('Build your first AI product in 21 days', 512, 430); } },
   watch:  { draw(g, P, t) { watchCard(g, P, t); } },
   learn:  { draw(g, P, t) { learnCard(g, P, t); } },
   build:  { draw(g, P, t) { buildCard(g, P, t, !P.dark); } },
   launch: { draw(g, P, t) { launchCard(g, P, t, !P.dark); } },
   earn:   { draw(g, P, t) { earnCard(g, P, t); } },
-  apply:  { kicker:'NO PAYMENT TO APPLY', index:'', draw(g, P, t) { frame(g, P, this.kicker, this.index); cta(g, P, t); word(g, P, 'START HERE', 512, 300, 820, 'center', 150); g.textAlign='center'; g.font=`500 25px ${FONT_UI}`; g.fillStyle=P.tag; g.fillText('Your first AI product, 21 days from now', 512, 360); } },
+  apply:  { kicker:'NO PAYMENT TO APPLY', index:'', draw(g, P, t) { frame(g, P, this.kicker, this.index); cta(g, P, t); word(g, P, 'START HERE', 512, 300, 820, 'center', 150); g.textAlign='center'; g.font=`500 20px ${FONT_UI}`; g.fillStyle=P.tag; g.fillText('Your first AI product, 21 days from now', 512, 360); } },
 };
 
 export function createArt(key, accentHex, light, frosted = false) {
@@ -398,7 +398,7 @@ const MOTIFS = {
     const R = 115, p = Math.min(.7, (t % 6) / 3);
     g.strokeStyle = alpha(P.accent, .15); g.lineWidth = 18; g.beginPath(); g.arc(cx, cy, R, 0, 7); g.stroke();
     g.strokeStyle = P.accent; g.lineCap = 'round'; g.beginPath(); g.arc(cx, cy, R, -Math.PI / 2, -Math.PI / 2 + p * Math.PI * 2); g.stroke(); g.lineCap = 'butt';
-    g.font = `600 41px ${FONT_UI}`; g.textAlign = 'center'; g.fillStyle = P.accent; g.fillText(Math.round(p * 100) + '%', cx, cy + 16);
+    g.font = `600 34px ${FONT_UI}`; g.textAlign = 'center'; g.fillStyle = P.accent; g.fillText(Math.round(p * 100) + '%', cx, cy + 16);
     g.font = `500 15px ${FONT_MONO}`; g.fillStyle = P.dim; g.fillText('HANDS-ON', cx, cy + 44);
   },
   deploy(g, P, t, cx, cy) {                                   // SHIP: weekly deploys ticking up
@@ -471,14 +471,14 @@ function panelBase(g, P, w, h, r = 26) {
 const PANELS = {
   schedule(g, P, t, w, h) {                                   // LEARN: the first six days
     panelBase(g, P, w, h);
-    g.textAlign = 'left'; g.font = `600 17px ${FONT_UI}`; g.fillStyle = P.accent; g.fillText('THIS WEEK', 36, 62);
+    g.textAlign = 'left'; g.font = `600 14px ${FONT_UI}`; g.fillStyle = P.accent; g.fillText('THIS WEEK', 36, 62);
     const days = ['AI-driven careers', 'Your direction', 'AI tools to know', 'Prompting', 'Research smarter', 'Learn faster'];
     const cur = 2 + (Math.floor(t / 3) % 2);
     days.forEach((d, i) => {
       const y = 112 + i * 76, on = i === cur, done = i < cur;
-      if (on) { rounded(g, 24, y - 34, w - 48, 62, 14); g.fillStyle = alpha(P.accent, .16); g.fill(); }
+      if (on) { rounded(g, 24, y - 34, w - 48, 62, 14); g.fillStyle = alpha(P.accent, .08); g.fill(); }
       g.font = `500 17px ${FONT_MONO}`; g.fillStyle = on || done ? P.accent : P.dim; g.fillText('DAY ' + String(i + 1).padStart(2, '0'), 40, y + 4);
-      g.font = `500 19px ${FONT_UI}`; g.fillStyle = on ? P.word : done ? P.tag : P.dim; g.fillText(d, 150, y + 4);
+      g.font = `500 16px ${FONT_UI}`; g.fillStyle = on ? P.word : done ? P.tag : P.dim; g.fillText(d, 150, y + 4);
     });
   },
   files(g, P, t, w, h) {                                      // BUILD: tests running
@@ -488,18 +488,18 @@ const PANELS = {
     const n = Math.floor((t % 8) / .8);
     tests.forEach((s, i) => {
       const y = 116 + i * 74, ok = i < n;
-      g.font = `500 23px ${FONT_UI}`; g.fillStyle = ok ? P.accent : P.dim; g.fillText(ok ? '✓' : '○', 36, y);
+      g.font = `500 19px ${FONT_UI}`; g.fillStyle = ok ? P.accent : P.dim; g.fillText(ok ? '✓' : '○', 36, y);
       g.font = `500 20px ${FONT_MONO}`; g.fillStyle = ok ? P.word : P.dim; g.fillText(s, 76, y);
     });
   },
   preview(g, P, t, w, h) {                                    // BUILD: the assistant answering
     panelBase(g, P, w, h, 44);
     g.fillStyle = alpha(P.accent, .5); rounded(g, w / 2 - 50, 26, 100, 10, 5); g.fill();
-    g.textAlign = 'left'; g.font = `600 17px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText('My assistant', 40, 84);
+    g.textAlign = 'left'; g.font = `600 14px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText('My assistant', 40, 84);
     const k = t % 8;
     const bubble = (x, y, bw, lines, mine) => {
       rounded(g, x, y, bw, 30 + lines.length * 32, 18); g.fillStyle = mine ? P.accent : (P.dark ? 'rgba(255,255,255,.08)' : '#eef0f3'); g.fill();
-      g.font = `500 17px ${FONT_UI}`; g.fillStyle = mine ? (P.dark ? '#0b0c10' : '#fff') : P.word;
+      g.font = `500 14px ${FONT_UI}`; g.fillStyle = mine ? (P.dark ? '#0b0c10' : '#fff') : P.word;
       lines.forEach((l, i) => g.fillText(l, x + 18, y + 40 + i * 32));
     };
     if (k > .8) bubble(w - 330, 120, 290, ['Plan my week for a', 'data analyst interview'], true);
@@ -508,7 +508,7 @@ const PANELS = {
   },
   pipeline(g, P, t, w, h) {                                   // LAUNCH: vertical deploy pipeline
     panelBase(g, P, w, h);
-    g.textAlign = 'left'; g.font = `600 17px ${FONT_UI}`; g.fillStyle = P.accent; g.fillText('DEPLOY', 40, 64);
+    g.textAlign = 'left'; g.font = `600 14px ${FONT_UI}`; g.fillStyle = P.accent; g.fillText('DEPLOY', 40, 64);
     const steps = ['Push', 'Build', 'Checks', 'Deploy', 'Live'], k = (t % 6) / 6 * (steps.length + .6);
     g.strokeStyle = alpha(P.accent, .3); g.lineWidth = 4; g.beginPath(); g.moveTo(70, 130); g.lineTo(70, 130 + 4 * 140); g.stroke();
     g.strokeStyle = P.accent; g.beginPath(); g.moveTo(70, 130); g.lineTo(70, 130 + Math.min(4, k) * 140); g.stroke();
@@ -516,13 +516,13 @@ const PANELS = {
       const y = 130 + i * 140, on = k >= i;
       g.fillStyle = on ? P.accent : (P.dark ? 'rgb(14,16,22)' : '#fff'); g.strokeStyle = P.accent; g.lineWidth = 3;
       g.beginPath(); g.arc(70, y, 16, 0, 7); g.fill(); g.stroke();
-      g.font = `600 25px ${FONT_UI}`; g.fillStyle = on ? P.word : P.dim; g.fillText(s, 110, y + 10);
+      g.font = `600 20px ${FONT_UI}`; g.fillStyle = on ? P.word : P.dim; g.fillText(s, 110, y + 10);
     });
   },
   earnHead(g, P, t, w, h) {
     panelBase(g, P, w, h, 30);
     g.textAlign = 'left'; word(g, P, 'EARN', 50, 200, 330, 'left', 150);
-    g.font = `500 30px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText('from the skill', 420, 150); g.fillText('pick your direction ↓', 420, 200);
+    g.font = `500 25px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText('from the skill', 420, 150); g.fillText('pick your direction ↓', 420, 200);
   },
 };
 const EARN_TILES = [['Career growth', 'ATS-ready resume', 'A project to explain'], ['Freelancing', 'Live links for clients', 'Ship every week'], ['Own products', 'Your own AI tools', 'Build → launch loop']];
@@ -530,11 +530,11 @@ EARN_TILES.forEach(([head, a, b], i) => {
   PANELS['tile' + i] = (g, P, t, w, h) => {
     const on = Math.floor(t / 2.5) % 3 === i;
     panelBase(g, P, w, h, 24);
-    if (on) { rounded(g, 8, 8, w - 16, h - 16, 24); g.fillStyle = alpha(P.accent, .14); g.fill(); g.strokeStyle = P.accent; g.lineWidth = 3; g.stroke(); }
+    if (on) { rounded(g, 8, 8, w - 16, h - 16, 24); g.fillStyle = alpha(P.accent, .07); g.fill(); g.strokeStyle = P.accent; g.lineWidth = 3; g.stroke(); }
     g.textAlign = 'left'; g.font = `500 21px ${FONT_MONO}`; g.fillStyle = P.accent; g.fillText('0' + (i + 1), 40, 70);
-    g.font = `600 30px ${FONT_UI}`; g.fillStyle = P.word; g.fillText(head, 40, 150);
+    g.font = `600 25px ${FONT_UI}`; g.fillStyle = P.word; g.fillText(head, 40, 150);
     g.fillStyle = P.accent; g.fillRect(40, 178, 60, 4);
-    g.font = `500 23px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText(a, 40, 250); g.fillText(b, 40, 298);
+    g.font = `500 19px ${FONT_UI}`; g.fillStyle = P.tag; g.fillText(a, 40, 250); g.fillText(b, 40, 298);
     for (let k = 0; k < 5; k++) { const bh = 20 + k * 16 * (on ? 1 : .55); g.fillStyle = alpha(P.accent, on ? .85 : .3); g.fillRect(40 + k * 30, 460 - bh, 20, bh); }
   };
 });
